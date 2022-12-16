@@ -3,8 +3,8 @@
 class b64
 {
 public:
-	static int b64_encode(char* pChIn, int nLen, char* pChOut);
-	static int b64_decode(char* pChIn, int nLen, char* pChOut);
+	static int b64_encode(char* pChIn, int nInLen, char* pChOut, int nOutLen);
+	static int b64_decode(char* pChIn, int nInLen, char* pChOut, int nOutLen);
 	static void test();
 private:
 	static const char m_arr_b64_enc_tbl[65];

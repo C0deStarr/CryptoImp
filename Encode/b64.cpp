@@ -27,22 +27,33 @@ const char b64::m_arr_b64_dec_tbl[123] = {
 	49, 50, 51
 };
 
-
-int b64::b64_encode(char* pChIn, int nLen, char* pChOut)
+/*
+* ret: 
+*	-1 : error
+*	>=0: out len
+*/
+int b64::b64_encode(char* pChIn, int nInLen, char* pChOut, int nOutLen)
 {
 	int nOffset = 0;
 	int i, mod;
-	int nOutLen = -1;
+	int nRet = -1;
 	int n24bits = 0;
 	if (!pChIn || !pChOut)
 	{
-		return nOutLen;
+		return nRet;
 	}
-	if (nLen == 0) {
-		nLen = strlen(pChIn);
+	if (nInLen == 0) {
+		nInLen = strlen(pChIn);
 	}
-	mod = nLen % 3;
-	n24bits = nLen - mod;
+
+	// check out memory size
+	if ((nInLen / 3 + 1) * 4 > nOutLen)
+	{
+		printf("No sufficient out memory space\n");
+		return nRet;
+	}
+	mod = nInLen % 3;
+	n24bits = nInLen - mod;
 	//3 bytes --> 4 bytes
 	for (i = 0; i < n24bits; i += 3)
 	{
@@ -91,45 +102,53 @@ int b64::b64_encode(char* pChIn, int nLen, char* pChOut)
 		pChOut[nOffset++] = '=';
 	}
 	pChOut[nOffset] = '\0';
-	nOutLen = nOffset;
-	return nOutLen;
+	nRet = nOffset;
+	return nRet;
 }
 
-//int b64::b64_decode(char* pChIn, int nLen, char* pChOut);
-int b64::b64_decode(char* pChIn, int nLen, char* pChOut)
+/*
+* ret: 
+*	-1 : error
+*	>=0: out len
+*/
+int b64::b64_decode(char* pChIn, int nInLen, char* pChOut, int nOutLen)
 {
 	
-
 	int nOffset = 0;
 	int i, mod;
-	int nOutLen = -1;
+	int nRet = -1;
 	int n24bits = 0;
 	if (!pChIn || !pChOut)
 	{
-		return nOutLen;
+		return nRet;
 	}
 
-	if (nLen == 0) {
-		nLen = strlen(pChIn);
+	if (nInLen == 0) {
+		nInLen = strlen(pChIn);
 	}
-
 	// check valid Base64 length and char 
-	if (nLen == 0 || nLen % 4 != 0) {
+	if (nInLen == 0 || nInLen % 4 != 0) {
 		printf("Invalid base64 length\n");
-		return nOutLen;
+		return nRet;
 	}
-	for (i = 0; i < nLen; i += 4)
+	for (i = 0; i < nInLen; i += 4)
 	{
 		if (('=' != pChIn[i])
 			&& (-1 == m_arr_b64_dec_tbl[pChIn[i]]))
 		{
 				printf("Invalid base64 char\n");
-				return nOutLen;
+				return nRet;
 		}
 	}
 
+	// check out memory size
+	if (((nInLen / 4) * 3) > nOutLen)
+	{
+		printf("No sufficient out memory space\n");
+		return nRet;
+	}
 	//4 bytes --> 3 bytes
-	n24bits = nLen - 4;
+	n24bits = nInLen - 4;
 	for (i = 0; i < n24bits; i += 4)
 	{
 		pChOut[nOffset++] = (m_arr_b64_dec_tbl[pChIn[i]] << 2) // i [5,0]
@@ -169,9 +188,9 @@ int b64::b64_decode(char* pChIn, int nLen, char* pChOut)
 			& 0xFF;
 	}
 
-	nOutLen= nOffset;
+	nRet = nOffset;
 
-	return 0;
+	return nRet;
 }
 
 void b64::test()
@@ -183,12 +202,12 @@ void b64::test()
 	int nB64Len = 0;
 
 	printf("%s\n", pChMsg);
-	if (-1 != b64::b64_encode(pChMsg, nMsgLen, pChB64))
+	if (-1 != b64::b64_encode(pChMsg, nMsgLen, pChB64, sizeof(pChB64)))
 	{
 		printf("%s\n", pChB64);
 	}
 	nB64Len = strlen(pChB64);
-	if (-1 != b64::b64_decode(pChB64, nB64Len, pChDec))
+	if (-1 != b64::b64_decode(pChB64, nB64Len, pChDec, sizeof(pChDec)))
 	{
 		printf("%s\n", pChDec);
 	}
