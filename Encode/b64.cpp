@@ -115,6 +115,7 @@ int b64::b64_decode(char* pChIn, int nLen, char* pChOut)
 
 	// check valid Base64 length and char 
 	if (nLen == 0 || nLen % 4 != 0) {
+		printf("Invalid base64 length\n");
 		return nOutLen;
 	}
 	for (i = 0; i < nLen; i += 4)
@@ -122,7 +123,8 @@ int b64::b64_decode(char* pChIn, int nLen, char* pChOut)
 		if (('=' != pChIn[i])
 			&& (-1 == m_arr_b64_dec_tbl[pChIn[i]]))
 		{
-			return nOutLen;
+				printf("Invalid base64 char\n");
+				return nOutLen;
 		}
 	}
 
