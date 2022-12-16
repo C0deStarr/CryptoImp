@@ -3,12 +3,8 @@
 
 int main()
 {
-    char pChMsg[] = "ÄãºÃa";
-    char pChB64[1024] = { 0 };
-    int nMsgLen = sizeof(pChMsg);
-    if (-1 != b64::b64_encode(pChMsg, nMsgLen, pChB64))
-    {
-        printf("%s\n", pChB64);
-    }
+    b64::test();
+
     getchar();
+    return 0;
 }
