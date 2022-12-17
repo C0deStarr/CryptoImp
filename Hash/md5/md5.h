@@ -24,7 +24,13 @@ typedef struct {
 	unsigned char buffer[64]; /* input buffer */
 } MD5_CTX;
 
-void MD5Init PROTO_LIST((MD5_CTX*));
-void MD5Update PROTO_LIST
-((MD5_CTX*, unsigned char*, unsigned int));
-void MD5Final PROTO_LIST((unsigned char[16], MD5_CTX*));
+void MD5Init(MD5_CTX* context /* context */);
+void MD5Update(
+	MD5_CTX* context, /* context */
+	unsigned char* input, /* input block */
+	unsigned int inputLen /* length of input block */
+);
+void MD5Final(
+	unsigned char digest[16], /* message digest */
+	MD5_CTX* context /* context */
+);

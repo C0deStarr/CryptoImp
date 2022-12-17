@@ -64,7 +64,7 @@ Arguments (may be any combination):
  filename - digests file
  (none) - digests standard input
  */
-int main(int argc, char* argv[])
+int main_md5(int argc, char* argv[])
 {
 	int i;
 	if (argc > 1)
@@ -145,8 +145,7 @@ static void MDTestSuite()
 }
 /* Digests a file and prints the result.
 * */
-static void MDFile(filename)
-char* filename;
+static void MDFile(char* filename)
 {
 	FILE* file;
 	MD_CTX context;
@@ -181,9 +180,9 @@ static void MDFilter()
 }
 /* Prints a message digest in hexadecimal.
  */
-static void MDPrint(digest)
-unsigned char digest[16];
-{unsigned int i;
-for (i = 0; i < 16; i++)
-	printf("%02x", digest[i]);
+static void MDPrint(unsigned char digest[16])
+{
+	unsigned int i;
+	for (i = 0; i < 16; i++)
+		printf("%02x", digest[i]);
 }
