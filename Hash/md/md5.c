@@ -111,25 +111,26 @@ void MD5Init(MD5_CTX* context /* context */)
  */
 void MD5Update(
 	MD5_CTX* pContext, /* context */
-	unsigned char* pInBlock, /* input block */
-	unsigned int nBytesOfBlock /* length of input block */
+	unsigned char* pInput, /* input block */
+	unsigned int nBytesInput /* length of input block */
 )
 {
-	unsigned int i = 0;
-	unsigned int nCurBytes = 0;
+	unsigned int nOffsetInput = 0;
+	unsigned int nCurBytesMod64 = 0;
 	unsigned int partLen = 0;
 	/* 
 		Compute number of bytes mod 64
 		& 0x3F: mod 64
+		partLen bytes needed for next Transform()
 	*/
-	//nCurBytes = (unsigned int)((pContext->count[0] >> 3) & 0x3F);
-	nCurBytes = (pContext->nBits >> 3) & 0x3F;
-	partLen = 64 - nCurBytes;
+	// nCurBytes = (unsigned int)((pContext->count[0] >> 3) & 0x3F);
+	nCurBytesMod64 = (pContext->nBits >> 3) & 0x3F;
+	partLen = 64 - nCurBytesMod64;
 
 	/* Update number of bits 
 	*  Take overflow into account
 	*/
-	pContext->nBits += ((UINT8)nBytesOfBlock << 3);
+	pContext->nBits += ((UINT8)nBytesInput << 3);
 	// if ((pContext->count[0] += ((UINT4)nBytesOfBlock << 3))
 	// 	< ((UINT4)nBytesOfBlock << 3))
 	// 	++(pContext->count[1]);
@@ -138,22 +139,25 @@ void MD5Update(
 
 	/* Transform as many times as possible.
    */
-	if (nBytesOfBlock >= partLen) 
+	if (nBytesInput >= partLen) 
 	{
+		// another 
 		MD5_memcpy
-		((POINTER)&pContext->buffer[nCurBytes], (POINTER)pInBlock, partLen);
+		((POINTER)&pContext->buffer[nCurBytesMod64], (POINTER)pInput, partLen);
 
 		MD5Transform(pContext->state, pContext->buffer);
-		for (i = partLen; i + 63 < nBytesOfBlock; i += 64)
-			MD5Transform(pContext->state, &pInBlock[i]);
-		nCurBytes = 0;
+
+		// This input contains many blocks
+		for (nOffsetInput = partLen; nOffsetInput + N_BYTES_BLOCK_SIZE - 1 < nBytesInput; nOffsetInput += N_BYTES_BLOCK_SIZE)
+			MD5Transform(pContext->state, &pInput[nOffsetInput]);
+		nCurBytesMod64 = 0;
 	}
 	else
-		i = 0;
+		nOffsetInput = 0;
 	/* Buffer remaining input */
 	MD5_memcpy
-	((POINTER)&pContext->buffer[nCurBytes], (POINTER)&pInBlock[i],
-		nBytesOfBlock - i);
+	((POINTER)&pContext->buffer[nCurBytesMod64], (POINTER)&pInput[nOffsetInput],
+		nBytesInput - nOffsetInput);
 }
 /* MD5 finalization. Ends an MD5 message-digest operation, writing the
  the message digest and zeroizing the context.
