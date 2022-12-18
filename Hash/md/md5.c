@@ -43,8 +43,8 @@
 #define N_BYTES_DIGEST_SIZE 16
 
 static void MD5Transform(UINT4 state[4], unsigned char block[N_BYTES_BLOCK_SIZE]);
-static void Encode(unsigned char* output, unsigned char* input, unsigned int len);
-static void Decode(UINT4* output, unsigned char* input, unsigned int len);
+//static void Encode(unsigned char* output, UINT4* input, unsigned int len);
+static void u8to32_little(UINT4* output, unsigned char* input, unsigned int len);
 static void MD5_memcpy(POINTER output, POINTER input, unsigned int len);
 static void MD5_memset(POINTER output, int value, unsigned int len);
 
@@ -170,7 +170,7 @@ void MD5Final(
 	* Maximum message length for MD5 is 2**64 bits
 	* memcpy() can be used if little-endian default
 	*/
-	Encode(arrMsgLength, &(context->nBits), N_BYTES_MSG_SIZE);
+	MD5_memcpy(arrMsgLength, &(context->nBits), N_BYTES_MSG_SIZE);
 
 
 	/* Step 1. Append Padding Bits
@@ -189,7 +189,7 @@ void MD5Final(
 	MD5Update(context, arrMsgLength, 8);
 
 	/* Store state in digest */
-	Encode(digest, context->state, N_BYTES_DIGEST_SIZE);
+	MD5_memcpy(digest, context->state, N_BYTES_DIGEST_SIZE);
 	/* Zeroize sensitive information.
    */
 	MD5_memset((POINTER)context, 0, sizeof(*context));
@@ -211,7 +211,7 @@ static void MD5Transform(UINT4 state[4],unsigned char block[N_BYTES_BLOCK_SIZE])
 	UINT4 c = state[2];
 	UINT4 d = state[3];
 	UINT4 x[16] = {0};
-	Decode(x, block, N_BYTES_BLOCK_SIZE);
+	u8to32_little(x, block, N_BYTES_BLOCK_SIZE);
 	/* Round 1 */
 	FF(a, b, c, d, x[0], S11, 0xd76aa478); /* 1 */
 	FF(d, a, b, c, x[1], S12, 0xe8c7b756); /* 2 */
@@ -291,29 +291,26 @@ static void MD5Transform(UINT4 state[4],unsigned char block[N_BYTES_BLOCK_SIZE])
 
 /* Encodes input (UINT4) into output (unsigned char). Assumes len is
  a multiple of 4.
- */
-static void Encode(unsigned char* output, unsigned char* input,unsigned int len)
+ 
+static void Encode(unsigned char* output, UINT4* input,unsigned int len)
 {
-	unsigned int i;
+	unsigned int i,j;
 	if (output && input)
 	{
-		/*for (i = 0, j = 0; j < len; i++, j += 4) {
+		for (i = 0, j = 0; j < len; i++, j += 4) {
 			output[j] = (unsigned char)(input[i] & 0xff);
 			output[j + 1] = (unsigned char)((input[i] >> 8) & 0xff);
 			output[j + 2] = (unsigned char)((input[i] >> 16) & 0xff);
 			output[j + 3] = (unsigned char)((input[i] >> 24) & 0xff);
-		}*/
-		for (i = 0; i < len; ++i)
-		{
-			output[i] = input[i] & 0xff;
 		}
 
 	}
 }
+*/
 /* Decodes input (unsigned char) into output (UINT4). Assumes len is
  a multiple of 4.
  */
-static void Decode(UINT4* output,	unsigned char* input,	unsigned int len)
+static void u8to32_little(UINT4* output,	unsigned char* input,	unsigned int len)
 {
 	unsigned int i, j;
 	for (i = 0, j = 0; j < len; i++, j += 4)
