@@ -162,7 +162,15 @@ void MD5Final(
    */
 	MD5_memset((POINTER)context, 0, sizeof(*context));
 }
-/* MD5 basic transformation. Transforms state based on block.
+/*
+	MD5 basic transformation. Transforms state based on block.
+	GenerateT.py
+	import math
+	T = []
+	for i in range(1,65):
+		T.append(int(4294967296 * abs(math.sin(i)) / 1))
+	for i in range(64):
+		print("%d, %s" % (i, hex(T[i])))
  */
 static void MD5Transform(UINT4 state[4],unsigned char block[64])
 {
