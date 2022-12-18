@@ -81,8 +81,8 @@ int main_md5(int argc, char* argv[])
  */
 void MDString(char* string)
 {
-	MD_CTX context;
-	unsigned char digest[16];
+	MD_CTX context = {0};
+	unsigned char digest[16] = { 0 };
 	unsigned int len = strlen(string);
 	MDInit(&context);
 	MDUpdate(&context, string, len);
@@ -165,9 +165,10 @@ void MDFile(char* filename)
  */
 void MDFilter()
 {
-	MD_CTX context;
-	int len;
-	unsigned char buffer[16], digest[16];
+	MD_CTX context = {0};
+	int len = 0;
+	unsigned char buffer[16] = { 0 };
+	unsigned char digest[16] = { 0 };
 	MDInit(&context);
 	while (len = fread(buffer, 1, 16, stdin))
 		MDUpdate(&context, buffer, len);

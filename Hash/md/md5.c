@@ -110,20 +110,24 @@ void MD5Update(
 	unsigned int inputLen /* length of input block */
 )
 {
-	unsigned int i, index, partLen;
+	unsigned int i = 0;
+	unsigned int index = 0;
+	unsigned int partLen = 0;
 	/* Compute number of bytes mod 64 */
 	index = (unsigned int)((context->count[0] >> 3) & 0x3F);
 	/* Update number of bits */
 	if ((context->count[0] += ((UINT4)inputLen << 3))
 		< ((UINT4)inputLen << 3))
-		context->count[1]++;
+		++(context->count[1]);
 	context->count[1] += ((UINT4)inputLen >> 29);
 	partLen = 64 - index;
 	/* Transform as many times as possible.
    */
-	if (inputLen >= partLen) {
+	if (inputLen >= partLen) 
+	{
 		MD5_memcpy
 		((POINTER)&context->buffer[index], (POINTER)input, partLen);
+
 		MD5Transform(context->state, context->buffer);
 		for (i = partLen; i + 63 < inputLen; i += 64)
 			MD5Transform(context->state, &input[i]);
@@ -144,8 +148,9 @@ void MD5Final(
 	MD5_CTX* context /* context */
 	)
 {
-	unsigned char bits[8];
-	unsigned int index, padLen;
+	unsigned char bits[8] = { 0 };
+	unsigned int index = 0;
+	unsigned int padLen = 0;
 	/* Save number of bits */
 	Encode(bits, context->count, 8);
 	/* Pad out to 56 mod 64.
@@ -277,8 +282,11 @@ static void Decode(UINT4* output,	unsigned char* input,	unsigned int len)
 {
 	unsigned int i, j;
 	for (i = 0, j = 0; j < len; i++, j += 4)
-		output[i] = ((UINT4)input[j]) | (((UINT4)input[j + 1]) << 8) |
-		(((UINT4)input[j + 2]) << 16) | (((UINT4)input[j + 3]) << 24);
+		output[i] = 
+			((UINT4)input[j]) 
+			| (((UINT4)input[j + 1]) << 8) 
+			| (((UINT4)input[j + 2]) << 16) 
+			| (((UINT4)input[j + 3]) << 24);
 }
 
 /* Note: Replace "for loop" with standard memcpy if possible.
