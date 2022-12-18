@@ -38,8 +38,12 @@
 #define S43 15
 #define S44 21
 
-static void MD5Transform(UINT4 state[4], unsigned char block[64]);
-static void Encode(unsigned char* output, UINT4* input, unsigned int len);
+#define N_BYTES_BLOCK_SIZE 64
+#define N_BYTES_MSG_SIZE 8
+#define N_BYTES_DIGEST_SIZE 16
+
+static void MD5Transform(UINT4 state[4], unsigned char block[N_BYTES_BLOCK_SIZE]);
+static void Encode(unsigned char* output, unsigned char* input, unsigned int len);
 static void Decode(UINT4* output, unsigned char* input, unsigned int len);
 static void MD5_memcpy(POINTER output, POINTER input, unsigned int len);
 static void MD5_memset(POINTER output, int value, unsigned int len);
@@ -92,7 +96,8 @@ Rotation is separate from addition to prevent recomputation.
 */
 void MD5Init(MD5_CTX* context /* context */)
 {
-	context->count[0] = context->count[1] = 0;
+	//context->count[0] = context->count[1] = 0;
+	context->nBits = 0;
 	/* Load magic initialization constants.
    */
 	context->state[0] = 0x67452301;
@@ -105,64 +110,86 @@ void MD5Init(MD5_CTX* context /* context */)
  context.
  */
 void MD5Update(
-	MD5_CTX* context, /* context */
-	unsigned char* input, /* input block */
-	unsigned int inputLen /* length of input block */
+	MD5_CTX* pContext, /* context */
+	unsigned char* pInBlock, /* input block */
+	unsigned int nBytesOfBlock /* length of input block */
 )
 {
 	unsigned int i = 0;
-	unsigned int index = 0;
+	unsigned int nCurBytes = 0;
 	unsigned int partLen = 0;
-	/* Compute number of bytes mod 64 */
-	index = (unsigned int)((context->count[0] >> 3) & 0x3F);
-	/* Update number of bits */
-	if ((context->count[0] += ((UINT4)inputLen << 3))
-		< ((UINT4)inputLen << 3))
-		++(context->count[1]);
-	context->count[1] += ((UINT4)inputLen >> 29);
-	partLen = 64 - index;
+	/* 
+		Compute number of bytes mod 64
+		& 0x3F: mod 64
+	*/
+	//nCurBytes = (unsigned int)((pContext->count[0] >> 3) & 0x3F);
+	nCurBytes = (pContext->nBits >> 3) & 0x3F;
+	partLen = 64 - nCurBytes;
+
+	/* Update number of bits 
+	*  Take overflow into account
+	*/
+	pContext->nBits += ((UINT8)nBytesOfBlock << 3);
+	// if ((pContext->count[0] += ((UINT4)nBytesOfBlock << 3))
+	// 	< ((UINT4)nBytesOfBlock << 3))
+	// 	++(pContext->count[1]);
+	// pContext->count[1] += ((UINT4)nBytesOfBlock >> 29);
+
+
 	/* Transform as many times as possible.
    */
-	if (inputLen >= partLen) 
+	if (nBytesOfBlock >= partLen) 
 	{
 		MD5_memcpy
-		((POINTER)&context->buffer[index], (POINTER)input, partLen);
+		((POINTER)&pContext->buffer[nCurBytes], (POINTER)pInBlock, partLen);
 
-		MD5Transform(context->state, context->buffer);
-		for (i = partLen; i + 63 < inputLen; i += 64)
-			MD5Transform(context->state, &input[i]);
-		index = 0;
+		MD5Transform(pContext->state, pContext->buffer);
+		for (i = partLen; i + 63 < nBytesOfBlock; i += 64)
+			MD5Transform(pContext->state, &pInBlock[i]);
+		nCurBytes = 0;
 	}
 	else
 		i = 0;
 	/* Buffer remaining input */
 	MD5_memcpy
-	((POINTER)&context->buffer[index], (POINTER)&input[i],
-		inputLen - i);
+	((POINTER)&pContext->buffer[nCurBytes], (POINTER)&pInBlock[i],
+		nBytesOfBlock - i);
 }
 /* MD5 finalization. Ends an MD5 message-digest operation, writing the
  the message digest and zeroizing the context.
  */
 void MD5Final(
-	unsigned char digest[16], /* message digest */
+	unsigned char digest[N_BYTES_DIGEST_SIZE], /* message digest */
 	MD5_CTX* context /* context */
 	)
 {
-	unsigned char bits[8] = { 0 };
-	unsigned int index = 0;
+	unsigned char arrMsgLength[N_BYTES_MSG_SIZE] = { 0 };
+	unsigned int nCurBytes = 0;
 	unsigned int padLen = 0;
-	/* Save number of bits */
-	Encode(bits, context->count, 8);
-	/* Pad out to 56 mod 64.
-   */
-	index = (unsigned int)((context->count[0] >> 3) & 0x3f);
-	padLen = (index < 56) ? (56 - index) : (120 - index);
+	/* Save number of bits into 64 bits(8 bytes)
+	* Maximum message length for MD5 is 2**64 bits
+	* memcpy() can be used if little-endian default
+	*/
+	Encode(arrMsgLength, &(context->nBits), N_BYTES_MSG_SIZE);
+
+
+	/* Step 1. Append Padding Bits
+	*	Pad out to 56 mod 64 == 448 mod 512.
+	*	& 0x3F:equal to ( % 0x40), mod 64
+	*/
+	nCurBytes = (context->nBits >> 3) & 0x3f;
+	// if nCurBytes >= 56
+	// (56 + 64 - nCurBytes) bytes to be padded
+	padLen = (nCurBytes < 56) ? (56 - nCurBytes) : (120 - nCurBytes);
 	MD5Update(context, PADDING, padLen);
-	/* Append length (before padding) */
-	MD5Update(context, bits, 8);
+
+	/* Step2. Append length (calc before padding)
+	* 
+	*/
+	MD5Update(context, arrMsgLength, 8);
 
 	/* Store state in digest */
-	Encode(digest, context->state, 16);
+	Encode(digest, context->state, N_BYTES_DIGEST_SIZE);
 	/* Zeroize sensitive information.
    */
 	MD5_memset((POINTER)context, 0, sizeof(*context));
@@ -177,14 +204,14 @@ void MD5Final(
 	for i in range(64):
 		print("%d, %s" % (i, hex(T[i])))
  */
-static void MD5Transform(UINT4 state[4],unsigned char block[64])
+static void MD5Transform(UINT4 state[4],unsigned char block[N_BYTES_BLOCK_SIZE])
 {
 	UINT4 a = state[0]; 
 	UINT4 b = state[1];
 	UINT4 c = state[2];
 	UINT4 d = state[3];
 	UINT4 x[16] = {0};
-	Decode(x, block, 64);
+	Decode(x, block, N_BYTES_BLOCK_SIZE);
 	/* Round 1 */
 	FF(a, b, c, d, x[0], S11, 0xd76aa478); /* 1 */
 	FF(d, a, b, c, x[1], S12, 0xe8c7b756); /* 2 */
@@ -265,14 +292,22 @@ static void MD5Transform(UINT4 state[4],unsigned char block[64])
 /* Encodes input (UINT4) into output (unsigned char). Assumes len is
  a multiple of 4.
  */
-static void Encode(unsigned char* output,	UINT4* input,unsigned int len)
+static void Encode(unsigned char* output, unsigned char* input,unsigned int len)
 {
-	unsigned int i, j;
-	for (i = 0, j = 0; j < len; i++, j += 4) {
-		output[j] = (unsigned char)(input[i] & 0xff);
-		output[j + 1] = (unsigned char)((input[i] >> 8) & 0xff);
-		output[j + 2] = (unsigned char)((input[i] >> 16) & 0xff);
-		output[j + 3] = (unsigned char)((input[i] >> 24) & 0xff);
+	unsigned int i;
+	if (output && input)
+	{
+		/*for (i = 0, j = 0; j < len; i++, j += 4) {
+			output[j] = (unsigned char)(input[i] & 0xff);
+			output[j + 1] = (unsigned char)((input[i] >> 8) & 0xff);
+			output[j + 2] = (unsigned char)((input[i] >> 16) & 0xff);
+			output[j + 3] = (unsigned char)((input[i] >> 24) & 0xff);
+		}*/
+		for (i = 0; i < len; ++i)
+		{
+			output[i] = input[i] & 0xff;
+		}
+
 	}
 }
 /* Decodes input (unsigned char) into output (UINT4). Assumes len is
