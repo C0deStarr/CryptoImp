@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include "md5/md5.h"
+#include "md/mddriver.h"
 
 int main(int argc, char* argv[])
 {
-	test_md5();
+	MDTestSuite();
 	getchar();
 	return 0;
 }

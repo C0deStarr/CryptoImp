@@ -19,12 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="md5\md5.c" />
-    <ClCompile Include="md5\mddriver.c" />
+    <ClCompile Include="main.c" />
+    <ClCompile Include="md\md5.c" />
+    <ClCompile Include="md\mddriver.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="md5\global.h" />
-    <ClInclude Include="md5\md5.h" />
+    <ClInclude Include="md\global.h" />
+    <ClInclude Include="md\md5.h" />
+    <ClInclude Include="md\mddriver.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
