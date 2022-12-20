@@ -12,8 +12,8 @@ typedef struct _HashState {
     uint64_t nLenInBits;
 } HashState;
 
-ERR_CRYPTO SHA1_init(HashState* pHashState);
-ERR_CRYPTO SHA1_update(HashState* pHashState, const uint64_t* pBuf, uint64_t nLen);
-ERR_CRYPTO SHA1_digest(const HashState* pHashState, uint64_t digest[DIGEST_SIZE]);
+ErrCrypto SHA1_init(HashState* pHashState);
+ErrCrypto SHA1_update(HashState* pHashState, const uint64_t* pBuf, uint64_t nLen);
+ErrCrypto SHA1_digest(const HashState* pHashState, uint64_t digest[DIGEST_SIZE]);
 void test_sha1();
 #endif
