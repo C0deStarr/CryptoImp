@@ -178,7 +178,7 @@ void MD5Final(
 
 
 	/* Step 1. Append Padding Bits
-	*	Pad out to 56 mod 64 == 448 mod 512.
+	*	Pad out to 56 bytes mod 64 == 448 bits mod 512.
 	*	& 0x3F:equal to ( % 0x40), mod 64
 	*/
 	nCurBytes = (context->nBits >> 3) & 0x3f;
