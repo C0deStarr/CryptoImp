@@ -7,6 +7,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Encode", "Encode\Encode.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hash", "Hash\Hash.vcxproj", "{8E6852BC-0363-4D06-A9EA-81C1787835CB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{169684BD-B768-4D9A-BD3B-7E329B5D21E6}"
+	ProjectSection(SolutionItems) = preProject
+		common\common.h = common\common.h
+		common\errors.h = common\errors.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

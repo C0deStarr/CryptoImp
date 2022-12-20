@@ -1,8 +1,11 @@
-/* GLOBAL.H - RSAREF types and constants
+/* COMMON.H - RSAREF types and constants
  */
  
-#ifndef _GLOBAL_H
-#define _GLOBAL_H
+#ifndef _COMMON_H
+#define _COMMON_H
+
+#include "errors.h"
+
  /* POINTER defines a generic pointer type */
 typedef unsigned char* POINTER;
 /* UINT2 defines a 2-byte word */

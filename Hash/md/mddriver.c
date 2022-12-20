@@ -18,7 +18,6 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
-#include "global.h"
 #include "mddriver.h"
 #if MD == 2
 #include "md2.h"

@@ -22,11 +22,12 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="md\md5.c" />
     <ClCompile Include="md\mddriver.c" />
+    <ClCompile Include="sha1\sha1.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="md\global.h" />
     <ClInclude Include="md\md5.h" />
     <ClInclude Include="md\mddriver.h" />
+    <ClInclude Include="sha1\sha1.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

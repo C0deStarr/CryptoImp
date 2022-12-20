@@ -20,7 +20,7 @@ documentation and/or software.
 
  #ifndef _MD5_H
  #define _MD5_H
- #include "../../common/global.h"
+ #include "../../common/common.h"
  /* MD5 context. */
 typedef struct {
 	UINT4 state[4]; /* state (ABCD) */

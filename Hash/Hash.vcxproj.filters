@@ -16,6 +16,9 @@
     <Filter Include="md">
       <UniqueIdentifier>{9a78e462-1718-4250-a05d-0b7dd0fff88c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sha1">
+      <UniqueIdentifier>{a0177abd-ba1b-4d28-9dd8-ec558b6afa73}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -27,16 +30,19 @@
     <ClCompile Include="md\mddriver.c">
       <Filter>md</Filter>
     </ClCompile>
+    <ClCompile Include="sha1\sha1.c">
+      <Filter>sha1</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="md\global.h">
-      <Filter>md</Filter>
-    </ClInclude>
     <ClInclude Include="md\md5.h">
       <Filter>md</Filter>
     </ClInclude>
     <ClInclude Include="md\mddriver.h">
       <Filter>md</Filter>
+    </ClInclude>
+    <ClInclude Include="sha1\sha1.h">
+      <Filter>sha1</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
