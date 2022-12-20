@@ -1,7 +1,8 @@
 #ifndef _ERRORS_H
 #define _ERRORS_H
 
-typedef enum _ERR_CRYPTO {
+typedef enum _Err_Crypto {
+	ERR_OK					= 0 ,
 	ERR_NULL                = 1	,
 	ERR_MEMORY              = 2	,
 	ERR_NOT_ENOUGH_DATA     = 3	,
@@ -20,6 +21,6 @@ typedef enum _ERR_CRYPTO {
 	ERR_EC_CURVE            = 16,
 	ERR_MODULUS             = 17,
 	ERR_UNKNOWN             = 32
-}ERR_CRYPTO;
+}ErrCrypto;
 
 #endif
