@@ -23,9 +23,9 @@ documentation and/or software.
  #include "../../common/common.h"
  /* MD5 context. */
 typedef struct {
-	UINT4 state[4]; /* state (ABCD) */
+	uint32_t state[4]; /* state (ABCD) */
 	//UINT4 count[2]; /* number of bits, modulo 2^64 (lsb first) */
-	UINT8 nBits;	/* Maximum message length for MD5 is 2**64 bits */
+	uint64_t nBits;	/* Maximum message length for MD5 is 2**64 bits */
 	unsigned char buffer[64]; /* input buffer */
 } MD5_CTX;
 

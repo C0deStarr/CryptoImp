@@ -41,9 +41,9 @@
 #define N_BYTES_MSG_SIZE 8
 #define N_BYTES_DIGEST_SIZE 16
 
-static void MD5Transform(UINT4 state[4], unsigned char block[N_BYTES_BLOCK_SIZE]);
+static void MD5Transform(uint32_t state[4], unsigned char block[N_BYTES_BLOCK_SIZE]);
 //static void Encode(unsigned char* output, UINT4* input, unsigned int len);
-static void u8to32_little(UINT4* output, unsigned char* input, unsigned int len);
+static void u8to32_little(uint32_t* output, unsigned char* input, unsigned int len);
 static void MD5_memcpy(POINTER output, POINTER input, unsigned int len);
 static void MD5_memset(POINTER output, int value, unsigned int len);
 
@@ -70,22 +70,22 @@ static unsigned char PADDING[64] = {
 Rotation is separate from addition to prevent recomputation.
 */
 #define FF(a, b, c, d, x, s, ac) { \
-	(a) += F ((b), (c), (d)) + (x) + (UINT4)(ac); \
+	(a) += F ((b), (c), (d)) + (x) + (uint32_t)(ac); \
 	(a) = ROTATE_LEFT ((a), (s)); \
 	(a) += (b); \
 }
 #define GG(a, b, c, d, x, s, ac) { \
-	(a) += G ((b), (c), (d)) + (x) + (UINT4)(ac); \
+	(a) += G ((b), (c), (d)) + (x) + (uint32_t)(ac); \
 	(a) = ROTATE_LEFT ((a), (s)); \
 	(a) += (b); \
 }
 #define HH(a, b, c, d, x, s, ac) { \
-	(a) += H ((b), (c), (d)) + (x) + (UINT4)(ac); \
+	(a) += H ((b), (c), (d)) + (x) + (uint32_t)(ac); \
 	(a) = ROTATE_LEFT ((a), (s)); \
 	(a) += (b); \
 }
 #define II(a, b, c, d, x, s, ac) { \
-	(a) += I ((b), (c), (d)) + (x) + (UINT4)(ac); \
+	(a) += I ((b), (c), (d)) + (x) + (uint32_t)(ac); \
 	(a) = ROTATE_LEFT ((a), (s)); \
 	(a) += (b); \
 }
@@ -129,7 +129,7 @@ void MD5Update(
 	/* Update number of bits 
 	*  Take overflow into account
 	*/
-	pContext->nBits += ((UINT8)nBytesInput << 3);
+	pContext->nBits += ((uint64_t)nBytesInput << 3);
 	// if ((pContext->count[0] += ((UINT4)nBytesOfBlock << 3))
 	// 	< ((UINT4)nBytesOfBlock << 3))
 	// 	++(pContext->count[1]);
@@ -207,13 +207,13 @@ void MD5Final(
 	for i in range(64):
 		print("%d, %s" % (i, hex(T[i])))
  */
-static void MD5Transform(UINT4 state[4],unsigned char block[N_BYTES_BLOCK_SIZE])
+static void MD5Transform(uint32_t state[4],unsigned char block[N_BYTES_BLOCK_SIZE])
 {
-	UINT4 a = state[0]; 
-	UINT4 b = state[1];
-	UINT4 c = state[2];
-	UINT4 d = state[3];
-	UINT4 x[16] = {0};
+	uint32_t a = state[0]; 
+	uint32_t b = state[1];
+	uint32_t c = state[2];
+	uint32_t d = state[3];
+	uint32_t x[16] = {0};
 	u8to32_little(x, block, N_BYTES_BLOCK_SIZE);
 	/* Round 1 */
 	FF(a, b, c, d, x[0], S11, 0xd76aa478); /* 1 */
@@ -313,15 +313,15 @@ static void Encode(unsigned char* output, UINT4* input,unsigned int len)
 /* Decodes input (unsigned char) into output (UINT4). Assumes len is
  a multiple of 4.
  */
-static void u8to32_little(UINT4* output,	unsigned char* input,	unsigned int len)
+static void u8to32_little(uint32_t* output,	unsigned char* input,	unsigned int len)
 {
 	unsigned int i, j;
 	for (i = 0, j = 0; j < len; i++, j += 4)
 		output[i] = 
-			((UINT4)input[j]) 
-			| (((UINT4)input[j + 1]) << 8) 
-			| (((UINT4)input[j + 2]) << 16) 
-			| (((UINT4)input[j + 3]) << 24);
+			((uint32_t)input[j]) 
+			| (((uint32_t)input[j + 1]) << 8) 
+			| (((uint32_t)input[j + 2]) << 16) 
+			| (((uint32_t)input[j + 3]) << 24);
 }
 
 /* Note: Replace "for loop" with standard memcpy if possible.
