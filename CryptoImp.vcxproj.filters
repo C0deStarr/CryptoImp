@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Hash">
+      <UniqueIdentifier>{cfd116b3-7828-4c10-8c10-fa24f1104858}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Encode">
+      <UniqueIdentifier>{21663911-3a8b-4300-9efe-25d529710df7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hash\md">
+      <UniqueIdentifier>{7750a01c-eb47-4075-a120-930e6b425d97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hash\sha">
+      <UniqueIdentifier>{891ade65-0619-4ba6-81f3-d5120e5afe46}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\errors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\endianess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Encode\b64.h">
+      <Filter>Encode</Filter>
+    </ClInclude>
+    <ClInclude Include="Hash\md\md5.h">
+      <Filter>Hash\md</Filter>
+    </ClInclude>
+    <ClInclude Include="Hash\md\mddriver.h">
+      <Filter>Hash\md</Filter>
+    </ClInclude>
+    <ClInclude Include="Hash\sha\sha1.h">
+      <Filter>Hash\sha</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="common\endianess.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Encode\b64.cpp">
+      <Filter>Encode</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash\md\md5.c">
+      <Filter>Hash\md</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash\md\mddriver.c">
+      <Filter>Hash\md</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash\sha\sha1.c">
+      <Filter>Hash\sha</Filter>
+    </ClCompile>
+    <ClCompile Include="main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

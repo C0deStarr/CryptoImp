@@ -18,18 +18,11 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="b64.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="b64.cpp" />
-    <ClCompile Include="main.cpp" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{7ba3cc0c-8398-44dd-83e6-cb458f44fa04}</ProjectGuid>
-    <RootNamespace>Encode</RootNamespace>
+    <ProjectGuid>{79c60a63-620b-4cf7-9e69-31315f397003}</ProjectGuid>
+    <RootNamespace>CryptoImp</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -79,15 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -145,6 +142,24 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="common\common.h" />
+    <ClInclude Include="common\endianess.h" />
+    <ClInclude Include="common\errors.h" />
+    <ClInclude Include="Encode\b64.h" />
+    <ClInclude Include="Hash\md\md5.h" />
+    <ClInclude Include="Hash\md\mddriver.h" />
+    <ClInclude Include="Hash\sha\sha1.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="common\endianess.c" />
+    <ClCompile Include="Encode\b64.cpp" />
+    <ClCompile Include="Hash\md\md5.c" />
+    <ClCompile Include="Hash\md\mddriver.c" />
+    <ClCompile Include="Hash\sha\sha1.c" />
+    <ClCompile Include="main.c" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
