@@ -1,6 +1,6 @@
 #include <string.h>
 #include "sha1.h"
-
+#include <common/endianess.h>
 
 #define CH(x,y,z)       ((x & y) ^ (~x & z))            /** 0  <= t <= 19 **/
 #define PARITY(x,y,z)   (x ^ y ^ z)                     /** 20 <= t <= 39  and 60 <= t <= 79 **/
@@ -114,7 +114,7 @@ static ErrCrypto sha1_compress(HashState* pHashState)
     // t <= 15
     for (i = 0; i < 16; ++i)
     {
-        W[i] = u8to32_big(pHashState->block[4*i]);
+        W[i] = u8to32_big(&(pHashState->block[4 * i]));
     }
     
 	// Initialize the five working variables
@@ -219,6 +219,7 @@ static ErrCrypto sha1_compress(HashState* pHashState)
 
 	return errRet;
 }
+
 ErrCrypto SHA1_update(HashState* pHashState, const uint64_t* pBuf, uint64_t nLen)
 {
 	ErrCrypto errRet = ERR_OK;
@@ -229,14 +230,14 @@ ErrCrypto SHA1_update(HashState* pHashState, const uint64_t* pBuf, uint64_t nLen
 
 	while (nLen > 0)
 	{
-		nBytesNeeded = BLOCK_SIZE - pHashState->nBytesOffset;
+		nBytesNeeded = BLOCK_SIZE - pHashState->nBytesLen;
 		nBytesCopy = (nBytesNeeded > nLen) ? nLen : nBytesNeeded;
 		memcpy(pHashState->hash, pBuf, nBytesCopy);
 		pBuf += nBytesCopy;
-		pHashState->nBytesOffset += nBytesCopy;
+		pHashState->nBytesLen += nBytesCopy;
 		nLen -= nBytesCopy;
 
-		if (BLOCK_SIZE == pHashState->nBytesOffset)
+		if (BLOCK_SIZE == pHashState->nBytesLen)
 		{
 			// let's do the 80 steps
 			errRet = sha1_compress(pHashState);
@@ -244,7 +245,7 @@ ErrCrypto SHA1_update(HashState* pHashState, const uint64_t* pBuf, uint64_t nLen
 				return errRet;
 
 			// waiting for the next block
-			pHashState->nBytesOffset = 0;
+			pHashState->nBytesLen = 0;
 			errRet = AddBitsLen(pHashState, BLOCK_SIZE*8);
 			if(errRet)
 				return errRet;
@@ -254,11 +255,44 @@ ErrCrypto SHA1_update(HashState* pHashState, const uint64_t* pBuf, uint64_t nLen
 	return errRet;
 }
 
-ErrCrypto SHA1_digest(const HashState* pHashState, uint64_t digest[DIGEST_SIZE])
+ErrCrypto SHA1_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
 	ErrCrypto errRet = ERR_OK;
+    uint8_t nPadLen = 0;
+    int i = 0;
+    if(!pHashState || !pDigest)
+        return ERR_NULL;
+    if (DIGEST_SIZE != nDigest)
+        return ERR_DIGEST_SIZE;
 
+    // After last SHA1_update()
+    // maybe 0 < nBytesLen <= BLOCK_SIZE
+    errRet = AddBitsLen(pHashState, (pHashState->nBytesLen) * 8);
+    if (errRet) {
+        return ERR_MAX_DATA;
+    }
 
+    // Padding the Message
+    // 1 + 0s + 8-byte msg length
+    nPadLen = (pHashState->nBytesLen < 56)
+        ? (56 - pHashState->nBytesLen) 
+        : (BLOCK_SIZE + 56 - pHashState->nBytesLen);
+    
+    pHashState->block[(pHashState->nBytesLen)++] = 0x80;
+    memset(&(pHashState->block[(pHashState->nBytesLen)])
+        ,0
+        , nPadLen - 1);
+    u32to8_big(&pHashState->block[BLOCK_SIZE - 8]
+        , pHashState->nBitsLen << 32);
+    u32to8_big(&pHashState->block[BLOCK_SIZE - 4]
+        , pHashState->nBitsLen );
+
+    sha1_compress(pHashState);
+
+    for (i = 0; i < 5; i++) {
+        u32to8_big(pDigest, pHashState->hash[i]);
+        pDigest += 4;
+    }
 	return errRet;
 }
 
@@ -267,6 +301,13 @@ void test_sha1()
 	HashState hashState = {0};
 	ErrCrypto err = ERR_OK;
 	uint8_t data[] = {"1234567890"};
+    uint8_t digest[DIGEST_SIZE] = {0};
+    int i = 0 ;
 	err = SHA1_init(&hashState);
 	err = SHA1_update(&hashState, data, sizeof(data) - 1);
+    err = SHA1_digest(&hashState, digest, DIGEST_SIZE);
+    for (i = 0; i < DIGEST_SIZE; i++) {
+        printf("%02X", digest[i]);
+    }
+    printf("\n");
 }
