@@ -232,7 +232,7 @@ ErrCrypto SHA1_update(HashState* pHashState, const uint64_t* pBuf, uint64_t nLen
 	{
 		nBytesNeeded = BLOCK_SIZE - pHashState->nBytesLen;
 		nBytesCopy = (nBytesNeeded > nLen) ? nLen : nBytesNeeded;
-		memcpy(pHashState->hash, pBuf, nBytesCopy);
+		memcpy(pHashState->block, pBuf, nBytesCopy);
 		pBuf += nBytesCopy;
 		pHashState->nBytesLen += nBytesCopy;
 		nLen -= nBytesCopy;
@@ -286,7 +286,13 @@ ErrCrypto SHA1_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIG
         , pHashState->nBitsLen << 32);
     u32to8_big(&pHashState->block[BLOCK_SIZE - 4]
         , pHashState->nBitsLen );
-
+    /*
+      abcde-->
+        61626364 65800000 00000000 00000000
+        00000000 00000000 00000000 00000000
+        00000000 00000000 00000000 00000000
+        00000000 00000000 00000000 00000028
+    */
     sha1_compress(pHashState);
 
     for (i = 0; i < 5; i++) {
@@ -300,14 +306,20 @@ void test_sha1()
 {
 	HashState hashState = {0};
 	ErrCrypto err = ERR_OK;
-	uint8_t data[] = {"1234567890"};
+    uint8_t data[] = "abcde";
+    
     uint8_t digest[DIGEST_SIZE] = {0};
     int i = 0 ;
 	err = SHA1_init(&hashState);
 	err = SHA1_update(&hashState, data, sizeof(data) - 1);
     err = SHA1_digest(&hashState, digest, DIGEST_SIZE);
+
+    /*
+    * abcde-->
+    *   03de6c570bfe24bfc328ccd7ca46b76eadaf4334
+    */
     for (i = 0; i < DIGEST_SIZE; i++) {
-        printf("%02X", digest[i]);
+        printf("%02x", digest[i]);
     }
     printf("\n");
 }
