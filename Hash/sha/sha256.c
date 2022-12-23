@@ -1,7 +1,7 @@
 
 #include "./sha256.h"
 #include <common/endianess.h>
-
+#include <string.h>
 
 static const uint32_t K[SCHEDULE_SIZE] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b,
@@ -83,6 +83,8 @@ ErrCrypto AddBitsLen(HashState* pHashState, uint16_t nBits)
 
 ErrCrypto sha256_compress(HashState* pHashState)
 {
+    ErrCrypto errRet = ERR_OK;
+
     uint32_t a = 0;
     uint32_t b = 0;
     uint32_t c = 0;
@@ -103,8 +105,6 @@ ErrCrypto sha256_compress(HashState* pHashState)
     for (; i < SCHEDULE_SIZE; i++) {
         W[i] = SCHEDULE(i);
     }
-
-
 
     // Initialize the eight working variables
     a = pHashState->hash[0];
@@ -193,6 +193,8 @@ ErrCrypto sha256_compress(HashState* pHashState)
     pHashState->hash[5] += f;
     pHashState->hash[6] += g;
     pHashState->hash[7] += h;
+
+    return errRet;
 }
 
 ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
@@ -230,10 +232,44 @@ ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
     return errRet;
 }
 
-ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* digest, int nDigest/* DIGEST_SIZE */)
+ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
     ErrCrypto errRet = ERR_OK;
+    uint8_t nPadLen = 0;
+    int i = 0;
+    if (!pHashState || !pDigest)
+        return ERR_NULL;
+    if (DIGEST_SIZE != nDigest)
+        return ERR_DIGEST_SIZE;
 
+    // After last SHA1_update()
+    // maybe 0 < nBytesLen <= BLOCK_SIZE
+    errRet = AddBitsLen(pHashState, (pHashState->nBytesLen) * 8);
+    if (errRet) {
+        return ERR_MAX_DATA;
+    }
+
+    // Padding the Message
+    // 1 + 0s + 8-byte msg length
+    nPadLen = (pHashState->nBytesLen < 56)
+        ? (56 - pHashState->nBytesLen)
+        : (BLOCK_SIZE + 56 - pHashState->nBytesLen);
+
+    pHashState->block[(pHashState->nBytesLen)++] = 0x80;
+    memset(&(pHashState->block[(pHashState->nBytesLen)])
+        , 0
+        , nPadLen - 1);
+    u32to8_big(&pHashState->block[BLOCK_SIZE - 8]
+        , pHashState->nBitsLen << 32);
+    u32to8_big(&pHashState->block[BLOCK_SIZE - 4]
+        , pHashState->nBitsLen);
+
+    sha256_compress(pHashState);
+
+    for (i = 0; i < 8; i++) {
+        u32to8_big(pDigest, pHashState->hash[i]);
+        pDigest += WORD_SIZE;
+    }
     return errRet;
 }
 
@@ -242,6 +278,13 @@ void test_sha256()
     HashState hashState = { 0 };
     ErrCrypto err = ERR_OK;
     uint8_t data[] = "abcde";
+    uint8_t digest[DIGEST_SIZE];
+    int i = 0;
     SHA256_init(&hashState);
     SHA256_update(&hashState, data, sizeof(data) - 1);
+    SHA256_digest(&hashState, digest, DIGEST_SIZE);
+    for (i = 0; i < DIGEST_SIZE; i++) {
+        printf("%02x", digest[i]);
+    }
+    printf("\n");
 }
