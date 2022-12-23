@@ -39,6 +39,41 @@ ErrCrypto AddBitsLen(HashState* pHashState, uint16_t nBits)
     return (pHashState->nBitsLen < nBits) ? ERR_MAX_DATA : ERR_OK;
 }
 
+ErrCrypto sha1_compress(HashState* pHashState)
+{
+    uint32_t a = 0;
+    uint32_t b = 0;
+    uint32_t c = 0;
+    uint32_t d = 0;
+    uint32_t e = 0;
+    uint32_t f = 0;
+    uint32_t g = 0;
+    uint32_t h = 0;
+
+
+    // Initialize the eight working variables
+    a = pHashState->hash[0];
+    b = pHashState->hash[1];
+    c = pHashState->hash[2];
+    d = pHashState->hash[3];
+    e = pHashState->hash[4];
+    f = pHashState->hash[5];
+    g = pHashState->hash[6];
+    h = pHashState->hash[7];
+
+
+
+
+    // Compute the intermediate hash value
+    pHashState->hash[0] += a;
+    pHashState->hash[1] += b;
+    pHashState->hash[2] += c;
+    pHashState->hash[3] += d;
+    pHashState->hash[4] += e;
+    pHashState->hash[5] += f;
+    pHashState->hash[6] += g;
+    pHashState->hash[7] += h;
+}
 
 ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 {
