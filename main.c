@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include "Hash/md/mddriver.h"
 #include "Hash/sha/sha1.h"
-int main(int argc, char* argv[])
+#include "./Hash/sha/sha256.h"
+
+int main()
 {
-	// MDTestSuite();
-	test_sha1();
+	test_sha256();
 	getchar();
 	return 0;
 }
+
+
