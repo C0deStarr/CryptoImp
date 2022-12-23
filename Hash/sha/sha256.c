@@ -35,6 +35,11 @@ static const uint32_t K[SCHEDULE_SIZE] = {
     + sigma_0_256(W[t-15])  \
     + W[t-16])
 
+// 64 steps
+#define CYCLE(a,b,c,d,e,f,g,h,t) \
+    h += SIGMA_1_256(e) + CH(e,f,g) + K[t]  + W[t]; \
+    d += h; \
+    h += SIGMA_0_256(a) + MAJ(a,b,c);
 
 static const uint32_t H[8] = {
     0x6a09e667,
@@ -98,7 +103,8 @@ ErrCrypto sha256_compress(HashState* pHashState)
     for (; i < SCHEDULE_SIZE; i++) {
         W[i] = SCHEDULE(i);
     }
-    // 64 steps
+
+
 
     // Initialize the eight working variables
     a = pHashState->hash[0];
@@ -110,6 +116,71 @@ ErrCrypto sha256_compress(HashState* pHashState)
     g = pHashState->hash[6];
     h = pHashState->hash[7];
 
+    // 64 steps
+    CYCLE(a, b, c, d, e, f, g, h, 0);
+    CYCLE(h, a, b, c, d, e, f, g, 1);
+    CYCLE(g, h, a, b, c, d, e, f, 2);
+    CYCLE(f, g, h, a, b, c, d, e, 3);
+    CYCLE(e, f, g, h, a, b, c, d, 4);
+    CYCLE(d, e, f, g, h, a, b, c, 5);
+    CYCLE(c, d, e, f, g, h, a, b, 6);
+    CYCLE(b, c, d, e, f, g, h, a, 7);
+    CYCLE(a, b, c, d, e, f, g, h, 8);
+    CYCLE(h, a, b, c, d, e, f, g, 9);
+    CYCLE(g, h, a, b, c, d, e, f, 10);
+    CYCLE(f, g, h, a, b, c, d, e, 11);
+    CYCLE(e, f, g, h, a, b, c, d, 12);
+    CYCLE(d, e, f, g, h, a, b, c, 13);
+    CYCLE(c, d, e, f, g, h, a, b, 14);
+    CYCLE(b, c, d, e, f, g, h, a, 15);
+    CYCLE(a, b, c, d, e, f, g, h, 16);
+    CYCLE(h, a, b, c, d, e, f, g, 17);
+    CYCLE(g, h, a, b, c, d, e, f, 18);
+    CYCLE(f, g, h, a, b, c, d, e, 19);
+    CYCLE(e, f, g, h, a, b, c, d, 20);
+    CYCLE(d, e, f, g, h, a, b, c, 21);
+    CYCLE(c, d, e, f, g, h, a, b, 22);
+    CYCLE(b, c, d, e, f, g, h, a, 23);
+    CYCLE(a, b, c, d, e, f, g, h, 24);
+    CYCLE(h, a, b, c, d, e, f, g, 25);
+    CYCLE(g, h, a, b, c, d, e, f, 26);
+    CYCLE(f, g, h, a, b, c, d, e, 27);
+    CYCLE(e, f, g, h, a, b, c, d, 28);
+    CYCLE(d, e, f, g, h, a, b, c, 29);
+    CYCLE(c, d, e, f, g, h, a, b, 30);
+    CYCLE(b, c, d, e, f, g, h, a, 31);
+    CYCLE(a, b, c, d, e, f, g, h, 32);
+    CYCLE(h, a, b, c, d, e, f, g, 33);
+    CYCLE(g, h, a, b, c, d, e, f, 34);
+    CYCLE(f, g, h, a, b, c, d, e, 35);
+    CYCLE(e, f, g, h, a, b, c, d, 36);
+    CYCLE(d, e, f, g, h, a, b, c, 37);
+    CYCLE(c, d, e, f, g, h, a, b, 38);
+    CYCLE(b, c, d, e, f, g, h, a, 39);
+    CYCLE(a, b, c, d, e, f, g, h, 40);
+    CYCLE(h, a, b, c, d, e, f, g, 41);
+    CYCLE(g, h, a, b, c, d, e, f, 42);
+    CYCLE(f, g, h, a, b, c, d, e, 43);
+    CYCLE(e, f, g, h, a, b, c, d, 44);
+    CYCLE(d, e, f, g, h, a, b, c, 45);
+    CYCLE(c, d, e, f, g, h, a, b, 46);
+    CYCLE(b, c, d, e, f, g, h, a, 47);
+    CYCLE(a, b, c, d, e, f, g, h, 48);
+    CYCLE(h, a, b, c, d, e, f, g, 49);
+    CYCLE(g, h, a, b, c, d, e, f, 50);
+    CYCLE(f, g, h, a, b, c, d, e, 51);
+    CYCLE(e, f, g, h, a, b, c, d, 52);
+    CYCLE(d, e, f, g, h, a, b, c, 53);
+    CYCLE(c, d, e, f, g, h, a, b, 54);
+    CYCLE(b, c, d, e, f, g, h, a, 55);
+    CYCLE(a, b, c, d, e, f, g, h, 56);
+    CYCLE(h, a, b, c, d, e, f, g, 57);
+    CYCLE(g, h, a, b, c, d, e, f, 58);
+    CYCLE(f, g, h, a, b, c, d, e, 59);
+    CYCLE(e, f, g, h, a, b, c, d, 60);
+    CYCLE(d, e, f, g, h, a, b, c, 61);
+    CYCLE(c, d, e, f, g, h, a, b, 62);
+    CYCLE(b, c, d, e, f, g, h, a, 63);
 
 
 
