@@ -220,7 +220,7 @@ static ErrCrypto sha1_compress(HashState* pHashState)
 	return errRet;
 }
 
-ErrCrypto SHA1_update(HashState* pHashState, const uint64_t* pBuf, uint64_t nLen)
+ErrCrypto SHA1_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 {
 	ErrCrypto errRet = ERR_OK;
 	uint8_t nBytesNeeded = 0;
