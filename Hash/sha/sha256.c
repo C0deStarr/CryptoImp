@@ -237,10 +237,11 @@ ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* D
     ErrCrypto errRet = ERR_OK;
     uint8_t nPadLen = 0;
     int i = 0;
+    int nWordInDigest = 0;
     if (!pHashState || !pDigest)
         return ERR_NULL;
-    if (DIGEST_SIZE != nDigest)
-        return ERR_DIGEST_SIZE;
+    //if (DIGEST_SIZE != nDigest)
+    //    return ERR_DIGEST_SIZE;
 
     // After last SHA1_update()
     // maybe 0 < nBytesLen <= BLOCK_SIZE
@@ -265,8 +266,8 @@ ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* D
         , pHashState->nBitsLen);
 
     sha256_compress(pHashState);
-
-    for (i = 0; i < 8; i++) {
+    nWordInDigest = nDigest / WORD_SIZE;
+    for (i = 0; i < nWordInDigest; i++) {
         u32to8_big(pDigest, pHashState->hash[i]);
         pDigest += WORD_SIZE;
     }
@@ -278,7 +279,7 @@ void test_sha256()
     HashState hashState = { 0 };
     ErrCrypto err = ERR_OK;
     uint8_t data[] = "abcde";
-    uint8_t digest[DIGEST_SIZE];
+    uint8_t digest[DIGEST_SIZE] = {0};
     int i = 0;
     SHA256_init(&hashState);
     SHA256_update(&hashState, data, sizeof(data) - 1);
