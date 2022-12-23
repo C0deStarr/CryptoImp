@@ -76,6 +76,10 @@ ErrCrypto SHA1_init(HashState* pHashState)
 	if (!pHashState)
 		return ERR_NULL;
 
+
+    pHashState->nBitsLen = 0;
+    pHashState->nBytesLen = 0;
+
 	pHashState->hash[0] = 0x67452301;
 	pHashState->hash[1] = 0xefcdab89;
 	pHashState->hash[2] = 0x98badcfe;
