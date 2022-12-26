@@ -1,5 +1,5 @@
 
-#include "./sha256.h"
+#include "./sha512.h"
 #include <common/endianess.h>
 #include <string.h>
 
@@ -24,22 +24,22 @@ static const uint32_t K[SCHEDULE_SIZE] = {
 
 #define ROTR32(n, x)    (((x)>>(n)) | ((x)<<(32-(n))))
 #define SHR(n,x)        ((x)>>(n))
-#define SIGMA_0_256(x)    (ROTR32(2,x)  ^ ROTR32(13,x) ^ ROTR32(22,x))
-#define SIGMA_1_256(x)    (ROTR32(6,x)  ^ ROTR32(11,x) ^ ROTR32(25,x))
-#define sigma_0_256(x)    (ROTR32(7,x)  ^ ROTR32(18,x) ^ SHR(3,x))
-#define sigma_1_256(x)    (ROTR32(17,x) ^ ROTR32(19,x) ^ SHR(10,x))
+#define SIGMA_0_512(x)    (ROTR32(2,x)  ^ ROTR32(13,x) ^ ROTR32(22,x))
+#define SIGMA_1_512(x)    (ROTR32(6,x)  ^ ROTR32(11,x) ^ ROTR32(25,x))
+#define sigma_0_512(x)    (ROTR32(7,x)  ^ ROTR32(18,x) ^ SHR(3,x))
+#define sigma_1_512(x)    (ROTR32(17,x) ^ ROTR32(19,x) ^ SHR(10,x))
 
 // W[t] for 16 <= t <= 63
-#define SCHEDULE(t) (sigma_1_256(W[t-2])    \
+#define SCHEDULE(t) (sigma_1_512(W[t-2])    \
     + W[t-7]        \
-    + sigma_0_256(W[t-15])  \
+    + sigma_0_512(W[t-15])  \
     + W[t-16])
 
 // 64 steps
 #define CYCLE(a,b,c,d,e,f,g,h,t) \
-    h += SIGMA_1_256(e) + CH(e,f,g) + K[t]  + W[t]; \
+    h += SIGMA_1_512(e) + CH(e,f,g) + K[t]  + W[t]; \
     d += h; \
-    h += SIGMA_0_256(a) + MAJ(a,b,c);
+    h += SIGMA_0_512(a) + MAJ(a,b,c);
 
 static const uint32_t H[8] = {
     0x6a09e667,
@@ -52,7 +52,7 @@ static const uint32_t H[8] = {
     0x5be0cd19
 };
 
-ErrCrypto SHA256_init(HashState* pHashState)
+ErrCrypto SHA512_init(HashState* pHashState)
 {
     ErrCrypto errRet = ERR_OK;
     int i = 0;
@@ -81,7 +81,7 @@ ErrCrypto AddBitsLen(HashState* pHashState, uint16_t nBits)
 
 
 
-ErrCrypto sha256_compress(HashState* pHashState)
+ErrCrypto sha512_compress(HashState* pHashState)
 {
     ErrCrypto errRet = ERR_OK;
 
@@ -197,7 +197,7 @@ ErrCrypto sha256_compress(HashState* pHashState)
     return errRet;
 }
 
-ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
+ErrCrypto SHA512_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 {
     ErrCrypto errRet = ERR_OK;
     uint8_t nBytesNeeded = 0;
@@ -218,7 +218,7 @@ ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
         if (BLOCK_SIZE == pHashState->nBytesLen)
         {
             // let's do the 80 steps
-            errRet = sha256_compress(pHashState);
+            errRet = sha512_compress(pHashState);
             if (errRet)
                 return errRet;
 
@@ -232,7 +232,7 @@ ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
     return errRet;
 }
 
-ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
+ErrCrypto SHA512_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
     ErrCrypto errRet = ERR_OK;
     uint8_t nPadLen = 0;
@@ -265,7 +265,7 @@ ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* D
     u32to8_big(&pHashState->block[BLOCK_SIZE - 4]
         , pHashState->nBitsLen);
 
-    sha256_compress(pHashState);
+    sha512_compress(pHashState);
     nWordInDigest = nDigest / WORD_SIZE;
     for (i = 0; i < nWordInDigest; i++) {
         u32to8_big(pDigest, pHashState->hash[i]);
@@ -274,16 +274,16 @@ ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* D
     return errRet;
 }
 
-void test_sha256()
+void test_sha512()
 {
     HashState hashState = { 0 };
     ErrCrypto err = ERR_OK;
     uint8_t data[] = "abcde";
     uint8_t digest[DIGEST_SIZE] = {0};
     int i = 0;
-    SHA256_init(&hashState);
-    SHA256_update(&hashState, data, sizeof(data) - 1);
-    SHA256_digest(&hashState, digest, DIGEST_SIZE);
+    SHA512_init(&hashState);
+    SHA512_update(&hashState, data, sizeof(data) - 1);
+    SHA512_digest(&hashState, digest, DIGEST_SIZE);
     for (i = 0; i < DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
     }
