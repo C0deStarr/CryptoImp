@@ -156,7 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common\endianess.c" />
-    <ClCompile Include="Encode\b64.cpp" />
+    <ClCompile Include="Encode\b64.c" />
     <ClCompile Include="Hash\md\md5.c" />
     <ClCompile Include="Hash\md\mddriver.c" />
     <ClCompile Include="Hash\sha\sha1.c" />
@@ -164,7 +164,6 @@
     <ClCompile Include="Hash\sha\sha256.c" />
     <ClCompile Include="Hash\sha\sha512.c" />
     <ClCompile Include="main.c" />
-    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

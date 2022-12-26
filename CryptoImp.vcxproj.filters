@@ -62,9 +62,6 @@
     <ClCompile Include="common\endianess.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Encode\b64.cpp">
-      <Filter>Encode</Filter>
-    </ClCompile>
     <ClCompile Include="Hash\md\md5.c">
       <Filter>Hash\md</Filter>
     </ClCompile>
@@ -77,9 +74,6 @@
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Hash\sha\sha256.c">
       <Filter>Hash\sha</Filter>
     </ClCompile>
@@ -88,6 +82,9 @@
     </ClCompile>
     <ClCompile Include="Hash\sha\sha512.c">
       <Filter>Hash\sha</Filter>
+    </ClCompile>
+    <ClCompile Include="Encode\b64.c">
+      <Filter>Encode</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
