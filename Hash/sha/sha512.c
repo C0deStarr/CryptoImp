@@ -3,7 +3,7 @@
 #include <common/endianess.h>
 #include <string.h>
 
-static const uint32_t K[SCHEDULE_SIZE] = {
+static const uint64_t K[SCHEDULE_SIZE] = {
     0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL, 0xb5c0fbcfec4d3b2fULL, 0xe9b5dba58189dbbcULL,
     0x3956c25bf348b538ULL, 0x59f111f1b605d019ULL, 0x923f82a4af194f9bULL, 0xab1c5ed5da6d8118ULL,
     0xd807aa98a3030242ULL, 0x12835b0145706fbeULL, 0x243185be4ee4b28cULL, 0x550c7dc3d5ffb4e2ULL,
@@ -48,15 +48,15 @@ static const uint32_t K[SCHEDULE_SIZE] = {
     d += h; \
     h += SIGMA_0_512(a) + MAJ(a,b,c);
 
-static const uint32_t H[8] = {
-    0x6a09e667,
-    0xbb67ae85,
-    0x3c6ef372,
-    0xa54ff53a,
-    0x510e527f,
-    0x9b05688c,
-    0x1f83d9ab,
-    0x5be0cd19
+static const uint64_t H[8] = {
+    0x6a09e667f3bcc908ULL,
+    0xbb67ae8584caa73bULL,
+    0x3c6ef372fe94f82bULL,
+    0xa54ff53a5f1d36f1ULL,
+    0x510e527fade682d1ULL,
+    0x9b05688c2b3e6c1fULL,
+    0x1f83d9abfb41bd6bULL,
+    0x5be0cd19137e2179ULL
 };
 
 ErrCrypto SHA512_init(HashState* pHashState)
@@ -92,16 +92,16 @@ ErrCrypto sha512_compress(HashState* pHashState)
 {
     ErrCrypto errRet = ERR_OK;
 
-    uint32_t a = 0;
-    uint32_t b = 0;
-    uint32_t c = 0;
-    uint32_t d = 0;
-    uint32_t e = 0;
-    uint32_t f = 0;
-    uint32_t g = 0;
-    uint32_t h = 0;
+    uint64_t a = 0;
+    uint64_t b = 0;
+    uint64_t c = 0;
+    uint64_t d = 0;
+    uint64_t e = 0;
+    uint64_t f = 0;
+    uint64_t g = 0;
+    uint64_t h = 0;
 
-    uint32_t W[SCHEDULE_SIZE] = {0};
+    uint64_t W[SCHEDULE_SIZE] = {0};
     unsigned int i = 0;
 
     // Prepare the message schedule

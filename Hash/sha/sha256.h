@@ -15,7 +15,10 @@ typedef struct _HashState {
     // 128 bytes == 1024 bits for SHA-512
     uint8_t block[BLOCK_SIZE];
     uint8_t nBytesLen;        // byte offset of current block
-    uint64_t nBitsLen;          // for msg padding
+    // msg length padding
+    // 8 bytes == 64 bits for SHA-256
+    // 16 bytes == 128 bits for SHA-512
+    uint64_t nBitsLen;        
 } HashState;
 
 ErrCrypto SHA256_init(HashState* pHashState);
