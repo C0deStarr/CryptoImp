@@ -260,9 +260,9 @@ ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* D
     memset(&(pHashState->block[(pHashState->nBytesLen)])
         , 0
         , nPadLen - 1);
-    u32to8_big(&pHashState->block[BLOCK_SIZE - 8]
-        , pHashState->nBitsLen << 32);
-    u32to8_big(&pHashState->block[BLOCK_SIZE - 4]
+    u32to8_big(&pHashState->block[BLOCK_SIZE - 8]   // - 2 * WORD_SIZE
+        , pHashState->nBitsLen >> 32);
+    u32to8_big(&pHashState->block[BLOCK_SIZE - 4]   // - WORD_SIZE
         , pHashState->nBitsLen);
 
     sha256_compress(pHashState);
