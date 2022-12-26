@@ -72,7 +72,7 @@ ErrCrypto SHA256_init(HashState* pHashState)
 
 
 
-ErrCrypto AddBitsLen(HashState* pHashState, uint16_t nBits)
+ErrCrypto AddBitsLen(HashState* pHashState, uint32_t nBits)
 {
     // Maximum message length is 2**64 bits 
     pHashState->nBitsLen += nBits;

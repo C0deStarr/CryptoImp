@@ -18,7 +18,7 @@ typedef struct _HashState {
     // msg length padding
     // 8 bytes == 64 bits for SHA-256
     // 16 bytes == 128 bits for SHA-512
-    uint64_t nBitsLen[2];     
+    uint64_t nArrBitsLen[2];     
 } HashState;
 
 ErrCrypto SHA512_init(HashState* pHashState);

@@ -68,7 +68,7 @@ ErrCrypto SHA512_init(HashState* pHashState)
         return ERR_NULL;
 
 
-    pHashState->nBitsLen = 0;
+    pHashState->nArrBitsLen = 0;
     pHashState->nBytesLen = 0;
 
     for (i = 0; i < 8; i++) {
@@ -79,11 +79,23 @@ ErrCrypto SHA512_init(HashState* pHashState)
 
 
 
-ErrCrypto AddBitsLen(HashState* pHashState, uint16_t nBits)
+ErrCrypto AddBitsLen(HashState* pHashState, uint64_t nBits)
 {
     // Maximum message length is 2**64 bits 
-    pHashState->nBitsLen += nBits;
-    return (pHashState->nBitsLen < nBits) ? ERR_MAX_DATA : ERR_OK;
+    pHashState->nArrBitsLen[0] += nBits;
+    if (pHashState->nArrBitsLen[0] >= nBits)
+    {
+        // not overflow
+        return ERR_OK;
+    }
+
+    // overflow
+    pHashState->nArrBitsLen[1] += 1;
+    if (pHashState->nArrBitsLen[1] > 0)
+    {
+        return ERR_OK;
+    }
+    return ERR_MAX_DATA;
 }
 
 
@@ -268,9 +280,9 @@ ErrCrypto SHA512_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* D
         , 0
         , nPadLen - 1);
     u32to8_big(&pHashState->block[BLOCK_SIZE - 8]
-        , pHashState->nBitsLen << 32);
+        , pHashState->nArrBitsLen << 32);
     u32to8_big(&pHashState->block[BLOCK_SIZE - 4]
-        , pHashState->nBitsLen);
+        , pHashState->nArrBitsLen);
 
     sha512_compress(pHashState);
     nWordInDigest = nDigest / WORD_SIZE;
