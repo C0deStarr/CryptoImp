@@ -79,7 +79,7 @@ ErrCrypto SHA512_init(HashState* pHashState)
 
 
 
-ErrCrypto AddBitsLen(HashState* pHashState, uint64_t nBits)
+static ErrCrypto AddBitsLen(HashState* pHashState, uint64_t nBits)
 {
     // Maximum message length is 2**64 bits 
     pHashState->nArrBitsLen[0] += nBits;

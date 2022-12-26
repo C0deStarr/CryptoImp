@@ -90,7 +90,7 @@ ErrCrypto SHA1_init(HashState* pHashState)
 }
 
 
-static ErrCrypto AddBitsLen(HashState* pHashState, uint16_t nBits)
+static ErrCrypto AddBitsLen(HashState* pHashState, uint64_t nBits)
 {
 	// Maximum message length is 2**64 bits 
 	pHashState->nBitsLen += nBits;
