@@ -29,12 +29,12 @@ static const uint32_t K[SCHEDULE_SIZE] = {
 #define CH(x,y,z)       (((x) & (y)) ^ (~(x) & (z)))
 #define MAJ(x,y,z)      (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z)))
 
-#define ROTR32(n, x)    (((x)>>(n)) | ((x)<<(32-(n))))
+#define ROTR64(n, x)    (((x)>>(n)) | ((x)<<(64-(n))))
 #define SHR(n,x)        ((x)>>(n))
-#define SIGMA_0_512(x)    (ROTR32(2,x)  ^ ROTR32(13,x) ^ ROTR32(22,x))
-#define SIGMA_1_512(x)    (ROTR32(6,x)  ^ ROTR32(11,x) ^ ROTR32(25,x))
-#define sigma_0_512(x)    (ROTR32(7,x)  ^ ROTR32(18,x) ^ SHR(3,x))
-#define sigma_1_512(x)    (ROTR32(17,x) ^ ROTR32(19,x) ^ SHR(10,x))
+#define SIGMA_0_512(x)    (ROTR64(28,x) ^ ROTR64(34,x) ^ ROTR64(39,x))
+#define SIGMA_1_512(x)    (ROTR64(14,x) ^ ROTR64(18,x) ^ ROTR64(41,x))
+#define sigma_0_512(x)    (ROTR64(1,x)  ^ ROTR64(8,x)  ^ SHR(7,x))
+#define sigma_1_512(x)    (ROTR64(19,x) ^ ROTR64(61,x) ^ SHR(6,x))
 
 // W[t] for 16 <= t <= 63
 #define SCHEDULE(t) (sigma_1_512(W[t-2])    \
