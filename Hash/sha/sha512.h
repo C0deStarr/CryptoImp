@@ -3,8 +3,8 @@
 
 #include "common/common.h"
 
-#define WORD_SIZE 4
-#define BLOCK_SIZE 64   // 16 * WORD_SIZE
+#define WORD_SIZE 8
+#define BLOCK_SIZE 128   // 16 * WORD_SIZE
 #define SCHEDULE_SIZE 80    // steps
 #define DIGEST_SIZE (512/8)
 
@@ -14,7 +14,7 @@ typedef struct _HashState {
     // 64 bytes == 512 bits for SHA-256
     // 128 bytes == 1024 bits for SHA-512
     uint8_t block[BLOCK_SIZE];
-    uint8_t nBytesLen;        // byte offset of current block
+    uint16_t nBytesLen;        // byte offset of current block
     // msg length padding
     // 8 bytes == 64 bits for SHA-256
     // 16 bytes == 128 bits for SHA-512

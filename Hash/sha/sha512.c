@@ -36,7 +36,7 @@ static const uint64_t K[SCHEDULE_SIZE] = {
 #define sigma_0_512(x)    (ROTR64(1,x)  ^ ROTR64(8,x)  ^ SHR(7,x))
 #define sigma_1_512(x)    (ROTR64(19,x) ^ ROTR64(61,x) ^ SHR(6,x))
 
-// W[t] for 16 <= t <= 63
+// W[t] for 16 <= t <= 80
 #define SCHEDULE(t) (sigma_1_512(W[t-2])    \
     + W[t-7]        \
     + sigma_0_512(W[t-15])  \
@@ -68,7 +68,8 @@ ErrCrypto SHA512_init(HashState* pHashState)
         return ERR_NULL;
 
 
-    pHashState->nArrBitsLen = 0;
+    pHashState->nArrBitsLen[0] = 0;
+    pHashState->nArrBitsLen[1] = 0;
     pHashState->nBytesLen = 0;
 
     for (i = 0; i < 8; i++) {
@@ -271,18 +272,19 @@ ErrCrypto SHA512_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* D
 
     // Padding the Message
     // 1 + 0s + 8-byte msg length
-    nPadLen = (pHashState->nBytesLen < 56)
-        ? (56 - pHashState->nBytesLen)
-        : (BLOCK_SIZE + 56 - pHashState->nBytesLen);
+    nPadLen = (pHashState->nBytesLen < 112)
+        ? (112 - pHashState->nBytesLen)
+        : (BLOCK_SIZE + 112 - pHashState->nBytesLen);
 
     pHashState->block[(pHashState->nBytesLen)++] = 0x80;
     memset(&(pHashState->block[(pHashState->nBytesLen)])
         , 0
         , nPadLen - 1);
-    u32to8_big(&pHashState->block[BLOCK_SIZE - 8]
-        , pHashState->nArrBitsLen << 32);
-    u32to8_big(&pHashState->block[BLOCK_SIZE - 4]
-        , pHashState->nArrBitsLen);
+    // Note: big endian 
+    u64to8_big(&pHashState->block[BLOCK_SIZE - 16]  // - 2 * WORD_SIZE
+        , pHashState->nArrBitsLen[1]);
+    u64to8_big(&pHashState->block[BLOCK_SIZE - 8]   // - WORD_SIZE
+        , pHashState->nArrBitsLen[0]);
 
     sha512_compress(pHashState);
     nWordInDigest = nDigest / WORD_SIZE;

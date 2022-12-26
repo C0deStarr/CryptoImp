@@ -217,7 +217,7 @@ ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
 
         if (BLOCK_SIZE == pHashState->nBytesLen)
         {
-            // let's do the 80 steps
+            // let's do the 64 steps
             errRet = sha256_compress(pHashState);
             if (errRet)
                 return errRet;
