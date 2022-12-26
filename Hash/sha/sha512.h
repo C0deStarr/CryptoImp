@@ -5,7 +5,7 @@
 
 #define WORD_SIZE 4
 #define BLOCK_SIZE 64   // 16 * WORD_SIZE
-#define SCHEDULE_SIZE 64    // steps
+#define SCHEDULE_SIZE 80    // steps
 #define DIGEST_SIZE (512/8)
 
 typedef struct _HashState {
