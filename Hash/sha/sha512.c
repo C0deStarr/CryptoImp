@@ -120,7 +120,7 @@ ErrCrypto sha512_compress(HashState* pHashState)
     // Prepare the message schedule
     for (i = 0; i < 16; ++i)
     {
-        W[i] = u8to64_big(&(pHashState->block[4 * i]));
+        W[i] = u8to64_big(&(pHashState->block[WORD_SIZE * i]));
     }
     for (; i < SCHEDULE_SIZE; i++) {
         W[i] = SCHEDULE(i);
@@ -136,7 +136,7 @@ ErrCrypto sha512_compress(HashState* pHashState)
     g = pHashState->hash[6];
     h = pHashState->hash[7];
 
-    // 64 steps
+    // 80 steps
     CYCLE(a, b, c, d, e, f, g, h, 0);
     CYCLE(h, a, b, c, d, e, f, g, 1);
     CYCLE(g, h, a, b, c, d, e, f, 2);
@@ -287,7 +287,7 @@ ErrCrypto SHA512_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* D
     }
 
     // Padding the Message
-    // 1 + 0s + 8-byte msg length
+    // 1 + 0s + 16-byte msg length
     nPadLen = (pHashState->nBytesLen < 112)
         ? (112 - pHashState->nBytesLen)
         : (BLOCK_SIZE + 112 - pHashState->nBytesLen);

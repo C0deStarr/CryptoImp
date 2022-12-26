@@ -100,7 +100,7 @@ ErrCrypto sha256_compress(HashState* pHashState)
     // Prepare the message schedule
     for (i = 0; i < 16; ++i)
     {
-        W[i] = u8to32_big(&(pHashState->block[4 * i]));
+        W[i] = u8to32_big(&(pHashState->block[WORD_SIZE * i]));
     }
     for (; i < SCHEDULE_SIZE; i++) {
         W[i] = SCHEDULE(i);
