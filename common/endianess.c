@@ -13,6 +13,22 @@ uint32_t u8to32_big(const uint8_t* pCh)
     return nRet;
 }
 
+uint64_t u8to64_big(const uint8_t* pCh)
+{
+    uint64_t nRet = 0;
+    if (pCh)
+    {
+        nRet = (uint64_t)pCh[7]
+            | (uint64_t)pCh[6] << 8
+            | (uint64_t)pCh[5] << 16
+            | (uint64_t)pCh[4] << 24
+            | (uint64_t)pCh[3] << 32
+            | (uint64_t)pCh[2] << 40
+            | (uint64_t)pCh[1] << 48
+            | (uint64_t)pCh[0] << 56;
+    }
+    return nRet;
+}
 
 void u32to8_big(uint8_t* p, const uint32_t w)
 {
@@ -26,4 +42,17 @@ void u32to8_big(uint8_t* p, const uint32_t w)
 }
 
 
-
+void u64to8_big(uint8_t* p, const uint64_t w)
+{
+    if (p)
+    {
+        p[0] = (uint8_t)(w >> 56);
+        p[1] = (uint8_t)(w >> 48);
+        p[2] = (uint8_t)(w >> 40);
+        p[3] = (uint8_t)(w >> 32);
+        p[4] = (uint8_t)(w >> 24);
+        p[5] = (uint8_t)(w >> 16);
+        p[6] = (uint8_t)(w >> 8);
+        p[7] = (uint8_t)w;
+    }
+}

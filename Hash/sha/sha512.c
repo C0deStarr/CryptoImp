@@ -120,7 +120,7 @@ ErrCrypto sha512_compress(HashState* pHashState)
     // Prepare the message schedule
     for (i = 0; i < 16; ++i)
     {
-        W[i] = u8to32_big(&(pHashState->block[4 * i]));
+        W[i] = u8to64_big(&(pHashState->block[4 * i]));
     }
     for (; i < SCHEDULE_SIZE; i++) {
         W[i] = SCHEDULE(i);
@@ -202,6 +202,22 @@ ErrCrypto sha512_compress(HashState* pHashState)
     CYCLE(c, d, e, f, g, h, a, b, 62);
     CYCLE(b, c, d, e, f, g, h, a, 63);
 
+    CYCLE(a, b, c, d, e, f, g, h, 64);
+    CYCLE(h, a, b, c, d, e, f, g, 65);
+    CYCLE(g, h, a, b, c, d, e, f, 66);
+    CYCLE(f, g, h, a, b, c, d, e, 67);
+    CYCLE(e, f, g, h, a, b, c, d, 68);
+    CYCLE(d, e, f, g, h, a, b, c, 69);
+    CYCLE(c, d, e, f, g, h, a, b, 70);
+    CYCLE(b, c, d, e, f, g, h, a, 71);
+    CYCLE(a, b, c, d, e, f, g, h, 72);
+    CYCLE(h, a, b, c, d, e, f, g, 73);
+    CYCLE(g, h, a, b, c, d, e, f, 74);
+    CYCLE(f, g, h, a, b, c, d, e, 75);
+    CYCLE(e, f, g, h, a, b, c, d, 76);
+    CYCLE(d, e, f, g, h, a, b, c, 77);
+    CYCLE(c, d, e, f, g, h, a, b, 78);
+    CYCLE(b, c, d, e, f, g, h, a, 79);
 
 
     // Compute the intermediate hash value
@@ -220,8 +236,8 @@ ErrCrypto sha512_compress(HashState* pHashState)
 ErrCrypto SHA512_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 {
     ErrCrypto errRet = ERR_OK;
-    uint8_t nBytesNeeded = 0;
-    uint8_t nBytesCopy = 0;
+    uint32_t nBytesNeeded = 0;
+    uint32_t nBytesCopy = 0;
 
     if (!pHashState || !pBuf)
         return ERR_NULL;
@@ -287,9 +303,9 @@ ErrCrypto SHA512_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* D
         , pHashState->nArrBitsLen[0]);
 
     sha512_compress(pHashState);
-    nWordInDigest = nDigest / WORD_SIZE;
-    for (i = 0; i < nWordInDigest; i++) {
-        u32to8_big(pDigest, pHashState->hash[i]);
+    //nWordInDigest = nDigest / WORD_SIZE;
+    for (i = 0; i < 8; i++) {
+        u64to8_big(pDigest, pHashState->hash[i]);
         pDigest += WORD_SIZE;
     }
     return errRet;
@@ -299,7 +315,7 @@ void test_sha512()
 {
     HashState hashState = { 0 };
     ErrCrypto err = ERR_OK;
-    uint8_t data[] = "abcde";
+    uint8_t data[] = "abc";
     uint8_t digest[DIGEST_SIZE] = {0};
     int i = 0;
     SHA512_init(&hashState);

@@ -14,7 +14,7 @@ typedef struct _HashState {
     // 64 bytes == 512 bits for SHA-256
     // 128 bytes == 1024 bits for SHA-512
     uint8_t block[BLOCK_SIZE];
-    uint16_t nBytesLen;        // byte offset of current block
+    uint32_t nBytesLen;        // byte offset of current block
     // msg length padding
     // 8 bytes == 64 bits for SHA-256
     // 16 bytes == 128 bits for SHA-512
