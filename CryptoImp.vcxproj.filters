@@ -48,6 +48,15 @@
     <ClInclude Include="Hash\sha\sha1.h">
       <Filter>Hash\sha</Filter>
     </ClInclude>
+    <ClInclude Include="Hash\sha\sha256.h">
+      <Filter>Hash\sha</Filter>
+    </ClInclude>
+    <ClInclude Include="Hash\sha\sha224.h">
+      <Filter>Hash\sha</Filter>
+    </ClInclude>
+    <ClInclude Include="Hash\sha\sha512.h">
+      <Filter>Hash\sha</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common\endianess.c">
@@ -70,6 +79,15 @@
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash\sha\sha256.c">
+      <Filter>Hash\sha</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash\sha\sha224.c">
+      <Filter>Hash\sha</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash\sha\sha512.c">
+      <Filter>Hash\sha</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

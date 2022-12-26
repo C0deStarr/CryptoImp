@@ -150,6 +150,9 @@
     <ClInclude Include="Hash\md\md5.h" />
     <ClInclude Include="Hash\md\mddriver.h" />
     <ClInclude Include="Hash\sha\sha1.h" />
+    <ClInclude Include="Hash\sha\sha224.h" />
+    <ClInclude Include="Hash\sha\sha256.h" />
+    <ClInclude Include="Hash\sha\sha512.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common\endianess.c" />
@@ -157,6 +160,9 @@
     <ClCompile Include="Hash\md\md5.c" />
     <ClCompile Include="Hash\md\mddriver.c" />
     <ClCompile Include="Hash\sha\sha1.c" />
+    <ClCompile Include="Hash\sha\sha224.c" />
+    <ClCompile Include="Hash\sha\sha256.c" />
+    <ClCompile Include="Hash\sha\sha512.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>

@@ -34,11 +34,6 @@ ErrCrypto SHA224_init(HashState* pHashState)
 
 
 
-// ErrCrypto sha224_compress(HashState* pHashState)
-// {
-//     return sha256_compress(pHashState);
-// }
-
 ErrCrypto SHA224_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 {
     
