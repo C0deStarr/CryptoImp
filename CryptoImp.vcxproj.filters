@@ -60,6 +60,9 @@
     <ClInclude Include="Hash\sha\sha384.h">
       <Filter>Hash\sha</Filter>
     </ClInclude>
+    <ClInclude Include="Hash\sha\sha512_224.h">
+      <Filter>Hash\sha</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common\endianess.c">
@@ -90,6 +93,9 @@
       <Filter>Encode</Filter>
     </ClCompile>
     <ClCompile Include="Hash\sha\sha384.c">
+      <Filter>Hash\sha</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash\sha\sha512_224.c">
       <Filter>Hash\sha</Filter>
     </ClCompile>
   </ItemGroup>

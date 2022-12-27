@@ -154,6 +154,7 @@
     <ClInclude Include="Hash\sha\sha256.h" />
     <ClInclude Include="Hash\sha\sha384.h" />
     <ClInclude Include="Hash\sha\sha512.h" />
+    <ClInclude Include="Hash\sha\sha512_224.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common\endianess.c" />
@@ -165,6 +166,7 @@
     <ClCompile Include="Hash\sha\sha256.c" />
     <ClCompile Include="Hash\sha\sha384.c" />
     <ClCompile Include="Hash\sha\sha512.c" />
+    <ClCompile Include="Hash\sha\sha512_224.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
