@@ -25,5 +25,5 @@ ErrCrypto SHA512_init(HashState* pHashState);
 ErrCrypto SHA512_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen);
 ErrCrypto SHA512_digest(HashState* pHashState, uint8_t* pDigest, int nDigest);
 void test_sha512();
-
+void sha512_t_iv_generator();
 #endif

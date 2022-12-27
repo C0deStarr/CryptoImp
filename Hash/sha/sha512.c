@@ -1,5 +1,6 @@
 
 #include "./sha512.h"
+#include <stdio.h>
 #include <common/endianess.h>
 #include <string.h>
 
@@ -78,6 +79,26 @@ ErrCrypto SHA512_init(HashState* pHashState)
     return errRet;
 }
 
+
+ErrCrypto SHA512_t_init(HashState* pHashState)
+{
+    ErrCrypto errRet = ERR_OK;
+    int i = 0;
+
+    if (!pHashState)
+        return ERR_NULL;
+
+
+    pHashState->nArrBitsLen[0] = 0;
+    pHashState->nArrBitsLen[1] = 0;
+    pHashState->nBytesLen = 0;
+
+    // SHA-512/t IV Generation Function
+    for (i = 0; i < 8; i++) {
+        pHashState->hash[i] = H[i] ^ 0xa5a5a5a5a5a5a5a5ULL;
+    }
+    return errRet;
+}
 
 
 static ErrCrypto AddBitsLen(HashState* pHashState, uint64_t nBits)
@@ -323,6 +344,33 @@ void test_sha512()
     SHA512_digest(&hashState, digest, DIGEST_SIZE);
     for (i = 0; i < DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
+    }
+    printf("\n");
+}
+
+void sha512_t_iv_generator()
+{
+    HashState hashState = { 0 };
+    ErrCrypto err = ERR_OK;
+    uint8_t sha512_224[] = "SHA-512/224";
+    uint8_t sha512_256[] = "SHA-512/256";
+    uint8_t digest[DIGEST_SIZE] = { 0 };
+    int i = 0;
+    SHA512_t_init(&hashState);
+    SHA512_update(&hashState, sha512_224, sizeof(sha512_224) - 1);
+    SHA512_digest(&hashState, digest, DIGEST_SIZE);
+    for (i = 0; i < DIGEST_SIZE; i++) {
+        printf("%02x%c", digest[i], 
+            ((i+1) % 8) ? '\x0' : '\n' );
+    }
+    printf("\n");
+
+    SHA512_t_init(&hashState);
+    SHA512_update(&hashState, sha512_256, sizeof(sha512_256) - 1);
+    SHA512_digest(&hashState, digest, DIGEST_SIZE);
+    for (i = 0; i < DIGEST_SIZE; i++) {
+        printf("%02x%c", digest[i],
+            ((i+1) % 8) ? '\x0' : '\n');
     }
     printf("\n");
 }

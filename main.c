@@ -8,10 +8,11 @@
 
 int main()
 {
-	test_base64();
+	//test_base64();
 	//test_sha256();
 	//test_sha224();
 	//test_sha512();
+	sha512_t_iv_generator();
 	getchar();
 	return 0;
 }
