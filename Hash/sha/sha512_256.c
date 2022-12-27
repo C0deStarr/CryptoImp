@@ -1,22 +1,22 @@
 
-#include "./sha512_224.h"
+#include "./sha512_256.h"
 #include <stdio.h>
 #include <common/endianess.h>
 #include <string.h>
 
 
 static const uint64_t H[8] = {
-    0x8C3D37C819544DA2ULL,
-    0x73E1996689DCD4D6ULL,
-    0x1DFAB7AE32FF9C82ULL,
-    0x679DD514582F9FCFULL,
-    0x0F6D2B697BD44DA8ULL,
-    0x77E36F7304C48942ULL,
-    0x3F9D85A86A1D36C8ULL,
-    0x1112E6AD91D692A1ULL
+    0x22312194FC2BF72CULL,
+    0x9F555FA3C84C64C2ULL,
+    0x2393B86B6F53B151ULL,
+    0x963877195940EABDULL,
+    0x96283EE2A88EFFE3ULL,
+    0xBE5E1E2553863992ULL,
+    0x2B0199FC2C85B8AAULL,
+    0x0EB72DDC81C52CA2ULL
 };
 
-ErrCrypto SHA512_224_init(HashState* pHashState)
+ErrCrypto SHA512_256_init(HashState* pHashState)
 {
     ErrCrypto errRet = ERR_OK;
     int i = 0;
@@ -37,27 +37,27 @@ ErrCrypto SHA512_224_init(HashState* pHashState)
 
 
 
-ErrCrypto SHA512_224_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
+ErrCrypto SHA512_256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 {
     return SHA512_update(pHashState, pBuf, nLen);
 }
 
-ErrCrypto SHA512_224_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
+ErrCrypto SHA512_256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
     return SHA512_digest(pHashState, pDigest, nDigest);
 }
 
-void test_sha512_224()
+void test_sha512_256()
 {
     HashState hashState = { 0 };
     ErrCrypto err = ERR_OK;
     uint8_t data[] = "abc";
     uint8_t digest[DIGEST_SIZE] = {0};
-    uint8_t nDigestLen = 224/8;
+    uint8_t nDigestLen = 256/8;
     int i = 0;
-    SHA512_224_init(&hashState);
-    SHA512_224_update(&hashState, data, sizeof(data) - 1);
-    SHA512_224_digest(&hashState, digest, DIGEST_SIZE);
+    SHA512_256_init(&hashState);
+    SHA512_256_update(&hashState, data, sizeof(data) - 1);
+    SHA512_256_digest(&hashState, digest, DIGEST_SIZE);
 
     for (i = 0; i < nDigestLen; i++) {
         printf("%02x", digest[i]);
