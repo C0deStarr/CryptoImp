@@ -266,8 +266,8 @@ ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* D
         , pHashState->nBitsLen);
 
     sha256_compress(pHashState);
-    //nWordInDigest = nDigest / WORD_SIZE;
-    for (i = 0; i < 8; i++) {
+    nWordInDigest = nDigest / WORD_SIZE;
+    for (i = 0; i < nWordInDigest; i++) {
         u32to8_big(pDigest, pHashState->hash[i]);
         pDigest += WORD_SIZE;
     }
