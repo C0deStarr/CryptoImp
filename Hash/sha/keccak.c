@@ -13,9 +13,30 @@ ErrCrypto keccak_init(KeccakState* pKeccakState, uint32_t c)
 	pKeccakState->nByCapacity = c;
 	pKeccakState->nByRate = KECCAK_b_200BYTES - c;
 
-	pKeccakState->nr = 24;
+	pKeccakState->nr = NUMBER_OF_ROUNDS;
 	return err;
 }
+
+//static ErrCrypto keccak_p(uint64_t* pArrState, uint32_t nr)
+static ErrCrypto keccak_f(uint64_t* pArrState, uint32_t nr/*==24 == 12+2*l*/)	
+{
+	ErrCrypto err = ERR_OK;
+	uint32_t ir = 0;	// ir = 12+2*l-nr
+	if(!pArrState)
+		return ERR_NULL;
+	if(nr >= NUMBER_OF_ROUNDS)
+		return ERR_NR_ROUNDS;
+	
+
+	for (ir = NUMBER_OF_ROUNDS - nr/*=0*/; ir < nr; ++ir)
+	{
+
+	}
+
+	return err;
+}
+
+
 ErrCrypto keccak_update(KeccakState* pKeccakState, const uint8_t* pBuf, uint64_t nLen)
 {
 	ErrCrypto err = ERR_OK;
