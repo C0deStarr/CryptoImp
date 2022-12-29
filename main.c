@@ -19,7 +19,7 @@ int main()
 	//sha512_t_iv_generator();
 	//test_sha384();
 	//test_sha512_224();
-	test_keccak();
+	test_sha3();
 	getchar();
 	return 0;
 }

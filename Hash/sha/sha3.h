@@ -12,6 +12,15 @@
 #define MAX_MD_SIZE	64	// sha3-512
 #define NUMBER_OF_ROUNDS 24	// for keccak-f, number of round == 12 + 2*l == 24
 
+typedef enum sha3_algorithm {
+	SHA3_224,
+	SHA3_256,
+	SHA3_384,
+	SHA3_512,
+	SHAKE128,
+	SHAKE256
+}SHA3_ALG;
+
 typedef struct
 {
 	// w == b / 25 == length of lane == 8 bytes == sizeof(uint64_t)
@@ -26,6 +35,9 @@ typedef struct
 
 	// number of round
 	uint32_t nr;
+
+	SHA3_ALG alg;
+	uint32_t nByMd;
 }KeccakState;
 
 /*
@@ -33,8 +45,8 @@ typedef struct
 * args:
 *	c: number of bytes of capacity
 */
-ErrCrypto keccak_init(KeccakState* pKeccakState, uint32_t c /*, uint32_t nr = 24*/);
-ErrCrypto keccak_update(KeccakState* pKeccakState, const uint8_t* pBuf, uint64_t nLen);
-ErrCrypto keccak_digest(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest);
-void test_keccak();
+ErrCrypto sha3_init(KeccakState* pKeccakState /*, uint32_t nr = 24*/);
+ErrCrypto sha3_update(KeccakState* pKeccakState, const uint8_t* pBuf, uint64_t nLen);
+ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest);
+void test_sha3();
 #endif
