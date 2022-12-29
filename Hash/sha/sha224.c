@@ -40,9 +40,9 @@ ErrCrypto SHA224_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
     return SHA256_update(pHashState, pBuf, nLen);
 }
 
-ErrCrypto SHA224_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
+ErrCrypto SHA224_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
-    return SHA256_digest(pHashState, pDigest, nDigest);
+    return SHA256_final(pHashState, pDigest, nDigest);
 }
 
 void test_sha224()
@@ -54,7 +54,7 @@ void test_sha224()
     int i = 0;
     SHA224_init(&hashState);
     SHA224_update(&hashState, data, sizeof(data) - 1);
-    SHA224_digest(&hashState, digest, DIGEST_SIZE);
+    SHA224_final(&hashState, digest, DIGEST_SIZE);
     for (i = 0; i < DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
     }

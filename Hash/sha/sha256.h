@@ -23,7 +23,7 @@ typedef struct _HashState {
 
 ErrCrypto SHA256_init(HashState* pHashState);
 ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen);
-ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest);
+ErrCrypto SHA256_final(HashState* pHashState, uint8_t* pDigest, int nDigest);
 void test_sha256();
 
 #endif

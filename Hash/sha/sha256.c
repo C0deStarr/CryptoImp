@@ -232,7 +232,7 @@ ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
     return errRet;
 }
 
-ErrCrypto SHA256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
+ErrCrypto SHA256_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
     ErrCrypto errRet = ERR_OK;
     uint8_t nPadLen = 0;
@@ -283,7 +283,7 @@ void test_sha256()
     int i = 0;
     SHA256_init(&hashState);
     SHA256_update(&hashState, data, sizeof(data) - 1);
-    SHA256_digest(&hashState, digest, DIGEST_SIZE);
+    SHA256_final(&hashState, digest, DIGEST_SIZE);
     for (i = 0; i < DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
     }

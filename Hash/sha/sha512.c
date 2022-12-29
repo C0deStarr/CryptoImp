@@ -289,7 +289,7 @@ ErrCrypto SHA512_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
     return errRet;
 }
 
-ErrCrypto SHA512_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
+ErrCrypto SHA512_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
     ErrCrypto errRet = ERR_OK;
     uint8_t nPadLen = 0;
@@ -341,7 +341,7 @@ void test_sha512()
     int i = 0;
     SHA512_init(&hashState);
     SHA512_update(&hashState, data, sizeof(data) - 1);
-    SHA512_digest(&hashState, digest, DIGEST_SIZE);
+    SHA512_final(&hashState, digest, DIGEST_SIZE);
     for (i = 0; i < DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
     }
@@ -358,7 +358,7 @@ void sha512_t_iv_generator()
     int i = 0;
     SHA512_t_init(&hashState);
     SHA512_update(&hashState, sha512_224, sizeof(sha512_224) - 1);
-    SHA512_digest(&hashState, digest, DIGEST_SIZE);
+    SHA512_final(&hashState, digest, DIGEST_SIZE);
     for (i = 0; i < DIGEST_SIZE; i++) {
         printf("%02x%c", digest[i], 
             ((i+1) % 8) ? '\x0' : '\n' );
@@ -367,7 +367,7 @@ void sha512_t_iv_generator()
 
     SHA512_t_init(&hashState);
     SHA512_update(&hashState, sha512_256, sizeof(sha512_256) - 1);
-    SHA512_digest(&hashState, digest, DIGEST_SIZE);
+    SHA512_final(&hashState, digest, DIGEST_SIZE);
     for (i = 0; i < DIGEST_SIZE; i++) {
         printf("%02x%c", digest[i],
             ((i+1) % 8) ? '\x0' : '\n');

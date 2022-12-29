@@ -10,7 +10,7 @@
 
 ErrCrypto SHA512_256_init(HashState* pHashState);
 ErrCrypto SHA512_256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen);
-ErrCrypto SHA512_256_digest(HashState* pHashState, uint8_t* pDigest, int nDigest);
+ErrCrypto SHA512_256_final(HashState* pHashState, uint8_t* pDigest, int nDigest);
 void test_sha512_256();
 
 #endif

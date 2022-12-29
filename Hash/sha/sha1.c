@@ -259,7 +259,7 @@ ErrCrypto SHA1_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 	return errRet;
 }
 
-ErrCrypto SHA1_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
+ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
 	ErrCrypto errRet = ERR_OK;
     uint8_t nPadLen = 0;
@@ -316,7 +316,7 @@ void test_sha1()
     int i = 0 ;
 	err = SHA1_init(&hashState);
 	err = SHA1_update(&hashState, data, sizeof(data) - 1);
-    err = SHA1_digest(&hashState, digest, DIGEST_SIZE);
+    err = SHA1_final(&hashState, digest, DIGEST_SIZE);
 
     /*
     * abcde-->

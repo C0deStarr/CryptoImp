@@ -10,7 +10,7 @@
 
 ErrCrypto SHA384_init(HashState* pHashState);
 ErrCrypto SHA384_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen);
-ErrCrypto SHA384_digest(HashState* pHashState, uint8_t* pDigest, int nDigest);
+ErrCrypto SHA384_final(HashState* pHashState, uint8_t* pDigest, int nDigest);
 void test_sha384();
 
 #endif

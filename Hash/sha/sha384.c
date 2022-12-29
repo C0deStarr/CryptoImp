@@ -42,9 +42,9 @@ ErrCrypto SHA384_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
     return SHA512_update(pHashState, pBuf, nLen);
 }
 
-ErrCrypto SHA384_digest(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
+ErrCrypto SHA384_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
-    return SHA512_digest(pHashState, pDigest, nDigest);
+    return SHA512_final(pHashState, pDigest, nDigest);
 }
 
 void test_sha384()
@@ -56,7 +56,7 @@ void test_sha384()
     int i = 0;
     SHA384_init(&hashState);
     SHA384_update(&hashState, data, sizeof(data) - 1);
-    SHA384_digest(&hashState, digest, DIGEST_SIZE);
+    SHA384_final(&hashState, digest, DIGEST_SIZE);
     for (i = 0; i < DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
     }
