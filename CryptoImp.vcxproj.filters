@@ -66,7 +66,7 @@
     <ClInclude Include="Hash\sha\sha512_256.h">
       <Filter>Hash\sha</Filter>
     </ClInclude>
-    <ClInclude Include="Hash\sha\keccak.h">
+    <ClInclude Include="Hash\sha\sha3.h">
       <Filter>Hash\sha</Filter>
     </ClInclude>
   </ItemGroup>
@@ -107,7 +107,7 @@
     <ClCompile Include="Hash\sha\sha512_256.c">
       <Filter>Hash\sha</Filter>
     </ClCompile>
-    <ClCompile Include="Hash\sha\keccak.c">
+    <ClCompile Include="Hash\sha\sha3.c">
       <Filter>Hash\sha</Filter>
     </ClCompile>
   </ItemGroup>

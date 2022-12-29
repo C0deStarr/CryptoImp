@@ -1,6 +1,6 @@
 
-#ifndef _KECCAK_H
-#define _KECCAK_H
+#ifndef _SHA3_H
+#define _SHA3_H
 
 #include <common/common.h>
 

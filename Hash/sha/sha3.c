@@ -1,5 +1,5 @@
 
-#include "./keccak.h"
+#include "./sha3.h"
 
 
 ErrCrypto keccak_init(KeccakState* pKeccakState, uint32_t c)
@@ -60,7 +60,8 @@ void test_keccak()
 	uint8_t digest[MAX_MD_SIZE] = {0};
 	uint8_t nDigest = 28;
 	uint8_t i = 0;
-	keccak_init(&keccakState);
+	uint32_t nCapacity224 = 28;
+	keccak_init(&keccakState, nCapacity224);
 	keccak_update(&keccakState, data, sizeof(data) - 1);
 	keccak_digest(&keccakState, digest, nDigest);
 	for (i = 0; i < nDigest; i++) {

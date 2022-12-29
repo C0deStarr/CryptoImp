@@ -8,7 +8,7 @@
 //#include "./Hash/sha/sha384.h"
 //#include "./Hash/sha/sha512_224.h"
 //#include "./Hash/sha/sha512_256.h"
-#include "./Hash/sha/keccak.h"
+#include "./Hash/sha/sha3.h"
 
 int main()
 {

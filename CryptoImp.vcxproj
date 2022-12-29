@@ -149,7 +149,7 @@
     <ClInclude Include="Encode\b64.h" />
     <ClInclude Include="Hash\md\md5.h" />
     <ClInclude Include="Hash\md\mddriver.h" />
-    <ClInclude Include="Hash\sha\keccak.h" />
+    <ClInclude Include="Hash\sha\sha3.h" />
     <ClInclude Include="Hash\sha\sha1.h" />
     <ClInclude Include="Hash\sha\sha224.h" />
     <ClInclude Include="Hash\sha\sha256.h" />
@@ -163,7 +163,7 @@
     <ClCompile Include="Encode\b64.c" />
     <ClCompile Include="Hash\md\md5.c" />
     <ClCompile Include="Hash\md\mddriver.c" />
-    <ClCompile Include="Hash\sha\keccak.c" />
+    <ClCompile Include="Hash\sha\sha3.c" />
     <ClCompile Include="Hash\sha\sha1.c" />
     <ClCompile Include="Hash\sha\sha224.c" />
     <ClCompile Include="Hash\sha\sha256.c" />
