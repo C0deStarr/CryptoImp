@@ -1,6 +1,6 @@
 
 #include "./sha3.h"
-
+#include <string.h>
 
 ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg)
 {
@@ -54,11 +54,13 @@ ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg)
 			break;
 	}
 
+	memset(pKeccakState->ullArrStateLanes, 0, KECCAK_b_200BYTES);
+
 	return err;
 }
 
-//static ErrCrypto keccak_p(uint64_t* pArrState, uint32_t nr)
-static ErrCrypto keccak_f(uint64_t* pArrState, uint32_t nr/*==24 == 12+2*l*/)	
+static ErrCrypto keccak_p(uint64_t* pArrState, uint32_t nr)
+//static ErrCrypto keccak_f(uint64_t* pArrState/*, uint32_t nr==24 == 12+2*l*/)	
 {
 	ErrCrypto err = ERR_OK;
 	uint32_t ir = 0;	// ir = 12+2*l-nr
