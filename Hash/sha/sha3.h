@@ -27,11 +27,13 @@ typedef struct
 	uint64_t ullArrStateLanes[5][5];
 
 	// as long as the array state
-	uint8_t buf[KECCAK_b_200BYTES];
+	// used to store r bytes as block
+	uint8_t block[KECCAK_b_200BYTES];
+	uint32_t nByOffset;
 
 	// c + r == b
 	uint32_t nByCapacity;
-	uint32_t nByRate;
+	uint32_t nByRate;	// rate for sponge construction
 
 	// number of round
 	uint32_t nr;
