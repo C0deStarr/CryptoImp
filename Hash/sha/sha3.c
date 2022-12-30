@@ -179,6 +179,19 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 		// pi end
 
 
+		// chi 
+		for (x = 0; x < 5; ++x)
+		{
+			for (y = 0; y < 5; ++y)
+			{
+				*pArrayState5_5[y][x] = *pArrayState5_5[y][x]
+					^ ((~(*pArrayState5_5[y][ ( x + 1 ) % 5 ]))
+						& *pArrayState5_5[y][ ( x + 2 ) % 5 ]);
+
+			}
+		}
+		// chi end
+
 	}
 
 	return err;
