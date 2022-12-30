@@ -162,7 +162,19 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 			x = y;
 			y = (2 * nTmp + 3 * y) % 5;
 		}
+
 		// rho end
+
+		// pi
+		x = 1;
+		y = 0;
+		for (i = 0; i < 25; ++i)
+		{
+			*pArrayState5_5[y][x] = *pArrayState5_5[x][(x + 3 * y) % 5];
+		}
+		// pi end
+
+
 	}
 
 	return err;
