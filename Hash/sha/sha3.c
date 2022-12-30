@@ -99,11 +99,13 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 	uint32_t i = 0;
 
 
-	uint64_t A[25] = {0};	
+	uint64_t (*pArrayState5_5)[5][5] = NULL;
+	uint64_t (*pArrayState25)[25] = NULL;
 	uint64_t theta_C[5] = { 0 };
 	uint64_t theta_D[5] = { 0 };
 	uint8_t x = 0, y = 0;
 	uint8_t nTmp = 0;
+	
 
 	static const uint32_t rho_offset[25] = {
 		   0,   1,  190,  28,  91,
@@ -120,32 +122,33 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 	
 	// convert bits to state array
 	ConvertS2Array(pKeccakState);
-	memcpy(A, pKeccakState->ullArrStateLanes, KECCAK_b_200BYTES);
+	pArrayState25 = pKeccakState->ullArrStateLanes;
+	pArrayState5_5 = pKeccakState->ullArrStateLanes;
 
 	for (ir = 0;	// ir = 12+2*l-nr
 		ir < pKeccakState->nRounds;
 		++ir)
 	{
 		// theta
-		//	xor all the sheets-->theta C
+		// xor all the sheets --> plane theta_C
 		for (i = 0; i < 5; ++i)
 		{
-			theta_C[i] = A[i]
-				^ A[i + 5]
-				^ A[i + 10]
-				^ A[i + 15]
-				^ A[i + 20];
+			theta_C[i] = (*pArrayState25)[i]
+				^ (*pArrayState25)[i + 5]
+				^ (*pArrayState25)[i + 10]
+				^ (*pArrayState25)[i + 15]
+				^ (*pArrayState25)[i + 20];
 		}
 
 		for (i = 0; i < 5; ++i)
 		{
-			// D[x] = C[x-1] ^ ROTL( C[x+1],     1)
+			// D[x] = C[x-1] ^ ROTL( C[x+1],    1)
 			theta_D[i] = theta_C[(i+4)%5] ^ ROTL(theta_C[(i+1)%5], 1);
 		}
 
 		for (i = 0; i < 25; ++i)
 		{
-			A[i] = A[i] ^ theta_D[i % 5];
+			(*pArrayState25)[i] = (*pArrayState25)[i] ^ theta_D[i % 5];
 		}
 		// theta end
 
@@ -154,7 +157,7 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 		y = 0;
 		for (i = 0; i < 25; ++i)
 		{
-			A[x + 5 * y] = ROTL64(A[x + 5 * y], rho_offset[i]%64);	// 64 == 8*sizeof(uint64_t)
+			(*pArrayState25)[x + 5 * y] = ROTL64((*pArrayState25)[x + 5 * y], rho_offset[i]%64);	// 64 == 8*sizeof(uint64_t)
 			nTmp = x;
 			x = y;
 			y = (2 * nTmp + 3 * y) % 5;
