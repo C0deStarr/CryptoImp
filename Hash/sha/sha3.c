@@ -2,6 +2,14 @@
 #include "./sha3.h"
 #include <string.h>
 #include <common/endianess.h>
+
+
+
+#define ROTL64(x,y) ( ((x) << (y)) | (x) >> (64-(y)) )
+
+
+
+
 ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg)
 {
 	ErrCrypto err = ERR_OK;
@@ -86,6 +94,13 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 	ErrCrypto err = ERR_OK;
 	uint32_t ir = 0;
 	uint32_t i = 0;
+
+
+	uint64_t A[25] = {0};	
+	uint64_t theta_C[5] = { 0 };
+	uint64_t theta_D[5] = { 0 };
+
+
 	if(!pKeccakState)
 		return ERR_NULL;
 	if(pKeccakState->nRounds >= NUMBER_OF_ROUNDS)
@@ -93,12 +108,34 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 	
 	// convert bits to state array
 	ConvertS2Array(pKeccakState);
+	memcpy(A, pKeccakState->ullArrStateLanes, KECCAK_b_200BYTES);
 
 	for (ir = 0;	// ir = 12+2*l-nr
 		ir < pKeccakState->nRounds;
 		++ir)
 	{
+		// theta
+		//	xor all the sheets-->theta C
+		for (i = 0; i < 5; ++i)
+		{
+			theta_C[i] = A[i]
+				^ A[i + 5]
+				^ A[i + 10]
+				^ A[i + 15]
+				^ A[i + 20];
+		}
 
+		for (i = 0; i < 5; ++i)
+		{
+			// D[x] = C[x-1] ^ ROTL( C[x+1],     1)
+			theta_D[i] = theta_C[(i+4)%5] ^ ROTL(theta_C[(i+1)%5], 1);
+		}
+
+		for (i = 0; i < 25; ++i)
+		{
+			A[i] = A[i] ^ theta_D[i % 5];
+		}
+		// theta end
 	}
 
 	return err;
