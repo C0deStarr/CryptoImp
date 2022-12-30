@@ -1,7 +1,7 @@
 
 #include "./sha3.h"
 #include <string.h>
-
+#include <common/endianess.h>
 ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg)
 {
 	ErrCrypto err = ERR_OK;
@@ -16,7 +16,7 @@ ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg)
 	//pKeccakState->nByCapacity = c;
 	//pKeccakState->nByRate = KECCAK_b_200BYTES - c;
 
-	pKeccakState->nr = NUMBER_OF_ROUNDS;
+	pKeccakState->nRounds = NUMBER_OF_ROUNDS;
 
 	pKeccakState->alg = alg;
 	switch (alg)
@@ -55,22 +55,48 @@ ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg)
 	}
 
 	memset(pKeccakState->ullArrStateLanes, 0, KECCAK_b_200BYTES);
-
+	pKeccakState->nByOffset = 0;
 	return err;
 }
 
-static ErrCrypto keccak_p(uint64_t* pArrState, uint32_t nr)
+
+static ErrCrypto ConvertS2Array(KeccakState* pKeccakState)
+{
+	uint32_t nLane = 0;
+
+	if (!pKeccakState)
+		return ERR_NULL;
+
+	for (nLane = 0;
+		(nLane < 25);
+		++nLane)
+	{
+		// little endian
+		// y: low-->high
+		// operation: xor
+		pKeccakState->ullArrStateLanes[nLane] ^= u8to64_little(pKeccakState->block[8*nLane]);
+	}
+	return ERR_OK;
+}
+
+//static ErrCrypto keccak_p(uint8_t* pBlock, uint32_t nr)
 //static ErrCrypto keccak_f(uint64_t* pArrState/*, uint32_t nr==24 == 12+2*l*/)	
+static ErrCrypto keccak_f(KeccakState* pKeccakState)
 {
 	ErrCrypto err = ERR_OK;
-	uint32_t ir = 0;	// ir = 12+2*l-nr
-	if(!pArrState)
+	uint32_t ir = 0;
+	uint32_t i = 0;
+	if(!pKeccakState)
 		return ERR_NULL;
-	if(nr >= NUMBER_OF_ROUNDS)
+	if(pKeccakState->nRounds >= NUMBER_OF_ROUNDS)
 		return ERR_NR_ROUNDS;
 	
+	// convert bits to state array
+	ConvertS2Array(pKeccakState);
 
-	for (ir = NUMBER_OF_ROUNDS - nr/*=0*/; ir < nr; ++ir)
+	for (ir = 0;	// ir = 12+2*l-nr
+		ir < pKeccakState->nRounds;
+		++ir)
 	{
 
 	}
@@ -78,12 +104,50 @@ static ErrCrypto keccak_p(uint64_t* pArrState, uint32_t nr)
 	return err;
 }
 
-
-ErrCrypto sha3_update(KeccakState* pKeccakState, const uint8_t* pBuf, uint64_t nLen)
+/*
+*	data-->block-->keccak()-->state array
+*/
+static ErrCrypto keccak_absorb(KeccakState* pKeccakState,
+	const uint8_t* pData,
+	uint32_t nInLen)
 {
 	ErrCrypto err = ERR_OK;
-	if (!pKeccakState || !pBuf)
+	uint32_t nByCopy = 0;
+	uint32_t nByNeeded = 0;
+	if (!pKeccakState || !pData)
 		return ERR_NULL;
+
+	while (nInLen)
+	{
+		nByNeeded = pKeccakState->nByRate - pKeccakState->nByOffset;
+		nByCopy = (nByNeeded > nInLen) ? nInLen : nByNeeded;
+		// min rate is 72 bytes when capacity is 512*2 bits(sha3-512)
+		memcpy(pKeccakState->block[pKeccakState->nByOffset], pData, nByCopy);
+		pKeccakState->nByOffset += nByCopy;
+		pData += nByCopy;
+		nInLen -= nByCopy;
+
+		
+		if (pKeccakState->nByOffset == pKeccakState->nByRate)
+		{
+			keccak_f(pKeccakState->block, pKeccakState->nRounds);
+			// wait for next r-byte block
+			pKeccakState->nByOffset = 0;
+		}
+	}
+
+	return err;
+}
+
+
+ErrCrypto sha3_update(KeccakState* pKeccakState, const uint8_t* pData, uint64_t nInLen)
+{
+	ErrCrypto err = ERR_OK;
+	if (!pKeccakState || !pData)
+		return ERR_NULL;
+
+	err = keccak_absorb(pKeccakState, pData, nInLen);
+
 	return err;
 }
 
@@ -121,9 +185,11 @@ ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 		}
 	}
 
-	// absorb
-
-	// keccak-f()
+	// the final absorb
+	if(err = keccak_f(pKeccakState))
+	{
+		return err;
+	}
 
 	// squeeze
 	return err;

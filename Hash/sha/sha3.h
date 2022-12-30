@@ -24,7 +24,7 @@ typedef enum sha3_algorithm {
 typedef struct
 {
 	// w == b / 25 == length of lane == 8 bytes == sizeof(uint64_t)
-	uint64_t ullArrStateLanes[5][5];
+	uint64_t ullArrStateLanes[25]; // or [5][5];
 
 	// as long as the array state
 	// used to store r bytes as block
@@ -36,7 +36,8 @@ typedef struct
 	uint32_t nByRate;	// rate for sponge construction
 
 	// number of round
-	uint32_t nr;
+	// hard coded to 24
+	uint32_t nRounds;
 
 	SHA3_ALG alg;
 	uint32_t nByMd;
@@ -48,7 +49,7 @@ typedef struct
 *	c: number of bytes of capacity
 */
 ErrCrypto sha3_init(KeccakState* pKeccakState /*, uint32_t nr = 24*/);
-ErrCrypto sha3_update(KeccakState* pKeccakState, const uint8_t* pBuf, uint64_t nLen);
+ErrCrypto sha3_update(KeccakState* pKeccakState, const uint8_t* pData, uint64_t nInLen);
 ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest);
 void test_sha3();
 #endif
