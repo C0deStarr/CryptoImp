@@ -20,6 +20,7 @@ typedef enum _Err_Crypto {
 	ERR_EC_POINT            = 15,
 	ERR_EC_CURVE            = 16,
 	ERR_MODULUS             = 17,
+	ERR_PARAM             = 18,
 	ERR_UNKNOWN             = 32
 }ErrCrypto;
 
