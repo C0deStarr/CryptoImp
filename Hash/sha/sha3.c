@@ -104,7 +104,7 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 	uint64_t theta_C[5] = { 0 };
 	uint64_t theta_D[5] = { 0 };
 	uint8_t x = 0, y = 0;
-	uint8_t nTmp = 0;
+	uint8_t x1 = 0, y1 = 0;
 	
 
 	static const uint32_t rho_offset[25] = {
@@ -158,9 +158,9 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 		for (i = 0; i < 25; ++i)
 		{
 			(*pArrayState25)[x + 5 * y] = ROTL64((*pArrayState25)[x + 5 * y], rho_offset[i]%64);	// 64 == 8*sizeof(uint64_t)
-			nTmp = x;
+			x1 = x;
 			x = y;
-			y = (2 * nTmp + 3 * y) % 5;
+			y = (2 * x1 + 3 * y) % 5;
 		}
 
 		// rho end
@@ -170,7 +170,11 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 		y = 0;
 		for (i = 0; i < 25; ++i)
 		{
-			*pArrayState5_5[y][x] = *pArrayState5_5[x][(x + 3 * y) % 5];
+			x1 = (x + 3 * y) % 5;
+			y1 = x;
+			*pArrayState5_5[y][x] = *pArrayState5_5[y1][x1];
+			x = x1;
+			y = y1;
 		}
 		// pi end
 
