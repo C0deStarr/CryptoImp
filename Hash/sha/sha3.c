@@ -7,8 +7,53 @@
 
 #define ROTL64(x,y) ( ((x) << (y)) | (x) >> (64-(y)) )
 
+/*
 
+int LFSR86540(uint8_t* LFSR)
+{
+	int result = ((*LFSR) & 0x01) != 0;
+	if (((*LFSR) & 0x80) != 0)
+		// Primitive polynomial over GF(2): x^8+x^6+x^5+x^4+1
+		(*LFSR) = ((*LFSR) << 1) ^ 0x71;	// 0111 0001
+	else
+		(*LFSR) <<= 1;
+	return result;
+}
 
+void KeccakInitializeRoundConstants()
+{
+	uint8_t LFSRstate = 0x01;
+	unsigned int ir, j, bitPosition;
+	uint8_t nr = 24;
+	uint64_t KeccakRoundConstants[64] = {0};
+	for (ir = 0; ir < nr; ir++) {
+		KeccakRoundConstants[ir] = 0;
+		for (j = 0; j < 7; j++) {
+			bitPosition = (1 << j) - 1; //2^j-1
+			if (LFSR86540(&LFSRstate))
+				KeccakRoundConstants[ir] ^= (uint64_t)1 << bitPosition;
+		}
+	}
+	for (ir = 0; ir < 24; ++ir)
+	{
+		printf("%016llx\n", KeccakRoundConstants[ir]);
+	}
+}
+*/
+static const uint64_t roundconstants[NUMBER_OF_ROUNDS] = {
+	0x0000000000000001ULL,    0x0000000000008082ULL,
+	0x800000000000808aULL,    0x8000000080008000ULL,
+	0x000000000000808bULL,    0x0000000080000001ULL,
+	0x8000000080008081ULL,    0x8000000000008009ULL,
+	0x000000000000008aULL,    0x0000000000000088ULL,
+	0x0000000080008009ULL,    0x000000008000000aULL,
+	0x000000008000808bULL,    0x800000000000008bULL,
+	0x8000000000008089ULL,    0x8000000000008003ULL,
+	0x8000000000008002ULL,    0x8000000000000080ULL,
+	0x000000000000800aULL,    0x800000008000000aULL,
+	0x8000000080008081ULL,    0x8000000000008080ULL,
+	0x0000000080000001ULL,    0x8000000080008008ULL
+};
 
 ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg)
 {
@@ -192,6 +237,9 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 		}
 		// chi end
 
+		// iota
+		(*pArrayState25)[0]
+		// iota end
 	}
 
 	return err;
