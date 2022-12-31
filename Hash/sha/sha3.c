@@ -134,7 +134,24 @@ static ErrCrypto ConvertS2Array(KeccakState* pKeccakState)
 	return ERR_OK;
 }
 
+static ErrCrypto ConvertArray2S(KeccakState* pKeccakState)
+{
+	uint32_t nLane = 0;
 
+	if (!pKeccakState)
+		return ERR_NULL;
+
+	for (nLane = 0;
+		(nLane < 25);
+		++nLane)
+	{
+		// little endian
+		// y: low-->high
+		// operation: xor
+		u64to8_little(&(pKeccakState->block[8 * nLane]), pKeccakState->ullArrStateLanes[nLane]);
+	}
+	return ERR_OK;
+}
 
 
 //static ErrCrypto keccak_p(uint8_t* pBlock, uint32_t nr)
@@ -304,43 +321,46 @@ ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 		return ERR_NULL;
 	if (nDigest * 2 != pKeccakState->nByMd)
 		return ERR_DIGEST_SIZE;
-	if (pKeccakState->bIsSqueezing)
-		return ERR_UNKNOWN;
-
-	// padding rule for sponge construction
-	// fips 202 B.2
-	memset(pKeccakState->block[pKeccakState->nByOffset]
-		, 0
-		, pKeccakState->nByRate - pKeccakState->nByOffset);
-	if ((SHAKE128 != pKeccakState->alg)
-		&& (SHAKE256 != pKeccakState->alg))
+	if (!(pKeccakState->bIsSqueezing))
 	{
-		// sh3 hash functions
-		pKeccakState->block[pKeccakState->nByOffset] = 0x06;
-		pKeccakState->block[pKeccakState->nByRate - 1] = 0x80;
-	}
-	else
-	{
-		// sha3 xof
-		if ((pKeccakState->nByRate - pKeccakState->nByOffset) >= 2)
+		// padding rule for sponge construction
+		// fips 202 B.2
+		memset(pKeccakState->block[pKeccakState->nByOffset]
+			, 0
+			, pKeccakState->nByRate - pKeccakState->nByOffset);
+		if ((SHAKE128 != pKeccakState->alg)
+			&& (SHAKE256 != pKeccakState->alg))
 		{
-			pKeccakState->block[pKeccakState->nByOffset] = 0x1F;
+			// sh3 hash functions
+			pKeccakState->block[pKeccakState->nByOffset] = 0x06;
 			pKeccakState->block[pKeccakState->nByRate - 1] = 0x80;
 		}
 		else
 		{
-			pKeccakState->block[pKeccakState->nByOffset] = 0x9F;
+			// sha3 xof
+			if ((pKeccakState->nByRate - pKeccakState->nByOffset) >= 2)
+			{
+				pKeccakState->block[pKeccakState->nByOffset] = 0x1F;
+				pKeccakState->block[pKeccakState->nByRate - 1] = 0x80;
+			}
+			else
+			{
+				pKeccakState->block[pKeccakState->nByOffset] = 0x9F;
+			}
 		}
+
+		// the final absorb
+		if(err = keccak_f(pKeccakState))
+		{
+			return err;
+		}
+
+		// begin squeezing
+		pKeccakState->bIsSqueezing = 1;
+		ConvertArray2S(pKeccakState);
 	}
 
-	// the final absorb
-	if(err = keccak_f(pKeccakState))
-	{
-		return err;
-	}
 
-	// squeeze
-	pKeccakState->bIsSqueezing = 1;
 	return err;
 }
 
