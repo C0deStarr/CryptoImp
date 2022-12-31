@@ -55,7 +55,7 @@ typedef struct
 * args:
 *	c: number of bytes of capacity
 */
-ErrCrypto sha3_init(KeccakState* pKeccakState /*, uint32_t nr = 24*/);
+ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg/*, uint32_t nr = 24*/);
 ErrCrypto sha3_update(KeccakState* pKeccakState, const uint8_t* pData, uint64_t nInLen);
 ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest);
 void test_sha3();
