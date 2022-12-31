@@ -41,6 +41,10 @@ typedef struct
 
 	SHA3_ALG alg;
 	uint32_t nByMd;
+
+	// for code robust
+	// needn't call keccak_f many times
+	uint8_t bIsSqueezing;
 }KeccakState;
 
 /*

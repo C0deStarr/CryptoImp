@@ -40,7 +40,7 @@ void KeccakInitializeRoundConstants()
 	}
 }
 */
-static const uint64_t roundconstants[NUMBER_OF_ROUNDS] = {
+static const uint64_t g_arrUllRoundConstants[NUMBER_OF_ROUNDS] = {
 	0x0000000000000001ULL,    0x0000000000008082ULL,
 	0x800000000000808aULL,    0x8000000080008000ULL,
 	0x000000000000808bULL,    0x0000000080000001ULL,
@@ -109,6 +109,8 @@ ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg)
 
 	memset(pKeccakState->ullArrStateLanes, 0, KECCAK_b_200BYTES);
 	pKeccakState->nByOffset = 0;
+
+	pKeccakState->bIsSqueezing = 0;
 	return err;
 }
 
@@ -238,7 +240,7 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 		// chi end
 
 		// iota
-		(*pArrayState25)[0]
+		(*pArrayState25)[0] ^= g_arrUllRoundConstants[ir];
 		// iota end
 	}
 
@@ -257,6 +259,9 @@ static ErrCrypto keccak_absorb(KeccakState* pKeccakState,
 	uint32_t nByNeeded = 0;
 	if (!pKeccakState || !pData)
 		return ERR_NULL;
+
+	if(pKeccakState->bIsSqueezing)
+		return ERR_UNKNOWN;
 
 	while (nInLen)
 	{
@@ -299,6 +304,8 @@ ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 		return ERR_NULL;
 	if (nDigest * 2 != pKeccakState->nByMd)
 		return ERR_DIGEST_SIZE;
+	if (pKeccakState->bIsSqueezing)
+		return ERR_UNKNOWN;
 
 	// padding rule for sponge construction
 	// fips 202 B.2
@@ -333,6 +340,7 @@ ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 	}
 
 	// squeeze
+	pKeccakState->bIsSqueezing = 1;
 	return err;
 }
 
