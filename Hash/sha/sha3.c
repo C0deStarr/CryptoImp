@@ -339,8 +339,8 @@ ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 
 	if (!pKeccakState || !pDigest)
 		return ERR_NULL;
-	if (nDigest != pKeccakState->nByMd)
-		return ERR_DIGEST_SIZE;
+	if (nDigest < pKeccakState->nByMd)
+		return ERR_MEMORY;
 	if (!(pKeccakState->bIsSqueezing))
 	{
 		// padding rule for sponge construction
@@ -380,8 +380,9 @@ ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 		// begin squeezing
 		pKeccakState->bIsSqueezing = 1;
 		keccak_squeeze_convertArray2S(pKeccakState);
+		pKeccakState->nByOffset = pKeccakState->nByRate;
 	}
-
+	nDigest = pKeccakState->nByMd;
 	while (nDigest)
 	{
 		nSqueeze = (nDigest < pKeccakState->nByOffset) ? nDigest : pKeccakState->nByOffset;
@@ -410,14 +411,14 @@ void test_sha3()
 
 	uint8_t data[] = "abc";
 	uint8_t digest[MAX_MD_SIZE] = {0};
-	uint8_t nDigest = 28;
+	uint8_t nDigest = MAX_MD_SIZE;
 	uint8_t i = 0;
 	uint32_t nCapacity224 = 28;
-	SHA3_ALG alg = SHA3_224;
+	SHA3_ALG alg = SHA3_256;
 	sha3_init(&keccakState, alg);
 	sha3_update(&keccakState, data, sizeof(data) - 1);
 	sha3_final(&keccakState, digest, nDigest);
-	for (i = 0; i < nDigest; i++) {
+	for (i = 0; i < keccakState.nByMd; i++) {
 		printf("%02x", digest[i]);
 	}
 	printf("\n");
