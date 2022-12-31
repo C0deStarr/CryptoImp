@@ -114,6 +114,36 @@ ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg)
 	return err;
 }
 
+
+ErrCrypto sha3_xof_init(KeccakState* pKeccakState, SHA3_ALG alg, uint32_t nDigest)
+{
+	ErrCrypto err = ERR_OK;
+	if (!pKeccakState)
+		return ERR_NULL;
+	if ((SHAKE128 != alg) && (SHAKE256 != alg))
+		return ERR_PARAM;
+
+	sha3_init(pKeccakState, SHA3_512);
+	pKeccakState->alg = alg;
+	switch (alg)
+	{
+	// SHAKE128(M,d) = KECCAK[256](M||1111,d), FIPS-202, sec 6.2
+	case SHAKE128:  
+		pKeccakState->nByRate = 168; // 1344 bits 
+		pKeccakState->nByCapacity = 32;  //  256 bits == 128 * 2
+		pKeccakState->nByMd = nDigest / 8;
+		break;
+	default:
+	// SHAKE256(M,d) = KECCAK[512](M||1111,d), FIPS-202, sec 6.2
+	case SHAKE256:  
+		pKeccakState->nByRate = 136; // 1088 bits
+		pKeccakState->nByCapacity = 64;  //  512 bits 
+		pKeccakState->nByMd = nDigest / 8;
+		break;
+	}
+	return err;
+}
+
 // absorb: block --> state array
 static ErrCrypto keccak_absorb_convertS2Array(KeccakState* pKeccakState)
 {
@@ -332,6 +362,12 @@ ErrCrypto sha3_update(KeccakState* pKeccakState, const uint8_t* pData, uint64_t 
 	return err;
 }
 
+ErrCrypto sha3_xof_update(KeccakState* pKeccakState, const uint8_t* pData, uint64_t nInLen)
+{
+	return sha3_update(pKeccakState, pData, nInLen);
+}
+
+
 ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 {
 	ErrCrypto err = ERR_OK;
@@ -405,19 +441,24 @@ ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 	return err;
 }
 
+ErrCrypto sha3_xof_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
+{
+	return sha3_final(pKeccakState, pDigest, nDigest);
+}
+
+
 void test_sha3()
 {
 	KeccakState keccakState = {0};
 
-	uint8_t data[] = "abc";
+	uint8_t data[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	uint8_t digest[MAX_MD_SIZE] = {0};
 	uint8_t nDigest = MAX_MD_SIZE;
 	uint8_t i = 0;
-	uint32_t nCapacity224 = 28;
-	SHA3_ALG alg = SHA3_256;
-	sha3_init(&keccakState, alg);
-	sha3_update(&keccakState, data, sizeof(data) - 1);
-	sha3_final(&keccakState, digest, nDigest);
+	SHA3_ALG alg = SHAKE256;
+	sha3_xof_init(&keccakState, alg, 256);
+	sha3_xof_update(&keccakState, data, sizeof(data) - 1);
+	sha3_xof_final(&keccakState, digest, nDigest);
 	for (i = 0; i < keccakState.nByMd; i++) {
 		printf("%02x", digest[i]);
 	}
