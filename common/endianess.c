@@ -73,3 +73,18 @@ uint64_t u8to64_little(const uint8_t* pCh)
     }
     return ullRet;
 }
+
+void u64to8_little(uint8_t* p, const uint64_t w)
+{
+    if (p)
+    {
+        p[0] = (uint8_t)w;
+        p[1] = (uint8_t)(w >> 8);
+        p[2] = (uint8_t)(w >> 16);
+        p[3] = (uint8_t)(w >> 24);
+        p[4] = (uint8_t)(w >> 32);
+        p[5] = (uint8_t)(w >> 40);
+        p[6] = (uint8_t)(w >> 48);
+        p[7] = (uint8_t)(w >> 56);
+    }
+}
