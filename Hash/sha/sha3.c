@@ -114,8 +114,8 @@ ErrCrypto sha3_init(KeccakState* pKeccakState, SHA3_ALG alg)
 	return err;
 }
 
-
-static ErrCrypto ConvertS2Array(KeccakState* pKeccakState)
+// absorb: block --> state array
+static ErrCrypto keccak_absorb_convertS2Array(KeccakState* pKeccakState)
 {
 	uint32_t nLane = 0;
 
@@ -123,18 +123,18 @@ static ErrCrypto ConvertS2Array(KeccakState* pKeccakState)
 		return ERR_NULL;
 
 	for (nLane = 0;
-		(nLane < 25);
+		8*nLane < pKeccakState->nByRate;
 		++nLane)
 	{
 		// little endian
 		// y: low-->high
 		// operation: xor
-		pKeccakState->ullArrStateLanes[nLane] ^= u8to64_little(pKeccakState->block[8*nLane]);
+		pKeccakState->ullArrStateLanes[nLane] ^= u8to64_little(&(pKeccakState->block[8*nLane]));
 	}
 	return ERR_OK;
 }
-
-static ErrCrypto ConvertArray2S(KeccakState* pKeccakState)
+// squeeze: state array --> block
+static ErrCrypto keccak_squeeze_convertArray2S(KeccakState* pKeccakState)
 {
 	uint32_t nLane = 0;
 
@@ -142,7 +142,7 @@ static ErrCrypto ConvertArray2S(KeccakState* pKeccakState)
 		return ERR_NULL;
 
 	for (nLane = 0;
-		(nLane < 25);
+		8 * nLane < pKeccakState->nByRate;
 		++nLane)
 	{
 		// little endian
@@ -165,13 +165,14 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 
 	uint64_t (*pArrayState5_5)[5][5] = NULL;
 	uint64_t (*pArrayState25)[25] = NULL;
+	uint64_t ullCopiedArrayState5_5[5][5] = {0};	// for pi
 	uint64_t theta_C[5] = { 0 };
 	uint64_t theta_D[5] = { 0 };
 	uint8_t x = 0, y = 0;
 	uint8_t x1 = 0, y1 = 0;
 	
 
-	static const uint32_t rho_offset[25] = {
+	static const uint32_t rho_offset[5][5] = {
 		   0,   1,  190,  28,  91,
 		  36, 300,    6,  55, 276,
 		   3,  10,  171, 153, 231,
@@ -181,11 +182,9 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 
 	if(!pKeccakState)
 		return ERR_NULL;
-	if(pKeccakState->nRounds >= NUMBER_OF_ROUNDS)
+	if(pKeccakState->nRounds != NUMBER_OF_ROUNDS)
 		return ERR_NR_ROUNDS;
 	
-	// convert bits to state array
-	ConvertS2Array(pKeccakState);
 	pArrayState25 = pKeccakState->ullArrStateLanes;
 	pArrayState5_5 = pKeccakState->ullArrStateLanes;
 
@@ -207,21 +206,24 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 		for (i = 0; i < 5; ++i)
 		{
 			// D[x] = C[x-1] ^ ROTL( C[x+1],    1)
-			theta_D[i] = theta_C[(i+4)%5] ^ ROTL(theta_C[(i+1)%5], 1);
+			theta_D[i] = theta_C[(i+4)%5] ^ ROTL64(theta_C[(i+1)%5], 1);
 		}
 
-		for (i = 0; i < 25; ++i)
+		for (y = 0; y < 5; ++y)
 		{
-			(*pArrayState25)[i] = (*pArrayState25)[i] ^ theta_D[i % 5];
+			for (x = 0; x < 5; ++x)
+			{
+				(*pArrayState5_5)[y][x] = (*pArrayState5_5)[y][x] ^ theta_D[x];
+			}
 		}
 		// theta end
 
 		// rho
 		x = 1;
 		y = 0;
-		for (i = 0; i < 25; ++i)
+		for (i = 1; i < 25; ++i)
 		{
-			(*pArrayState25)[x + 5 * y] = ROTL64((*pArrayState25)[x + 5 * y], rho_offset[i]%64);	// 64 == 8*sizeof(uint64_t)
+			(*pArrayState25)[x + 5 * y] = ROTL64((*pArrayState25)[x + 5 * y], rho_offset[y][x]%64);	// 64 == 8*sizeof(uint64_t)
 			x1 = x;
 			x = y;
 			y = (2 * x1 + 3 * y) % 5;
@@ -230,27 +232,39 @@ static ErrCrypto keccak_f(KeccakState* pKeccakState)
 		// rho end
 
 		// pi
+		memcpy(ullCopiedArrayState5_5, pKeccakState->ullArrStateLanes, KECCAK_b_200BYTES);
+
+		/*
 		x = 1;
 		y = 0;
 		for (i = 0; i < 25; ++i)
 		{
 			x1 = (x + 3 * y) % 5;
 			y1 = x;
-			*pArrayState5_5[y][x] = *pArrayState5_5[y1][x1];
+			(*pArrayState5_5)[y][x] = (*pArrayState5_5)[y1][x1];
 			x = x1;
 			y = y1;
 		}
-		// pi end
+		*/
+		for (y = 0; y < 5; y++)
+		{
+			for (x = 0; x < 5; x++)
+			{
+		  		(*pArrayState5_5)[y][x] = ullCopiedArrayState5_5[x][(x + 3 * y) % 5];
+			}
+		}
+		//pi end
 
 
 		// chi 
-		for (x = 0; x < 5; ++x)
+		memcpy(ullCopiedArrayState5_5, pKeccakState->ullArrStateLanes, KECCAK_b_200BYTES);
+		for (y = 0; y < 5; ++y)
 		{
-			for (y = 0; y < 5; ++y)
+			for (x = 0; x < 5; ++x)
 			{
-				*pArrayState5_5[y][x] = *pArrayState5_5[y][x]
-					^ ((~(*pArrayState5_5[y][ ( x + 1 ) % 5 ]))
-						& *pArrayState5_5[y][ ( x + 2 ) % 5 ]);
+				(*pArrayState5_5)[y][x] = ullCopiedArrayState5_5[y][x]
+					^ ( ( ~(ullCopiedArrayState5_5[y][ ( x + 1 ) % 5 ]))
+						& ullCopiedArrayState5_5[y][ ( x + 2 ) % 5 ]  );
 
 			}
 		}
@@ -285,7 +299,9 @@ static ErrCrypto keccak_absorb(KeccakState* pKeccakState,
 		nByNeeded = pKeccakState->nByRate - pKeccakState->nByOffset;
 		nByCopy = (nByNeeded > nInLen) ? nInLen : nByNeeded;
 		// min rate is 72 bytes when capacity is 512*2 bits(sha3-512)
-		memcpy(pKeccakState->block[pKeccakState->nByOffset], pData, nByCopy);
+		memcpy(&(pKeccakState->block[pKeccakState->nByOffset])
+			, pData
+			, nByCopy);
 		pKeccakState->nByOffset += nByCopy;
 		pData += nByCopy;
 		nInLen -= nByCopy;
@@ -293,6 +309,8 @@ static ErrCrypto keccak_absorb(KeccakState* pKeccakState,
 		
 		if (pKeccakState->nByOffset == pKeccakState->nByRate)
 		{
+			// convert bits to state array
+			keccak_absorb_convertS2Array(pKeccakState);
 			keccak_f(pKeccakState->block, pKeccakState->nRounds);
 			// wait for next r-byte block
 			pKeccakState->nByOffset = 0;
@@ -317,15 +335,17 @@ ErrCrypto sha3_update(KeccakState* pKeccakState, const uint8_t* pData, uint64_t 
 ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 {
 	ErrCrypto err = ERR_OK;
+	uint32_t nSqueeze = 0;
+
 	if (!pKeccakState || !pDigest)
 		return ERR_NULL;
-	if (nDigest * 2 != pKeccakState->nByMd)
+	if (nDigest != pKeccakState->nByMd)
 		return ERR_DIGEST_SIZE;
 	if (!(pKeccakState->bIsSqueezing))
 	{
 		// padding rule for sponge construction
 		// fips 202 B.2
-		memset(pKeccakState->block[pKeccakState->nByOffset]
+		memset(&(pKeccakState->block[pKeccakState->nByOffset])
 			, 0
 			, pKeccakState->nByRate - pKeccakState->nByOffset);
 		if ((SHAKE128 != pKeccakState->alg)
@@ -350,6 +370,8 @@ ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 		}
 
 		// the final absorb
+		// convert bits to state array
+		keccak_absorb_convertS2Array(pKeccakState);
 		if(err = keccak_f(pKeccakState))
 		{
 			return err;
@@ -357,10 +379,28 @@ ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 
 		// begin squeezing
 		pKeccakState->bIsSqueezing = 1;
-		ConvertArray2S(pKeccakState);
+		keccak_squeeze_convertArray2S(pKeccakState);
 	}
 
+	while (nDigest)
+	{
+		nSqueeze = (nDigest < pKeccakState->nByOffset) ? nDigest : pKeccakState->nByOffset;
+		memcpy(pDigest
+			, &(pKeccakState->block[pKeccakState->nByRate - pKeccakState->nByOffset])
+			, nSqueeze);
 
+		pKeccakState->nByOffset -= nSqueeze;
+		pDigest += nSqueeze;
+		nDigest -= nSqueeze;
+
+		if (0 == pKeccakState->nByOffset)
+		{
+			keccak_f(pKeccakState);
+			keccak_squeeze_convertArray2S(pKeccakState);
+			pKeccakState->nByOffset = pKeccakState->nByRate;
+		}
+
+	}
 	return err;
 }
 

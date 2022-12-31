@@ -29,6 +29,9 @@ typedef struct
 	// as long as the array state
 	// used to store r bytes as block
 	uint8_t block[KECCAK_b_200BYTES];
+
+	// while absorbing, it's the index of data in block[]
+	// while squeezing, it's the remaining bytes to copy to digest[]
 	uint32_t nByOffset;
 
 	// c + r == b
