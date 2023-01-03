@@ -1,5 +1,6 @@
 #include "sm3.h"
 #include <common/endianess.h>
+#include <string.h>
 
 #define SM3_NUMBER_OF_ROUNDS 64
 
@@ -76,7 +77,7 @@ static uint32_t P1(uint32_t x)
 }
 
 
-static int SM3_ProcessBlock(HashState* pState, const uint8_t* pBlock)
+static int SM3_ProcessBlock(HashState* pState)
 {
     ErrCrypto errRet = ERR_OK;
     uint32_t j;
@@ -94,8 +95,8 @@ static int SM3_ProcessBlock(HashState* pState, const uint8_t* pBlock)
     uint32_t  F = 0;
     uint32_t  G = 0;
     uint32_t  H = 0;
-
-    if (!pState || !pBlock)
+    uint8_t* pBlock = NULL;
+    if (!pState)
     {
         return ERR_NULL;
     }
@@ -109,6 +110,8 @@ static int SM3_ProcessBlock(HashState* pState, const uint8_t* pBlock)
     G = pState->hash[6];
     H = pState->hash[7];
     
+    pBlock = pState->block;
+
     for (j = 0; j < (SM3_NUMBER_OF_ROUNDS + 4); j++)
     {
         if (j < 16)
@@ -179,12 +182,46 @@ ErrCrypto SM3_init(HashState* pHashState)
     }
     return errRet;
 }
+
+static ErrCrypto AddBitsLen(HashState* pHashState, uint64_t nBits)
+{
+    // Maximum message length is 2**64 bits 
+    pHashState->nBitsLen += nBits;
+    return (pHashState->nBitsLen < nBits) ? ERR_MAX_DATA : ERR_OK;
+}
+
 ErrCrypto SM3_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 {
     ErrCrypto errRet = ERR_OK;
-    if (!pHashState)
+    uint32_t nBytesNeeded = 0;
+    uint32_t nBytesCopy = 0;
+    if (!pHashState || !pBuf)
     {
         return ERR_NULL;
+    }
+
+    while (nLen > 0)
+    {
+        nBytesNeeded = BLOCK_SIZE - pHashState->nBytesLen;
+        nBytesCopy = (nBytesNeeded > nLen) ? nLen : nBytesNeeded;
+        memcpy(pHashState->block, pBuf, nBytesCopy);
+        pBuf += nBytesCopy;
+        pHashState->nBytesLen += nBytesCopy;
+        nLen -= nBytesCopy;
+
+        if (BLOCK_SIZE == pHashState->nBytesLen)
+        {
+            // let's do the 64 steps
+            errRet = SM3_ProcessBlock(pHashState);
+            if (errRet)
+                return errRet;
+
+            // waiting for the next block
+            pHashState->nBytesLen = 0;
+            errRet = AddBitsLen(pHashState, BLOCK_SIZE * 8);
+            if (errRet)
+                return errRet;
+        }
     }
     return errRet;
 }
