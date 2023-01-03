@@ -108,16 +108,26 @@ static int SM3_ProcessBlock(SM3_State* pState, const uint8_t* pBlock)
     F = pState->hash[5];
     G = pState->hash[6];
     H = pState->hash[7];
-    // extend W[16:68]
-    for (j = 16; j < (SM3_NUMBER_OF_ROUNDS + 4); j++)
+    
+    for (j = 0; j < (SM3_NUMBER_OF_ROUNDS + 4); j++)
     {
-        W[j] = P1(
-                W[j - 16]
-                ^ W[j - 9]
-                ^ ROTL(W[j - 3], 15)
-                )
-            ^ ROTL(W[j - 13], 7)
-            ^ W[j - 6];
+        if (j < 16)
+        {
+            // init 16 uint32 
+            // big endian
+            W[j] = u8to32_big(pBlock + j * 4);
+        }
+        else
+        {
+            // extend W[16:68]
+            W[j] = P1(
+                    W[j - 16]
+                    ^ W[j - 9]
+                    ^ ROTL(W[j - 3], 15)
+                    )
+                ^ ROTL(W[j - 13], 7)
+                ^ W[j - 6];
+        }
     }
 
     // extend W[68:132] == W1
