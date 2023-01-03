@@ -3,12 +3,14 @@
 
 #include <common/common.h>
 
+#define WORD_SIZE 4
 #define BLOCK_SIZE 64   // 16 * WORD_SIZE
 #define DIGEST_SIZE (256/8)
 typedef struct {
 	uint32_t hash[8];
 	uint8_t block[BLOCK_SIZE];
-	uint8_t nByIndex; // index of block
+	uint8_t nBytesLen; // index of block
+	uint64_t nBitsLen;
 }HashState;
 
 ErrCrypto SM3_init(HashState* pHashState);

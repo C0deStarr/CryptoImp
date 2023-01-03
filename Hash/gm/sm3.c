@@ -185,9 +185,40 @@ ErrCrypto SM3_final(HashState* pHashState, uint8_t* pDigest, int nDigest)
 
 {
     ErrCrypto errRet = ERR_OK;
+    uint8_t nPadLen = 0;
+    uint8_t nWordInDigest = 0;
+    uint8_t i = 0;
     if (!pHashState)
     {
         return ERR_NULL;
+    }
+
+    errRet = AddBitsLen(pHashState, (pHashState->nBytesLen) * 8);
+    if (errRet) {
+        return ERR_MAX_DATA;
+    }
+
+    // Padding the Message
+    // 1 + 0s + 8-byte msg length
+    nPadLen = (pHashState->nBytesLen < 56)
+        ? (56 - pHashState->nBytesLen)
+        : (BLOCK_SIZE + 56 - pHashState->nBytesLen);
+
+    pHashState->block[(pHashState->nBytesLen)++] = 0x80;
+    memset(&(pHashState->block[(pHashState->nBytesLen)])
+        , 0
+        , nPadLen - 1);
+    u32to8_big(&pHashState->block[BLOCK_SIZE - 8]   // - 2 * WORD_SIZE
+        , pHashState->nBitsLen >> 32);
+    u32to8_big(&pHashState->block[BLOCK_SIZE - 4]   // - WORD_SIZE
+        , pHashState->nBitsLen);
+
+    SM3_ProcessBlock(pHashState, pHashState->block);
+    nWordInDigest = nDigest / WORD_SIZE;
+    nWordInDigest = (nWordInDigest < 8) ? nWordInDigest : 8;
+    for (i = 0; i < nWordInDigest; i++) {
+        u32to8_big(pDigest, pHashState->hash[i]);
+        pDigest += WORD_SIZE;
     }
     return errRet;
 }
