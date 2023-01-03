@@ -3,4 +3,8 @@
 
 #include <common/common.h>
 
+typedef struct {
+	uint32_t hash[8];
+}SM3_State;
+
 #endif
