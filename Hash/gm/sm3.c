@@ -166,9 +166,16 @@ static int SM3_ProcessBlock(HashState* pState, const uint8_t* pBlock)
 ErrCrypto SM3_init(HashState* pHashState)
 {
     ErrCrypto errRet = ERR_OK;
+    uint8_t i = 0;
     if (!pHashState)
     {
         return ERR_NULL;
+    }
+    pHashState->nBitsLen = 0;
+    pHashState->nBytesLen = 0;
+
+    for (i = 0; i < 8; i++) {
+        pHashState->hash[i] = IV[i];
     }
     return errRet;
 }
