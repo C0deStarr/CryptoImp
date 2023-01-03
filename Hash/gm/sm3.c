@@ -162,6 +162,14 @@ static int SM3_ProcessBlock(HashState* pState)
         E = P0(TT2);
     }
 
+    pState->hash[0] ^= A;
+    pState->hash[1] ^= B;
+    pState->hash[2] ^= C;
+    pState->hash[3] ^= D;
+    pState->hash[4] ^= E;
+    pState->hash[5] ^= F;
+    pState->hash[6] ^= G;
+    pState->hash[7] ^= H;
     return errRet;
 }
 
