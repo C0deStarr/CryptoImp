@@ -76,7 +76,7 @@ static uint32_t P1(uint32_t x)
 }
 
 
-static int SM3_ProcessBlock(SM3_State* pState, const uint8_t* pBlock)
+static int SM3_ProcessBlock(HashState* pState, const uint8_t* pBlock)
 {
     ErrCrypto errRet = ERR_OK;
     uint32_t j;
@@ -160,4 +160,50 @@ static int SM3_ProcessBlock(SM3_State* pState, const uint8_t* pBlock)
     }
 
     return errRet;
+}
+
+
+ErrCrypto SM3_init(HashState* pHashState)
+{
+    ErrCrypto errRet = ERR_OK;
+    if (!pHashState)
+    {
+        return ERR_NULL;
+    }
+    return errRet;
+}
+ErrCrypto SM3_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
+{
+    ErrCrypto errRet = ERR_OK;
+    if (!pHashState)
+    {
+        return ERR_NULL;
+    }
+    return errRet;
+}
+ErrCrypto SM3_final(HashState* pHashState, uint8_t* pDigest, int nDigest)
+
+{
+    ErrCrypto errRet = ERR_OK;
+    if (!pHashState)
+    {
+        return ERR_NULL;
+    }
+    return errRet;
+}
+
+void test_sm3()
+{
+    HashState hashState = { 0 };
+    ErrCrypto err = ERR_OK;
+    uint8_t data[] = "abc";
+    uint8_t digest[DIGEST_SIZE] = { 0 };
+    int i = 0;
+    SM3_init(&hashState);
+    SM3_update(&hashState, data, sizeof(data) - 1);
+    SM3_final(&hashState, digest, DIGEST_SIZE);
+    for (i = 0; i < DIGEST_SIZE; i++) {
+        printf("%02x", digest[i]);
+    }
+    printf("\n");
 }

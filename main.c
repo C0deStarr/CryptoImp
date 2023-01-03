@@ -8,7 +8,9 @@
 //#include "./Hash/sha/sha384.h"
 //#include "./Hash/sha/sha512_224.h"
 //#include "./Hash/sha/sha512_256.h"
-#include "./Hash/sha/sha3.h"
+//#include "./Hash/sha/sha3.h"
+#include "./Hash/gm/sm3.h"
+
 
 int main()
 {
@@ -19,7 +21,8 @@ int main()
 	//sha512_t_iv_generator();
 	//test_sha384();
 	//test_sha512_224();
-	test_sha3();
+	//test_sha3();
+	test_sm3();
 	getchar();
 	return 0;
 }

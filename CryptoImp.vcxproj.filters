@@ -25,6 +25,9 @@
     <Filter Include="Hash\sha">
       <UniqueIdentifier>{891ade65-0619-4ba6-81f3-d5120e5afe46}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hash\gm">
+      <UniqueIdentifier>{11ba99a4-7e15-4a02-8435-a5452a7c99be}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common\common.h">
@@ -69,6 +72,9 @@
     <ClInclude Include="Hash\sha\sha3.h">
       <Filter>Hash\sha</Filter>
     </ClInclude>
+    <ClInclude Include="Hash\gm\sm3.h">
+      <Filter>Hash\gm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common\endianess.c">
@@ -109,6 +115,9 @@
     </ClCompile>
     <ClCompile Include="Hash\sha\sha3.c">
       <Filter>Hash\sha</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash\gm\sm3.c">
+      <Filter>Hash\gm</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
