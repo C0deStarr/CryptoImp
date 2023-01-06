@@ -72,7 +72,7 @@ ErrCrypto SHA256_init(HashState* pHashState)
 
 
 
-static ErrCrypto AddBitsLen(HashState* pHashState, uint32_t nBits)
+static ErrCrypto AddBitsLen(HashState* pHashState, uint64_t nBits)
 {
     // Maximum message length is 2**64 bits 
     pHashState->nBitsLen += nBits;
@@ -267,10 +267,65 @@ ErrCrypto SHA256_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DI
 
     sha256_compress(pHashState);
     nWordInDigest = nDigest / WORD_SIZE;
+    nWordInDigest = (nWordInDigest < 8) ? nWordInDigest : 8;
     for (i = 0; i < nWordInDigest; i++) {
         u32to8_big(pDigest, pHashState->hash[i]);
         pDigest += WORD_SIZE;
     }
+    return errRet;
+}
+
+
+ErrCrypto SHA1256_HMAC(const uint8_t* pKey, int nKey,
+    const uint8_t* pData, uint32_t nData,
+    uint8_t* md, uint32_t* nMd)
+{
+    ErrCrypto errRet = ERR_OK;
+    HashState hashState = {0};
+    uint8_t key_ipad[BLOCK_SIZE] = { 0 };
+    uint8_t key_opad[BLOCK_SIZE] = {0};
+    uint32_t i = 0;
+    if(!pKey || !pData)
+        return ERR_NULL;
+    if(nMd < DIGEST_SIZE)
+        return ERR_DIGEST_SIZE;
+
+    // 1. pad key
+    if (nKey > BLOCK_SIZE)
+    {
+        // hash then pad
+        SHA256_init(&hashState);
+        SHA256_update(&hashState, pKey, nKey);
+        SHA256_final(&hashState, md, DIGEST_SIZE);
+        nKey = DIGEST_SIZE;
+        
+        memcpy(key_ipad, md, nKey);
+        memcpy(key_opad, md, nKey);
+    }
+    else
+    {
+        memcpy(key_ipad, pKey, nKey);
+        memcpy(key_opad, pKey, nKey);
+    }
+
+    for (i = 0; i < BLOCK_SIZE; ++i)
+    {
+        key_ipad[i] ^= 0x36;
+        key_opad[i] ^= 0x5c;
+    }
+
+    // inner hash
+    SHA256_init(&hashState);
+    SHA256_update(&hashState, key_ipad, BLOCK_SIZE);
+    SHA256_update(&hashState, pData, nData);
+    SHA256_final(&hashState, md, DIGEST_SIZE);
+
+    // outer hash
+    SHA256_init(&hashState);
+    SHA256_update(&hashState, key_opad, BLOCK_SIZE);
+    SHA256_update(&hashState, md, DIGEST_SIZE);
+    SHA256_final(&hashState, md, DIGEST_SIZE);
+
     return errRet;
 }
 
@@ -284,6 +339,21 @@ void test_sha256()
     SHA256_init(&hashState);
     SHA256_update(&hashState, data, sizeof(data) - 1);
     SHA256_final(&hashState, digest, DIGEST_SIZE);
+    for (i = 0; i < DIGEST_SIZE; i++) {
+        printf("%02x", digest[i]);
+    }
+    printf("\n");
+}
+
+void test_sha256_hmac()
+{
+    uint8_t data[] = "Hello";
+    uint8_t key[] = "Swordfish";
+    uint8_t digest[DIGEST_SIZE] = { 0 };
+    int i = 0;
+    SHA1256_HMAC(key, sizeof(key)-1,
+        data, sizeof(data)-1,
+        digest, DIGEST_SIZE);
     for (i = 0; i < DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
     }
