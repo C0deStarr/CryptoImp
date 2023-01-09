@@ -13,12 +13,12 @@
 
 typedef struct {
     uint64_t subkeys[NUMBER_OF_ROUNDS];
-}des_key;
+}block_state;
 
 
-ErrCrypto des_init(des_key *pKey, uint32_t nKey);
+ErrCrypto des_init(block_state *pState, const uint8_t *pKey, uint32_t nKey);
 
-ErrCrypto des_encrypt(des_key key
+ErrCrypto des_encrypt(block_state *pState
 	, uint32_t nKey
 	, const uint8_t *pData
 	, uint32_t nData
@@ -27,7 +27,7 @@ ErrCrypto des_encrypt(des_key key
 	, uint32_t *pnCipher
 	, OperationModes mode);
 
-ErrCrypto des_decrypt(des_key key
+ErrCrypto des_decrypt(block_state *pState
 	, uint32_t nKey
 	, uint8_t* pCipher
 	, uint32_t nCipher

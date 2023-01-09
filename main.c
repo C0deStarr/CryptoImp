@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include "Encode/b64.h"
-#include "Hash/md/mddriver.h"
+//#include "Hash/md/mddriver.h"
 //#include "Hash/sha/sha1.h"
-#include "./Hash/sha/sha256.h"
+//#include "./Hash/sha/sha256.h"
 //#include "./Hash/sha/sha224.h"
 //#include "./Hash/sha/sha512.h"
 //#include "./Hash/sha/sha384.h"
@@ -11,6 +11,7 @@
 //#include "./Hash/sha/sha3.h"
 //#include "./Hash/gm/sm3.h"
 
+#include "./Cipher/BlockCipher/des.h"
 
 int main()
 {
@@ -23,7 +24,11 @@ int main()
 	//test_sha512_224();
 	//test_sha3();
 	//test_sm3();
-	test_sha256_hmac();
+	//test_sha256_hmac();
+
+
+	test_des();
+
 	getchar();
 	return 0;
 }

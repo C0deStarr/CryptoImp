@@ -2,7 +2,7 @@
 
 
 
-ErrCrypto des_init(des_key* pKey, uint32_t nKey)
+ErrCrypto des_init(block_state* pStcKey, const uint8_t* pKey, uint32_t nKey)
 {
 	ErrCrypto errRet = ERR_OK;
 	if(!pKey)
@@ -14,7 +14,7 @@ ErrCrypto des_init(des_key* pKey, uint32_t nKey)
 }
 
 
-ErrCrypto des_encrypt(des_key key
+ErrCrypto des_encrypt(block_state *pState
 	, uint32_t nKey
 	, const uint8_t* pData
 	, uint32_t nData
@@ -24,7 +24,7 @@ ErrCrypto des_encrypt(des_key key
 	, OperationModes mode)
 {
 	ErrCrypto errRet = ERR_OK;
-	if (!pData || !pCipher || !pnCipher)
+	if (!pState || !pData || !pCipher || !pnCipher)
 	{
 		return ERR_NULL;
 	}
@@ -32,7 +32,7 @@ ErrCrypto des_encrypt(des_key key
 	return errRet;
 }
 
-ErrCrypto des_decrypt(des_key key
+ErrCrypto des_decrypt(block_state *pState
 	, uint32_t nKey
 	, uint8_t* pCipher
 	, uint32_t nCipher
@@ -42,7 +42,7 @@ ErrCrypto des_decrypt(des_key key
 	, OperationModes mode)
 {
 	ErrCrypto errRet = ERR_OK;
-	if (!pCipher || !pOutPlain || !pnPlain)
+	if (!pState || !pCipher || !pOutPlain || !pnPlain)
 	{
 		return ERR_NULL;
 	}
@@ -54,22 +54,22 @@ ErrCrypto des_decrypt(des_key key
 
 void test_des()
 {
-	des_key key = {0};
+	block_state state = {0};
 	uint8_t data[] = {"adcdefg"};
-	uint8_t key[] = {"12345678"};
+	uint8_t szKey[] = {"12345678"};
 	uint8_t cipher[256] = { 0 };
 	uint8_t buf[256] = { 0 };
 
 	uint32_t nData = sizeof(data) - 1;
-	uint32_t nKey = sizeof(key) - 1;
+	uint32_t nKey = sizeof(szKey) - 1;
 	uint32_t nBuf = sizeof(cipher);
 	uint32_t nCipher = 0;
 	uint32_t nDecrypt = 0;
 	uint32_t i = 0;
 	ErrCrypto err = ERR_OK;
-	err = des_init(&key, KEY_SIZE);
+	err = des_init(&state, szKey, nKey);
 	err = des_encrypt(
-		key
+		&state
 		, nKey
 		, data
 		, nData
@@ -85,7 +85,7 @@ void test_des()
 
 
 	err = des_decrypt(
-		key
+		&state
 		, nKey
 		, cipher
 		, nBuf
