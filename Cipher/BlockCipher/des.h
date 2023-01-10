@@ -9,6 +9,7 @@
 
 #define NUMBER_OF_ROUNDS    16
 #define KEY_SIZE    8
+#define BLOCK_SIZE    8
 
 
 typedef struct {
@@ -20,7 +21,6 @@ typedef struct {
 ErrCrypto des_init(block_state *pState, const uint8_t *pKey, uint32_t nKey);
 
 ErrCrypto des_encrypt(block_state *pState
-	, uint32_t nKey
 	, const uint8_t *pData
 	, uint32_t nData
 	, uint8_t *pCipher
@@ -29,7 +29,6 @@ ErrCrypto des_encrypt(block_state *pState
 	, OperationModes mode);
 
 ErrCrypto des_decrypt(block_state *pState
-	, uint32_t nKey
 	, uint8_t* pCipher
 	, uint32_t nCipher
 	, uint8_t *pOutPlain

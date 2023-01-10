@@ -5,10 +5,12 @@
 * 64 bits --> 28 bits + 28 bits
 */
 static const uint8_t pc1[56] = {
+	// C
 	57, 49,  41, 33,  25,  17,  9,
 	 1, 58,  50, 42,  34,  26, 18,
 	10,  2,  59, 51,  43,  35, 27,
 	19, 11,   3, 60,  52,  44, 36,
+	// D
 	63, 55,  47, 39,  31,  23, 15,
 	 7, 62,  54, 46,  38,  30, 22,
 	14,  6,  61, 53,  45,  37, 29,
@@ -66,7 +68,7 @@ static ErrCrypto Permutate(uint8_t *pPermutationChoice, uint32_t nChoice
 	ullIn = u8to64_big(pIn);
 	for (i = 0; i < nChoice; ++i)
 	{
-		nBitOffset = pc1[i] - 1;
+		nBitOffset = pPermutationChoice[i] - 1;
 		//if ((nBitOffset >> 3) > (nInBytes - 1))
 		//{
 		//	errRet = ERR_MEMORY;
@@ -159,8 +161,33 @@ ErrCrypto des_init(block_state* pStcKey, const uint8_t* pKey, uint32_t nKey)
 }
 
 
+/* Initial Permutation Table 
+* 64 bits --> 32 bit L + 32 bit R
+*/
+static const uint8_t IP[] = {
+	58, 50, 42, 34, 26, 18, 10,  2,
+	60, 52, 44, 36, 28, 20, 12,  4,
+	62, 54, 46, 38, 30, 22, 14,  6,
+	64, 56, 48, 40, 32, 24, 16,  8,
+	57, 49, 41, 33, 25, 17,  9,  1,
+	59, 51, 43, 35, 27, 19, 11,  3,
+	61, 53, 45, 37, 29, 21, 13,  5,
+	63, 55, 47, 39, 31, 23, 15,  7
+};
+
+/* Inverse Initial Permutation Table */
+static const uint8_t InverseIP[] = {
+	40,  8, 48, 16, 56, 24, 64, 32,
+	39,  7, 47, 15, 55, 23, 63, 31,
+	38,  6, 46, 14, 54, 22, 62, 30,
+	37,  5, 45, 13, 53, 21, 61, 29,
+	36,  4, 44, 12, 52, 20, 60, 28,
+	35,  3, 43, 11, 51, 19, 59, 27,
+	34,  2, 42, 10, 50, 18, 58, 26,
+	33,  1, 41,  9, 49, 17, 57, 25
+};
+
 ErrCrypto des_encrypt(block_state *pState
-	, uint32_t nKey
 	, const uint8_t* pData
 	, uint32_t nData
 	, uint8_t* pCipher
@@ -169,16 +196,25 @@ ErrCrypto des_encrypt(block_state *pState
 	, OperationModes mode)
 {
 	ErrCrypto errRet = ERR_OK;
+	uint64_t ullData = 0;
+	uint32_t L = 0, R = 0;
 	if (!pState || !pData || !pCipher || !pnCipher)
 	{
 		return ERR_NULL;
 	}
+	if ((BLOCK_SIZE != nData) || (BLOCK_SIZE > nOutBuf) )
+	{
+		return ERR_BLOCK_SIZE;
+	}
+
+	Permutate(IP, 64, pData, nData, &ullData);
+	L = (ullData >> 32) & 0xFFFFFFFF;
+	R = ullData & 0xFFFFFFFF;
 
 	return errRet;
 }
 
 ErrCrypto des_decrypt(block_state *pState
-	, uint32_t nKey
 	, uint8_t* pCipher
 	, uint32_t nCipher
 	, uint8_t* pOutPlain
@@ -215,7 +251,6 @@ void test_des()
 	err = des_init(&state, szKey, nKey);
 	err = des_encrypt(
 		&state
-		, nKey
 		, data
 		, nData
 		, cipher
@@ -231,7 +266,6 @@ void test_des()
 
 	err = des_decrypt(
 		&state
-		, nKey
 		, cipher
 		, nBuf
 		, buf
