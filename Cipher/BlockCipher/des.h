@@ -12,6 +12,7 @@
 
 
 typedef struct {
+	// big endian
     uint64_t subkeys[NUMBER_OF_ROUNDS];
 }block_state;
 
