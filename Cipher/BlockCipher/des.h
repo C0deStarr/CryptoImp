@@ -24,21 +24,14 @@ typedef struct {
 
 ErrCrypto des_init(block_state *pState, const uint8_t *pKey, uint32_t nKey);
 
-ErrCrypto des_encrypt(block_state *pState
+ErrCrypto des(block_state *pState
 	, const uint8_t *pData
 	, uint32_t nData
 	, uint8_t *pCipher
 	, uint32_t nOutBuf
-	, uint32_t *pnCipher
 	, DES_OPERATION op);
 
-ErrCrypto des_decrypt(block_state *pState
-	, uint8_t* pCipher
-	, uint32_t nCipher
-	, uint8_t *pOutPlain
-	, uint32_t nOutBuf
-	, uint32_t* pnPlain
-	, OperationModes mode);
+
 
 //ErrCrypto des_finalize();
 

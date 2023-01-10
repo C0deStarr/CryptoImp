@@ -274,12 +274,11 @@ static const uint8_t P[32] = {
 	22, 11,  4, 25
 };
 
-ErrCrypto des_encrypt(block_state *pState
+ErrCrypto des(block_state *pState
 	, const uint8_t* pData
 	, uint32_t nData
-	, uint8_t* pCipher
+	, uint8_t* pOut
 	, uint32_t nOutBuf
-	, uint32_t* pnCipher
 	, DES_OPERATION op)
 {
 	ErrCrypto errRet = ERR_OK;
@@ -295,7 +294,10 @@ ErrCrypto des_encrypt(block_state *pState
 	uint8_t nRow = 0;
 	uint8_t nCol = 0;
 
-	if (!pState || !pData || !pCipher || !pnCipher)
+	uint64_t ullRet = 0;
+
+
+	if (!pState || !pData || !pOut)
 	{
 		return ERR_NULL;
 	}
@@ -352,25 +354,13 @@ ErrCrypto des_encrypt(block_state *pState
 	}
 
 	ullTmp = R | (L >> 32);
+
+	// inverse initial permutation
+	PermutateULL(InverseIP, 64, ullTmp, &ullRet);
+	u64to8_big(pOut, ullRet);
 	return errRet;
 }
 
-ErrCrypto des_decrypt(block_state *pState
-	, uint8_t* pCipher
-	, uint32_t nCipher
-	, uint8_t* pOutPlain
-	, uint32_t nOutBuf
-	, uint32_t* pnPlain
-	, OperationModes mode)
-{
-	ErrCrypto errRet = ERR_OK;
-	if (!pState || !pCipher || !pOutPlain || !pnPlain)
-	{
-		return ERR_NULL;
-	}
-
-	return errRet;
-}
 
 
 
@@ -385,37 +375,34 @@ void test_des()
 	uint32_t nData = sizeof(data);
 	uint32_t nKey = sizeof(szKey);
 	uint32_t nBuf = sizeof(cipher);
-	uint32_t nCipher = 0;
-	uint32_t nDecrypt = 0;
+
 	uint32_t i = 0;
 	ErrCrypto err = ERR_OK;
 	err = des_init(&state, szKey, nKey);
-	err = des_encrypt(
+	err = des(
 		&state
 		, data
 		, nData
 		, cipher
 		, nBuf
-		, &nCipher
 		, ENC);
 
-	for (i = 0; i < nCipher; i++) {
+	for (i = 0; i < BLOCK_SIZE; i++) {
 		printf("%02x", cipher[i]);
 	}
 	printf("\n");
 
 
-	err = des_decrypt(
+	err = des(
 		&state
 		, cipher
-		, nBuf
+		, BLOCK_SIZE
 		, buf
 		, nBuf
-		, &nDecrypt
-		, MODE_ECB);
+		, DEC);
 
-	for (i = 0; i < nCipher; i++) {
-		printf("%02x", cipher[i]);
+	for (i = 0; i < BLOCK_SIZE; i++) {
+		printf("%02x", buf[i]);
 	}
 	printf("\n");
 
