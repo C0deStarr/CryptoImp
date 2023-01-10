@@ -11,6 +11,10 @@
 #define KEY_SIZE    8
 #define BLOCK_SIZE    8
 
+typedef enum {
+	ENC = 0,
+	DEC = 1
+}DES_OPERATION;
 
 typedef struct {
 	// big endian
@@ -26,7 +30,7 @@ ErrCrypto des_encrypt(block_state *pState
 	, uint8_t *pCipher
 	, uint32_t nOutBuf
 	, uint32_t *pnCipher
-	, OperationModes mode);
+	, DES_OPERATION op);
 
 ErrCrypto des_decrypt(block_state *pState
 	, uint8_t* pCipher
