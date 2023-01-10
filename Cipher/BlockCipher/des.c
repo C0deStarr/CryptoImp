@@ -70,6 +70,7 @@ static ErrCrypto PermutateArr(uint8_t *pPermutationChoice, uint32_t nChoice
 		return ERR_MEMORY;
 	}
 	ullIn = u8to64_big(pIn);
+	(*pUllOut) = 0;
 	for (i = 0; i < nChoice; ++i)
 	{
 		nBitOffset = pPermutationChoice[i] - 1;
@@ -111,7 +112,7 @@ static ErrCrypto PermutateULL(uint8_t* pPermutationChoice, uint32_t nChoice
 		return ERR_NULL;
 	}
 
-
+	(*pUllOut) = 0;
 	for (i = 0; i < nChoice; ++i)
 	{
 		nBitOffset = pPermutationChoice[i] - 1;
@@ -196,7 +197,7 @@ static const uint8_t InverseIP[64] = {
 
 /*	Extend table for f(R, k)
 */
-static const uint8_t E[] = {
+static const uint8_t E[48] = {
 	32,  1,  2,  3,  4,  5,
 	 4,  5,  6,  7,  8,  9,
 	 8,  9, 10, 11, 12, 13,
@@ -261,6 +262,18 @@ static const uint8_t S[8][64] = {
 	} 
 };
 
+/* For S-Box output*/
+static const uint8_t P[32] = {
+	16,  7, 20, 21,
+	29, 12, 28, 17,
+	 1, 15, 23, 26,
+	 5, 18, 31, 10,
+	 2,  8, 24, 14,
+	32, 27,  3,  9,
+	19, 13, 30,  6,
+	22, 11,  4, 25
+};
+
 ErrCrypto des_encrypt(block_state *pState
 	, const uint8_t* pData
 	, uint32_t nData
@@ -275,7 +288,9 @@ ErrCrypto des_encrypt(block_state *pState
 	uint64_t ullExtend_48bits = 0;
 	uint32_t i = 0, j = 0;
 
-	uint32_t nS_Output = 0;
+	uint64_t ullS_Output = 0;
+	uint64_t ullF = 0;
+	uint64_t ullTmp = 0;
 	uint8_t by6bits = 0;
 	uint8_t nRow = 0;
 	uint8_t nCol = 0;
@@ -299,6 +314,7 @@ ErrCrypto des_encrypt(block_state *pState
 		// f(R, k)
 
 		// extend
+		ullExtend_48bits = 0;
 		PermutateULL(E, 48, R, &ullExtend_48bits);
 
 
@@ -322,11 +338,20 @@ ErrCrypto des_encrypt(block_state *pState
 			// bit 4 | bit 3 | bit 2 | bit 1
 			nCol = (by6bits & 0x1E) >> 1;
 			
-			nS_Output <<= 4;
-			nS_Output |= (uint32_t)(S[j][16*nRow+nCol] & 0xF);
+			ullS_Output <<= 4;
+			ullS_Output |= (uint32_t)(S[j][16*nRow+nCol] & 0xF);
 		}
+
+		// Permutation P
+		ullS_Output <<= 32;
+		PermutateULL(P, 32, ullS_Output, &ullF);
+
+		ullTmp = R;
+		R = L ^ ullF;
+		L = ullTmp;
 	}
 
+	ullTmp = R | (L >> 32);
 	return errRet;
 }
 
