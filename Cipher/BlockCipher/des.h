@@ -19,12 +19,12 @@ typedef enum {
 typedef struct {
 	// big endian
     uint64_t subkeys[NUMBER_OF_ROUNDS];
-}block_state;
+}des_key;
 
 
-ErrCrypto des_init(block_state *pState, const uint8_t *pKey, uint32_t nKey);
+ErrCrypto des_init(des_key *pStcKey, const uint8_t *pKey, uint32_t nKey);
 
-ErrCrypto des(block_state *pState
+ErrCrypto des(des_key *pStcKey
 	, const uint8_t *pData
 	, uint32_t nData
 	, uint8_t *pCipher

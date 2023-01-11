@@ -124,7 +124,7 @@ static ErrCrypto PermutateULL(uint8_t* pPermutationChoice, uint32_t nChoice
 	return errRet;
 }
 
-ErrCrypto des_init(block_state* pStcKey, const uint8_t* pKey, uint32_t nKey)
+ErrCrypto des_init(des_key* pStcKey, const uint8_t* pKey, uint32_t nKey)
 {
 	ErrCrypto errRet = ERR_OK;
 
@@ -274,7 +274,7 @@ static const uint8_t P[32] = {
 	22, 11,  4, 25
 };
 
-ErrCrypto des(block_state *pState
+ErrCrypto des(des_key *pStcKey
 	, const uint8_t* pData
 	, uint32_t nData
 	, uint8_t* pOut
@@ -297,7 +297,7 @@ ErrCrypto des(block_state *pState
 	uint64_t ullRet = 0;
 
 
-	if (!pState || !pData || !pOut)
+	if (!pStcKey || !pData || !pOut)
 	{
 		return ERR_NULL;
 	}
@@ -323,11 +323,11 @@ ErrCrypto des(block_state *pState
 		// xor sub key
 		if (ENC == op)
 		{
-			ullExtend_48bits ^= pState->subkeys[i];
+			ullExtend_48bits ^= pStcKey->subkeys[i];
 		}
 		else
 		{
-			ullExtend_48bits ^= pState->subkeys[NUMBER_OF_ROUNDS - 1- i];
+			ullExtend_48bits ^= pStcKey->subkeys[NUMBER_OF_ROUNDS - 1- i];
 		}
 
 		// s-box
@@ -366,7 +366,7 @@ ErrCrypto des(block_state *pState
 
 void test_des()
 {
-	block_state state = {0};
+	des_key stcKey = {0};
 	uint8_t data[] = { 0x94, 0x74, 0xB8, 0xE8, 0xC7, 0x3B, 0xCA, 0x7D };
 	uint8_t szKey[] = { 0x10, 0x31, 0x6E, 0x02, 0x8C, 0x8F, 0x3B, 0x4A };
 	uint8_t cipher[256] = { 0 };
@@ -378,9 +378,9 @@ void test_des()
 
 	uint32_t i = 0;
 	ErrCrypto err = ERR_OK;
-	err = des_init(&state, szKey, nKey);
+	err = des_init(&stcKey, szKey, nKey);
 	err = des(
-		&state
+		&stcKey
 		, data
 		, nData
 		, cipher
@@ -394,7 +394,7 @@ void test_des()
 
 
 	err = des(
-		&state
+		&stcKey
 		, cipher
 		, BLOCK_SIZE
 		, buf
