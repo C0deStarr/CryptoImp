@@ -86,8 +86,7 @@ static ErrCrypto PermutateArr(uint8_t *pPermutationChoice, uint32_t nChoice
 		//
 		//pOut[i / 8] |= byPermutedChoice >> (i % 8);
 
-		ullTmp = ((0x8000000000000000 >> nBitOffset) & (ullIn)) 
-			<< nBitOffset;
+		ullTmp = (0x8000000000000000  & (ullIn << nBitOffset));
 		(*pUllOut) |= ullTmp >> i;
 	}
 	return errRet;
@@ -117,8 +116,7 @@ static ErrCrypto PermutateULL(uint8_t* pPermutationChoice, uint32_t nChoice
 	{
 		nBitOffset = pPermutationChoice[i] - 1;
 	
-		ullTmp = ((0x8000000000000000 >> nBitOffset) & (ullIn))
-			<< nBitOffset;
+		ullTmp = (0x8000000000000000 & (ullIn << nBitOffset));
 		(*pUllOut) |= ullTmp >> i;
 	}
 	return errRet;
