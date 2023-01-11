@@ -31,11 +31,33 @@ ErrCrypto des3_init(des3_key* pStcKey, const uint8_t* pKey, uint32_t nKey)
 ErrCrypto des3(des3_key* pStcKey
 	, const uint8_t* pData
 	, uint32_t nData
-	, uint8_t* pCipher
+	, uint8_t* pOut
 	, uint32_t nOutBuf
 	, DES_OPERATION op)
 {
 	ErrCrypto errRet = ERR_OK;
+
+	if (!pStcKey || !pData || !pOut)
+	{
+		return ERR_NULL;
+	}
+	if ((BLOCK_SIZE != nData) || (BLOCK_SIZE > nOutBuf))
+	{
+		return ERR_BLOCK_SIZE;
+	}
+
+	if (ENC == op)
+	{
+		des(&pStcKey->desKeys[0], pData, nData, pOut, nOutBuf, ENC);
+		des(&pStcKey->desKeys[1], pOut, nData, pOut, nOutBuf, DEC);
+		des(&pStcKey->desKeys[2], pOut, nData, pOut, nOutBuf, ENC);
+	}
+	else
+	{
+		des(&pStcKey->desKeys[2], pData, nData, pOut, nOutBuf, DEC);
+		des(&pStcKey->desKeys[1], pOut, nData, pOut, nOutBuf, ENC);
+		des(&pStcKey->desKeys[0], pOut, nData, pOut, nOutBuf, DEC);
+	}
 
 	return errRet;
 }
@@ -46,9 +68,9 @@ void test_des3()
 	des3_key stcKey = { 0 };
 	uint8_t data[] = { 0x94, 0x74, 0xB8, 0xE8, 0xC7, 0x3B, 0xCA, 0x7D };
 	uint8_t szKey[] = { 
-		0x10, 0x31, 0x6E, 0x02, 0x8C, 0x8F, 0x3B, 0x4A,
-		0x10, 0x31, 0x6E, 0x02, 0x8C, 0x8F, 0x3B, 0x4A,
-		0x10, 0x31, 0x6E, 0x02, 0x8C, 0x8F, 0x3B, 0x4A
+		0x11, 0x31, 0x6E, 0x02, 0x8C, 0x8F, 0x3B, 0x4A,
+		0x12, 0x31, 0x6E, 0x02, 0x8C, 0x8F, 0x3B, 0x4B,
+		0x13, 0x31, 0x6E, 0x02, 0x8C, 0x8F, 0x3B, 0x4C
 	};
 	uint8_t cipher[256] = { 0 };
 	uint8_t buf[256] = { 0 };
@@ -74,7 +96,7 @@ void test_des3()
 	printf("\n");
 
 
-	err = des(
+	err = des3(
 		&stcKey
 		, cipher
 		, BLOCK_SIZE

@@ -27,7 +27,7 @@ ErrCrypto des_init(des_key *pStcKey, const uint8_t *pKey, uint32_t nKey);
 ErrCrypto des(des_key *pStcKey
 	, const uint8_t *pData
 	, uint32_t nData
-	, uint8_t *pCipher
+	, uint8_t * pOut
 	, uint32_t nOutBuf
 	, DES_OPERATION op);
 
