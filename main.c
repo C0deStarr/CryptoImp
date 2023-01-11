@@ -11,7 +11,8 @@
 //#include "./Hash/sha/sha3.h"
 //#include "./Hash/gm/sm3.h"
 
-#include "./Cipher/BlockCipher/des.h"
+//#include "./Cipher/BlockCipher/des.h"
+#include "./Cipher/BlockCipher/des3.h"
 
 int main()
 {
@@ -27,7 +28,8 @@ int main()
 	//test_sha256_hmac();
 
 
-	test_des();
+	//test_des();
+	test_des3();
 
 	getchar();
 	return 0;
