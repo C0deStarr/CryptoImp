@@ -1,2 +1,2 @@
 # CryptoImp
-My Cryptography algorithm implements/collections.
+My Cryptography algorithm implements.
