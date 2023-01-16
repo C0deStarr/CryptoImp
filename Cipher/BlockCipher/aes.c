@@ -3,6 +3,7 @@
 
 
 #define RotWord32(x) (((x) << 8) | ((x) >> 24))
+#define RotWord32_R(x, n) (((x) >> (n)) | ((x) << (32-(n))))
 
 ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/]);
 
@@ -180,6 +181,25 @@ ErrCrypto SubBytes(uint8_t* pState)
 	return ERR_OK;
 }
 
+ErrCrypto ShiftRows(uint8_t* pState)
+{
+	uint32_t i = 0;
+	if (!pState)
+	{
+		return ERR_NULL;
+	}
+
+	for (i = 1; i < 4; ++i)
+	{
+		// bytes shift left
+		// == little endian dword shift right
+		*(uint32_t*)&(pState[i * AES_Nb]) = RotWord32_R(*(uint32_t*)&(pState[i * AES_Nb]), i * 8);
+	}
+
+
+	return ERR_OK;
+}
+
 ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[AES_BLOCK_SIZE])
 {
 	ErrCrypto errRet = ERR_OK;
@@ -199,6 +219,7 @@ ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[A
 	for (i = 1; i < pStcAES->Nr; ++i)
 	{
 		SubBytes(state);
+		ShiftRows(state);
 		AddRoundKey(pStcAES, state, i*AES_Nb);
 	}
 
