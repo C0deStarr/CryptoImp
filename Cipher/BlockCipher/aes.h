@@ -24,6 +24,7 @@ typedef struct {
 ErrCrypto aes_init(StcAES* pStcAES, aes_key_size nAesKeySize, uint8_t *pKey, uint32_t nKey);
 ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/]);
 
+void test_aes();
 
 #endif
 
