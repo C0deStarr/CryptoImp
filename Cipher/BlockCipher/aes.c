@@ -150,10 +150,7 @@ ErrCrypto AddRoundKey(StcAES* pStcAES, uint8_t* pState, uint32_t nRound)
 	{
 		return ERR_NULL;
 	}
-	if (nRound >= pStcAES->Nr)
-	{
-		return ERR_NR_ROUNDS;
-	}
+	
 
 	for (i = 0; i < AES_BLOCK_SIZE; ++i)
 	{
@@ -291,7 +288,9 @@ ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[A
 		MixColumns(state);
 		AddRoundKey(pStcAES, state, i*AES_Nb);
 	}
-
+	SubBytes(state);
+	ShiftRows(state);
+	AddRoundKey(pStcAES, state, i * AES_Nb);
 	return errRet;
 }
 
