@@ -4,6 +4,7 @@
 
 #define RotWord32(x) (((x) << 8) | ((x) >> 24))
 
+ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/]);
 
 static const uint8_t sbox[16][16] = {
 	{0x63,0x7C,0x77,0x7B,0xF2,0x6B,0x6F,0xC5,0x30,0x01,0x67,0x2B,0xFE,0xD7,0xAB,0x76},
@@ -71,8 +72,8 @@ ErrCrypto aes_init(StcAES* pStcAES, aes_key_size nAesKeySize, uint8_t* pKey, uin
 		default:
 			return ERR_KEY_SIZE;
 	}
-	pStcAES->nKeySize = nAesKeySize;
-	pStcAES->Nb = AES_Nb;
+	pStcAES->nKeyBitsSize = nAesKeySize;
+	//pStcAES->Nb = AES_Nb;
 
 	errRet = KeyExpansion(pStcAES, pKey);
 
@@ -118,7 +119,7 @@ ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/])
 		pStcAES->w[i] = u8to32_big(&key[4*i]);
 	}
 
-	nW = pStcAES->Nb * (pStcAES->Nr + 1);
+	nW = AES_Nb * (pStcAES->Nr + 1);
 	while (i < nW)
 	{
 		temp = pStcAES->w[i - 1];
@@ -141,6 +142,48 @@ ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/])
 }
 
 
+ErrCrypto AddRoundKey(StcAES* pStcAES, uint8_t* pState, uint32_t nRound)
+{
+	ErrCrypto errRet = ERR_OK;
+	uint32_t i = 0;
+	if (!pStcAES || !pState)
+	{
+		return ERR_NULL;
+	}
+	if (nRound >= pStcAES->Nr)
+	{
+		return ERR_NR_ROUNDS;
+	}
+
+	for (i = 0; i < AES_BLOCK_SIZE; ++i)
+	{
+		pState[i] ^= (pStcAES->w[nRound + i % AES_Nb]
+			>> (24 - (i / AES_Nb ) * 8))
+			& 0xFF;
+	}
+
+	return errRet;
+}
+
+ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[AES_BLOCK_SIZE])
+{
+	ErrCrypto errRet = ERR_OK;
+	uint8_t state[4][AES_Nb] = {0};
+	uint32_t i = 0;
+	if (!pStcAES || !in || !out)
+	{
+		return ERR_NULL;
+	}
+
+	for (i = 0; i < AES_BLOCK_SIZE; ++i)
+	{
+		state[i % 4][i / 4] = in[i];
+	}
+
+	AddRoundKey(pStcAES, state, 0);
+
+	return errRet;
+}
 
 
 void test_aes()
@@ -149,6 +192,10 @@ void test_aes()
 	uint8_t key[] = {
 		0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
 	};
+	uint8_t input[] = {
+		0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34
+	};
 	uint32_t nKey = sizeof(key);
 	aes_init(&stcAES, aes128, key, nKey);
+	aes_encrypt(&stcAES, input, sizeof(input));
 }
