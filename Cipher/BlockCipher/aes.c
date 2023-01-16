@@ -1,7 +1,6 @@
 #include "aes.h"
 #include <common/endianess.h>
-
-
+#include "gf_mul.h"
 #define RotWord32(x) (((x) << 8) | ((x) >> 24))
 #define RotWord32_R(x, n) (((x) >> (n)) | ((x) << (32-(n))))
 
@@ -200,6 +199,75 @@ ErrCrypto ShiftRows(uint8_t* pState)
 	return ERR_OK;
 }
 
+uint8_t xtime(uint16_t a, uint8_t b)
+{
+	static const uint16_t mx = 0x011B;
+	uint16_t nRet = 0;
+	int i = 0;
+	for (i = 0; i < 8; ++i)
+	{
+		if (b & 0x01)
+		{
+			nRet ^= a;
+		}
+		b >>= 1;
+		a <<= 1;
+		if (a & 0x0100)
+		{
+			a ^= mx;
+		}
+	}
+	return nRet & 0xFF;
+}
+
+ErrCrypto MixColumns(uint8_t* pState)
+{
+	uint8_t byCols[4] = { 0 };
+	uint32_t i = 0;
+	if (!pState)
+	{
+		return ERR_NULL;
+	}
+
+	// 4 cols of state
+	for (i = 0; i < 4; ++i)
+	{
+		byCols[0] = pState[i];
+		byCols[1] = pState[AES_Nb + i];
+		byCols[2] = pState[2 * AES_Nb + i];
+		byCols[3] = pState[3 * AES_Nb + i];
+
+		pState[i] =
+			/*xtime(0x02, byCols[0])
+			^ xtime(0x03, byCols[1])*/
+			 gf_mul[0x02][byCols[0]]
+			 ^ gf_mul[0x03][byCols[1]]
+			^ byCols[2]
+			^ byCols[3];
+		pState[AES_Nb + i] = byCols[0]
+			 /*^ xtime(0x02, byCols[1])
+			 ^ xtime(0x03, byCols[2])*/
+			^ gf_mul[0x02][byCols[1]]
+			^ gf_mul[0x03][byCols[2]]
+			^ byCols[3];
+		pState[2 * AES_Nb + i] = byCols[0]
+			^ byCols[1]
+			//^ xtime(0x02, byCols[2])
+			^ gf_mul[0x02][byCols[2]]
+			//^ xtime(0x03, byCols[3]);
+			^ gf_mul[0x03][byCols[3]];
+		pState[3 * AES_Nb + i] =
+			//xtime(0x03, byCols[0])
+			gf_mul[0x03][byCols[0]]
+			^ byCols[1]
+			^ byCols[2]
+			//^ xtime(0x02, byCols[3]);
+			^ gf_mul[0x02][byCols[3]];
+		
+	}
+	
+	return ERR_OK;
+}
 ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[AES_BLOCK_SIZE])
 {
 	ErrCrypto errRet = ERR_OK;
@@ -220,6 +288,7 @@ ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[A
 	{
 		SubBytes(state);
 		ShiftRows(state);
+		MixColumns(state);
 		AddRoundKey(pStcAES, state, i*AES_Nb);
 	}
 

@@ -146,6 +146,7 @@
     <ClInclude Include="Cipher\BlockCipher\aes.h" />
     <ClInclude Include="Cipher\BlockCipher\des.h" />
     <ClInclude Include="Cipher\BlockCipher\des3.h" />
+    <ClInclude Include="Cipher\BlockCipher\gf_mul.h" />
     <ClInclude Include="Cipher\BlockCipher\modes.h" />
     <ClInclude Include="common\common.h" />
     <ClInclude Include="common\endianess.h" />
@@ -167,6 +168,7 @@
     <ClCompile Include="Cipher\BlockCipher\aes.c" />
     <ClCompile Include="Cipher\BlockCipher\des.c" />
     <ClCompile Include="Cipher\BlockCipher\des3.c" />
+    <ClCompile Include="Cipher\BlockCipher\gf_mul.c" />
     <ClCompile Include="common\endianess.c" />
     <ClCompile Include="Encode\b64.c" />
     <ClCompile Include="Hash\gm\sm3.c" />
