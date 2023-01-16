@@ -90,6 +90,9 @@
     <ClInclude Include="Cipher\BlockCipher\des3.h">
       <Filter>Cipher\BlockCipher</Filter>
     </ClInclude>
+    <ClInclude Include="Cipher\BlockCipher\aes.h">
+      <Filter>Cipher\BlockCipher</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="common\endianess.c">
@@ -138,6 +141,9 @@
       <Filter>Cipher\BlockCipher</Filter>
     </ClCompile>
     <ClCompile Include="Cipher\BlockCipher\des3.c">
+      <Filter>Cipher\BlockCipher</Filter>
+    </ClCompile>
+    <ClCompile Include="Cipher\BlockCipher\aes.c">
       <Filter>Cipher\BlockCipher</Filter>
     </ClCompile>
   </ItemGroup>

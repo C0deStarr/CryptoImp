@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Cipher\BlockCipher\aes.h" />
     <ClInclude Include="Cipher\BlockCipher\des.h" />
     <ClInclude Include="Cipher\BlockCipher\des3.h" />
     <ClInclude Include="Cipher\BlockCipher\modes.h" />
@@ -163,6 +164,7 @@
     <ClInclude Include="Hash\sha\sha512_256.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Cipher\BlockCipher\aes.c" />
     <ClCompile Include="Cipher\BlockCipher\des.c" />
     <ClCompile Include="Cipher\BlockCipher\des3.c" />
     <ClCompile Include="common\endianess.c" />

@@ -22,7 +22,7 @@ typedef struct {
 }StcAES;
 
 ErrCrypto aes_init(StcAES* pStcAES, aes_key_size nAesKeySize, uint8_t *pKey, uint32_t nKey);
-ErrCrypto KeyExpansion(uint8_t key[/*4*Nk*/],  uint32_t w[/*Nb*(Nr+1)*/], uint32_t Nk);
+ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/]);
 
 
 #endif
