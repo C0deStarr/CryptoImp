@@ -15,6 +15,7 @@ typedef enum {
 
 typedef struct {
 	uint32_t w[60];	// max == Nb * (Nr+1)
+	uint32_t dw[60];	// max == Nb * (Nr+1)
 	aes_key_size nKeyBitsSize;
 	//uint32_t Nb;
 	uint32_t Nr;
@@ -35,6 +36,11 @@ ErrCrypto aes_decrypt(StcAES* pStcAES
 	, uint8_t* pOut
 	, uint32_t nOut/* = AES_BLOCK_SIZE*/);
 
+ErrCrypto aes_decrypt_ex(StcAES* pStcAES
+	, uint8_t* in
+	, uint32_t nIn/* = AES_BLOCK_SIZE*/
+	, uint8_t* pOut
+	, uint32_t nOut/* = AES_BLOCK_SIZE*/);
 void test_aes();
 
 #endif

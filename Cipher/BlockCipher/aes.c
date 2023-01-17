@@ -11,6 +11,7 @@
 ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/]);
 
 ErrCrypto AddRoundKey(StcAES* pStcAES, uint8_t* pState, uint32_t nRound);
+ErrCrypto AddRoundKeyDecrypt(StcAES* pStcAES, uint8_t* pState, uint32_t nRound);
 
 ErrCrypto SubBytes(uint8_t* pState);
 ErrCrypto InvSubBytes(uint8_t* pState);
@@ -122,6 +123,11 @@ ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/])
 	uint32_t temp = 0;
 	uint32_t nW = 0;
 
+	// for dw
+	uint8_t state[4][AES_Nb] = { 0 };
+	uint32_t nOffsetDW = 0;
+	uint32_t j = 0;
+
 
 	/* py generator
 	a = 0x01
@@ -151,6 +157,7 @@ ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/])
 	}
 
 	memset(pStcAES->w, 0, sizeof(pStcAES->w));
+	memset(pStcAES->dw, 0, sizeof(pStcAES->dw));
 
 	for (i = 0; i < pStcAES->Nk; ++i)
 	{
@@ -176,6 +183,34 @@ ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/])
 		++i;
 	}
 
+
+	for (i = 0; i < nW; ++i)
+	{
+		pStcAES->dw[i] = pStcAES->w[i];
+	}
+
+	i = nW - AES_Nb;
+	for (nOffsetDW = AES_Nb; nOffsetDW < i; nOffsetDW += AES_Nb)
+	{
+		for (j = 0; j < 4; ++j)
+		{
+			state[0][j] = (pStcAES->dw[nOffsetDW + j] >> 24) & 0xFF;
+			state[1][j] = (pStcAES->dw[nOffsetDW + j] >> 16) & 0xFF;
+			state[2][j] = (pStcAES->dw[nOffsetDW + j] >> 8) & 0xFF;
+			state[3][j] = (pStcAES->dw[nOffsetDW + j]) & 0xFF;
+		}
+		
+		InvMixColumns(state);
+
+		for (j = 0; j < 4; ++j)
+		{
+			pStcAES->dw[nOffsetDW + j] =
+				(state[0][j] << 24)
+				^ (state[1][j] << 16)
+				^ (state[2][j] << 8)
+				^ (state[3][j]);
+		}
+	}
 	return errRet;
 }
 
@@ -204,6 +239,32 @@ ErrCrypto AddRoundKey(StcAES* pStcAES, uint8_t* pState, uint32_t nRound)
 
 	return errRet;
 }
+
+ErrCrypto AddRoundKeyDecrypt(StcAES* pStcAES, uint8_t* pState, uint32_t nRound)
+{
+	ErrCrypto errRet = ERR_OK;
+	uint32_t i = 0;
+	uint32_t nOffsetKey = nRound * AES_Nb;
+	if (!pStcAES || !pState)
+	{
+		return ERR_NULL;
+	}
+
+	if (nRound > pStcAES->Nr)
+	{
+		return ERR_NR_ROUNDS;
+	}
+
+	for (i = 0; i < AES_BLOCK_SIZE; ++i)
+	{
+		pState[i] ^= (pStcAES->dw[nOffsetKey + i % AES_Nb]
+			>> (24 - (i / AES_Nb) * 8))
+			& 0xFF;
+	}
+
+	return errRet;
+}
+
 
 ErrCrypto SubBytes(uint8_t* pState)
 {
@@ -474,6 +535,51 @@ ErrCrypto aes_decrypt(StcAES* pStcAES
 	return errRet;
 }
 
+ErrCrypto aes_decrypt_ex(StcAES* pStcAES
+	, uint8_t* in
+	, uint32_t nIn/* = AES_BLOCK_SIZE*/
+	, uint8_t* pOut
+	, uint32_t nOut/* = AES_BLOCK_SIZE*/)
+{
+	ErrCrypto errRet = ERR_OK;
+	uint8_t state[4][AES_Nb] = { 0 };
+	uint32_t i = 0;
+	if (!pStcAES || !in || !pOut)
+	{
+		return ERR_NULL;
+	}
+	if ((AES_BLOCK_SIZE != nIn)
+		|| (AES_BLOCK_SIZE != nOut))
+	{
+		return ERR_BLOCK_SIZE;
+	}
+
+	for (i = 0; i < AES_BLOCK_SIZE; ++i)
+	{
+		state[i % 4][i / 4] = in[i];
+	}
+
+	AddRoundKeyDecrypt(pStcAES, state, pStcAES->Nr);
+	for (i = pStcAES->Nr - 1; i >= 1; --i)
+	{
+		InvSubBytes(state);
+		InvShiftRows(state);
+		InvMixColumns(state);
+		AddRoundKeyDecrypt(pStcAES, state, i);
+	}
+	InvSubBytes(state);
+	InvShiftRows(state);
+	AddRoundKeyDecrypt(pStcAES, state, 0);
+
+
+	for (i = 0; i < AES_BLOCK_SIZE; ++i)
+	{
+		pOut[i] = state[i % 4][i / 4];
+	}
+	return errRet;
+}
+
+
 void test_aes()
 {
 	StcAES stcAES = {0};
@@ -483,6 +589,9 @@ void test_aes()
 	};
 	uint8_t data[] = {
 		0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34
+	};
+	uint8_t true_cipher[] = {
+		0x39, 0x25, 0x84, 0x1d, 0x02, 0xdc, 0x09, 0xfb, 0xdc, 0x11, 0x85, 0x97, 0x19, 0x6a, 0x0b, 0x32
 	};
 	uint8_t cipher[0x10] = { 0 };
 	uint8_t plain[0x10] = {0};
@@ -494,6 +603,10 @@ void test_aes()
 		printf("%02x", cipher[i]);
 	}
 	printf("\n");
+	if (!memcmp(true_cipher, cipher, 0x10))
+	{
+		printf("ok\n");
+	}
 
 	aes_decrypt(&stcAES, cipher, sizeof(cipher), plain, 0x10);
 
@@ -501,4 +614,20 @@ void test_aes()
 		printf("%02x", plain[i]);
 	}
 	printf("\n");
+	if (!memcmp(plain, data, 0x10))
+	{
+		printf("ok\n");
+	}
+
+	memset(plain, 0, 0x10);
+	aes_decrypt_ex(&stcAES, cipher, sizeof(cipher), plain, 0x10);
+
+	for (i = 0; i < AES_BLOCK_SIZE; i++) {
+		printf("%02x", plain[i]);
+	}
+	printf("\n");
+	if (!memcmp(plain, data, 0x10))
+	{
+		printf("ok\n");
+	}
 }
