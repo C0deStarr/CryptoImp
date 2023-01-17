@@ -146,15 +146,20 @@ ErrCrypto AddRoundKey(StcAES* pStcAES, uint8_t* pState, uint32_t nRound)
 {
 	ErrCrypto errRet = ERR_OK;
 	uint32_t i = 0;
+	uint32_t nOffsetKey = nRound * AES_Nb;
 	if (!pStcAES || !pState)
 	{
 		return ERR_NULL;
 	}
 	
+	if ( nRound  > pStcAES->Nr)
+	{
+		return ERR_NR_ROUNDS;
+	}
 
 	for (i = 0; i < AES_BLOCK_SIZE; ++i)
 	{
-		pState[i] ^= (pStcAES->w[nRound + i % AES_Nb]
+		pState[i] ^= (pStcAES->w[nOffsetKey + i % AES_Nb]
 			>> (24 - (i / AES_Nb ) * 8))
 			& 0xFF;
 	}
@@ -286,11 +291,11 @@ ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[A
 		SubBytes(state);
 		ShiftRows(state);
 		MixColumns(state);
-		AddRoundKey(pStcAES, state, i*AES_Nb);
+		AddRoundKey(pStcAES, state, i);
 	}
 	SubBytes(state);
 	ShiftRows(state);
-	AddRoundKey(pStcAES, state, i * AES_Nb);
+	AddRoundKey(pStcAES, state, i);
 	return errRet;
 }
 
