@@ -4,7 +4,6 @@
 
 
 #include <common/common.h>
-#include "modes.h"
 
 
 #define NUMBER_OF_ROUNDS    16

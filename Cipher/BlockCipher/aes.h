@@ -59,7 +59,22 @@ ErrCrypto aes_decrypt_cbc(StcAES* pStcAES
 	, uint8_t* pOut
 	, uint32_t nOut);
 
-void test_aes_cbc();
+ErrCrypto aes_encrypt_cfb(StcAES* pStcAES
+	, uint8_t* pIn
+	, uint32_t nIn
+	, uint8_t* pIV
+	, uint32_t nIV/* = AES_BLOCK_SIZE*/
+	, uint8_t* pOut
+	, uint32_t nOut);
+ErrCrypto aes_decrypt_cfb(StcAES* pStcAES
+	, uint8_t* pIn
+	, uint32_t nIn
+	, uint8_t* pIV
+	, uint32_t nIV/* = AES_BLOCK_SIZE*/
+	, uint8_t* pOut
+	, uint32_t nOut);
+
+void test_aes_modes();
 
 #endif
 

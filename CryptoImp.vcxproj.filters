@@ -78,9 +78,6 @@
     <ClInclude Include="Cipher\BlockCipher\des.h">
       <Filter>Cipher\BlockCipher</Filter>
     </ClInclude>
-    <ClInclude Include="Cipher\BlockCipher\modes.h">
-      <Filter>Cipher\BlockCipher</Filter>
-    </ClInclude>
     <ClInclude Include="Cipher\BlockCipher\des3.h">
       <Filter>Cipher\BlockCipher</Filter>
     </ClInclude>

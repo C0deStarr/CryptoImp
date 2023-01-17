@@ -31,7 +31,7 @@ int main()
 
 	//test_des();
 	//test_des3();
-	test_aes_cbc();
+	test_aes_modes();
 
 	getchar();
 	return 0;
