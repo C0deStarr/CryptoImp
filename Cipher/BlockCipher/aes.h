@@ -23,7 +23,11 @@ typedef struct {
 
 ErrCrypto aes_init(StcAES* pStcAES, aes_key_size nAesKeySize, uint8_t *pKey, uint32_t nKey);
 
-ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[AES_BLOCK_SIZE]);
+ErrCrypto aes_encrypt(StcAES* pStcAES
+	, uint8_t *in
+	, uint32_t nIn/* = AES_BLOCK_SIZE*/
+	, uint8_t* pOut
+	, uint32_t nOut/* = AES_BLOCK_SIZE*/);
 
 void test_aes();
 

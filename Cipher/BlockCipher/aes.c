@@ -270,14 +270,23 @@ ErrCrypto MixColumns(uint8_t* pState)
 	
 	return ERR_OK;
 }
-ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[AES_BLOCK_SIZE])
+ErrCrypto aes_encrypt(StcAES* pStcAES
+	, uint8_t* in
+	, uint32_t nIn/* = AES_BLOCK_SIZE*/
+	, uint8_t *pOut
+	, uint32_t nOut/* = AES_BLOCK_SIZE*/)
 {
 	ErrCrypto errRet = ERR_OK;
 	uint8_t state[4][AES_Nb] = {0};
 	uint32_t i = 0;
-	if (!pStcAES || !in || !out)
+	if (!pStcAES || !in || !pOut)
 	{
 		return ERR_NULL;
+	}
+	if ((AES_BLOCK_SIZE != nIn)
+		|| (AES_BLOCK_SIZE != nOut))
+	{
+		return ERR_BLOCK_SIZE;
 	}
 
 	for (i = 0; i < AES_BLOCK_SIZE; ++i)
@@ -296,6 +305,11 @@ ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[A
 	SubBytes(state);
 	ShiftRows(state);
 	AddRoundKey(pStcAES, state, i);
+
+	for (i = 0; i < AES_BLOCK_SIZE; ++i)
+	{
+		pOut[i] = state[i % 4][i / 4];
+	}
 	return errRet;
 }
 
@@ -303,13 +317,20 @@ ErrCrypto aes_encrypt(StcAES* pStcAES, uint8_t in[AES_BLOCK_SIZE], uint8_t out[A
 void test_aes()
 {
 	StcAES stcAES = {0};
+	uint32_t i = 0;
 	uint8_t key[] = {
 		0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
 	};
 	uint8_t input[] = {
 		0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34
 	};
+	uint8_t cipher[0x10] = {0};
 	uint32_t nKey = sizeof(key);
 	aes_init(&stcAES, aes128, key, nKey);
-	aes_encrypt(&stcAES, input, sizeof(input));
+	aes_encrypt(&stcAES, input, sizeof(input), cipher, 0x10);
+
+	for (i = 0; i < AES_BLOCK_SIZE; i++) {
+		printf("%02x", cipher[i]);
+	}
+	printf("\n");
 }
