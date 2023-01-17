@@ -29,6 +29,12 @@ ErrCrypto aes_encrypt(StcAES* pStcAES
 	, uint8_t* pOut
 	, uint32_t nOut/* = AES_BLOCK_SIZE*/);
 
+ErrCrypto aes_decrypt(StcAES* pStcAES
+	, uint8_t* in
+	, uint32_t nIn/* = AES_BLOCK_SIZE*/
+	, uint8_t* pOut
+	, uint32_t nOut/* = AES_BLOCK_SIZE*/);
+
 void test_aes();
 
 #endif
