@@ -151,6 +151,7 @@
     <ClInclude Include="common\common.h" />
     <ClInclude Include="common\endianess.h" />
     <ClInclude Include="common\errors.h" />
+    <ClInclude Include="common\util.h" />
     <ClInclude Include="Encode\b64.h" />
     <ClInclude Include="Hash\gm\sm3.h" />
     <ClInclude Include="Hash\md\md5.h" />
@@ -166,10 +167,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cipher\BlockCipher\aes.c" />
+    <ClCompile Include="Cipher\BlockCipher\aes_modes.c" />
     <ClCompile Include="Cipher\BlockCipher\des.c" />
     <ClCompile Include="Cipher\BlockCipher\des3.c" />
     <ClCompile Include="Cipher\BlockCipher\gf_mul.c" />
     <ClCompile Include="common\endianess.c" />
+    <ClCompile Include="common\util.c" />
     <ClCompile Include="Encode\b64.c" />
     <ClCompile Include="Hash\gm\sm3.c" />
     <ClCompile Include="Hash\md\md5.c" />

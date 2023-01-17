@@ -34,17 +34,11 @@
     <Filter Include="Cipher\BlockCipher">
       <UniqueIdentifier>{4f3f304a-b94f-4432-99b0-fa87c5e37eff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{93d688ab-36a6-4ae6-8c5f-ff4e8815d5c5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common\common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\errors.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="common\endianess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Encode\b64.h">
       <Filter>Encode</Filter>
     </ClInclude>
@@ -96,11 +90,20 @@
     <ClInclude Include="Cipher\BlockCipher\gf_mul.h">
       <Filter>Cipher\BlockCipher</Filter>
     </ClInclude>
+    <ClInclude Include="common\common.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\endianess.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\errors.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\util.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="common\endianess.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Hash\md\md5.c">
       <Filter>Hash\md</Filter>
     </ClCompile>
@@ -151,6 +154,15 @@
     </ClCompile>
     <ClCompile Include="Cipher\BlockCipher\gf_mul.c">
       <Filter>Cipher\BlockCipher</Filter>
+    </ClCompile>
+    <ClCompile Include="Cipher\BlockCipher\aes_modes.c">
+      <Filter>Cipher\BlockCipher</Filter>
+    </ClCompile>
+    <ClCompile Include="common\endianess.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\util.c">
+      <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
