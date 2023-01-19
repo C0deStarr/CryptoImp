@@ -17,13 +17,13 @@ typedef struct {
 ErrCrypto sm4_init(sm4_ctx* pStcSM4, uint8_t *pKey, uint32_t nKey);
 
 ErrCrypto sm4_encrypt(sm4_ctx* pStcSM4
-	, uint8_t *in
+	, uint8_t *pIn
 	, uint32_t nIn/* = SM4_BLOCK_SIZE*/
 	, uint8_t* pOut
 	, uint32_t nOut/* = SM4_BLOCK_SIZE*/);
 
 ErrCrypto sm4_decrypt(sm4_ctx* pStcSM4
-	, uint8_t* in
+	, uint8_t* pIn
 	, uint32_t nIn/* = SM4_BLOCK_SIZE*/
 	, uint8_t* pOut
 	, uint32_t nOut/* = SM4_BLOCK_SIZE*/);

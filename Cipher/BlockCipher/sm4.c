@@ -181,19 +181,34 @@ ErrCrypto sm4_encrypt(sm4_ctx* pCtx
 }
 
 ErrCrypto sm4_decrypt(sm4_ctx* pCtx
-	, uint8_t* in
+	, uint8_t* pIn
 	, uint32_t nIn/* = SM4_BLOCK_SIZE*/
 	, uint8_t* pOut
 	, uint32_t nOut/* >= SM4_BLOCK_SIZE*/)
 {
 	ErrCrypto errRet = ERR_OK;
 	uint32_t i = 0;
-	
-
-	for (i = 0; i < SM4_BLOCK_SIZE; ++i)
+	uint32_t x[36] = { 0 };
+	if (!pCtx || !pIn || !pOut)
 	{
-		pOut[i];
+		return ERR_NULL;
 	}
+	if ((SM4_BLOCK_SIZE != nIn) || (nOut < nIn))
+	{
+		return ERR_MEMORY;
+	}
+	x[0] = u8to32_big(&pIn[0]);
+	x[1] = u8to32_big(&pIn[4]);
+	x[2] = u8to32_big(&pIn[8]);
+	x[3] = u8to32_big(&pIn[12]);
+	for (i = 0; i < SM4_ROUNDS; ++i)
+	{
+		x[i + 4] = F(x[i], x[i + 1], x[i + 2], x[i + 3], pCtx->rk[SM4_ROUNDS - i - 1]);
+	}
+	u32to8_big(&pOut[0], x[35]);
+	u32to8_big(&pOut[4], x[34]);
+	u32to8_big(&pOut[8], x[33]);
+	u32to8_big(&pOut[12], x[32]);
 	return errRet;
 }
 
