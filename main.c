@@ -13,7 +13,8 @@
 
 //#include "./Cipher/BlockCipher/des.h"
 //#include "./Cipher/BlockCipher/des3.h"
-#include "./Cipher/BlockCipher/aes.h"
+//#include "./Cipher/BlockCipher/aes.h"
+#include "./Cipher/BlockCipher/sm4.h"
 
 int main()
 {
@@ -31,7 +32,8 @@ int main()
 
 	//test_des();
 	//test_des3();
-	test_aes_modes();
+	//test_aes_modes();
+	test_sm4();
 
 	getchar();
 	return 0;

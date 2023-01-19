@@ -99,6 +99,9 @@
     <ClInclude Include="common\util.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="Cipher\BlockCipher\sm4.h">
+      <Filter>Cipher\BlockCipher</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Hash\md\md5.c">
@@ -160,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="common\util.c">
       <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="Cipher\BlockCipher\sm4.c">
+      <Filter>Cipher\BlockCipher</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
