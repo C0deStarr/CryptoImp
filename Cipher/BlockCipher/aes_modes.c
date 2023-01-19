@@ -216,10 +216,9 @@ ErrCrypto aes_decrypt_cfb(StcAES* pStcAES
 
 
 
-ErrCrypto KeyStreamGenerator(
+ErrCrypto KeyStreamGeneratorOFB(
 	StcAES* pStcAES
 	, const uint8_t* pIV
-	, uint32_t nIV
 	, const uint32_t nBlockSize
 	, const uint8_t* pOut
 	, uint32_t nStream)
@@ -232,7 +231,8 @@ ErrCrypto KeyStreamGenerator(
 		return ERR_NULL;
 	}
 
-	if (0 != (nIV % nBlockSize))
+
+	if (nStream % nBlockSize)
 	{
 		return ERR_BLOCK_SIZE;
 	}
@@ -299,6 +299,66 @@ ErrCrypto aes_ofb(StcAES* pStcAES
 	}
 
 	return errRet;
+}
+
+
+
+ErrCrypto KeyStreamGeneratorCTR(
+	StcAES* pStcAES
+	, const uint8_t* pCtr
+	, const uint32_t nBlockSize
+	, const uint8_t* pOut
+	, uint32_t nStream)
+{
+	ErrCrypto errRet = ERR_OK;
+	uint32_t nOffset = 0;
+	uint32_t nOffsetEnc = 0;
+	if (!pCtr || !pOut)
+	{
+		return ERR_NULL;
+	}
+
+
+	if (nStream % nBlockSize)
+	{
+		return ERR_BLOCK_SIZE;
+	}
+
+	memcpy(pOut, pCtr, nBlockSize);
+	nOffsetEnc = 0;
+	for (nOffset = nBlockSize;
+		nOffset < nStream;
+		nOffset += nBlockSize)
+	{
+		memcpy(pOut + nOffset, pOut + nOffsetEnc, nBlockSize);
+		increment_ctr(pOut + nOffset, nBlockSize);
+		errRet = aes_encrypt(pStcAES, pOut + nOffsetEnc, nBlockSize, pOut + nOffsetEnc, nBlockSize);
+		if (ERR_OK != errRet)
+		{
+			break;
+		}
+		nOffsetEnc = nOffset;
+	}
+	errRet = aes_encrypt(pStcAES, pOut + nOffsetEnc, nBlockSize, pOut + nOffsetEnc, nBlockSize);
+
+	return errRet;
+}
+
+ErrCrypto aes_ctr(StcAES* pStcAES
+	, uint8_t* pIn
+	, uint32_t nIn
+	, uint8_t* pKeyStream
+	, uint32_t nKeyStream/* = AES_BLOCK_SIZE*/
+	, uint8_t* pOut
+	, uint32_t nOut)
+{
+	return aes_ofb(pStcAES
+		, pIn
+		, nIn
+		, pKeyStream
+		, nKeyStream
+		, pOut
+		, nOut);
 }
 
 void test_aes_modes()
@@ -386,7 +446,7 @@ void test_aes_modes()
 		printf("\nofb mode:\n");
 		memset(cipher, 0, nData);
 		memset(plain, 0, nData);
-		KeyStreamGenerator(&stcAES, iv, AES_BLOCK_SIZE, AES_BLOCK_SIZE, keystream, nData);
+		KeyStreamGeneratorOFB(&stcAES, iv, AES_BLOCK_SIZE, keystream, nData);
 		aes_ofb(&stcAES, data, nData, keystream, nData, cipher, nData);
 
 		for (i = 0; i < sizeof(cipher); i++) {
@@ -408,6 +468,33 @@ void test_aes_modes()
 
 	}
 
+	// ctr
+	{
+		printf("\nctr mode:\n");
+		memset(cipher, 0, nData);
+		memset(plain, 0, nData);
+		memset(keystream, 0, nData);
+		KeyStreamGeneratorCTR(&stcAES, iv, AES_BLOCK_SIZE, keystream, nData);
+		aes_ctr(&stcAES, data, nData, keystream, nData, cipher, nData);
+
+		for (i = 0; i < sizeof(cipher); i++) {
+			printf("%02x", cipher[i]);
+		}
+		printf("\n");
+
+
+		aes_ctr(&stcAES, cipher, nData, keystream, nData, plain, nData);
+
+		for (i = 0; i < nData; i++) {
+			printf("%02x", plain[i]);
+		}
+		printf("\n");
+		if (!memcmp(plain, data, 0x10))
+		{
+			printf("ok\n");
+		}
+
+	}
 }
 
 
