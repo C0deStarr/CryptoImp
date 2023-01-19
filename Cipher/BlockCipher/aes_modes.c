@@ -226,6 +226,7 @@ ErrCrypto KeyStreamGenerator(
 {
 	ErrCrypto errRet = ERR_OK;
 	uint32_t nOffset = 0;
+	uint32_t nOffsetPre = 0;
 	if (!pIV || !pOut)
 	{
 		return ERR_NULL;
@@ -236,13 +237,16 @@ ErrCrypto KeyStreamGenerator(
 		return ERR_BLOCK_SIZE;
 	}
 
-	for (nOffset = 0; nOffset < nIV; nOffset += nBlockSize)
+	memcpy(pOut, pIV, nBlockSize);
+	nOffsetPre = 0;
+	for (nOffset = 0; nOffset < nStream; nOffset += nBlockSize)
 	{
-		errRet = aes_encrypt(pStcAES, pIV, nBlockSize, pOut + nOffset, nBlockSize);
+		errRet = aes_encrypt(pStcAES, pOut + nOffsetPre, nBlockSize, pOut + nOffset, nBlockSize);
 		if (ERR_OK != errRet) 
 		{
 			break;
 		}
+		nOffsetPre = nOffset;
 	}
 
 	return errRet;
