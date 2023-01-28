@@ -4,9 +4,9 @@
 #include <common/endianess.h>
 #include <string.h>
 
-#define RotWord32(x) (((x) << 8) | ((x) >> 24))
 #define ROTR32(x, n) (((x) >> (n)) | ((x) << (32-(n))))
 #define ROTL32(x, n) (((x) << (n)) | ((x) >> (32-(n))))
+#define RotWord(x) ROTL32(x,8)
 
 ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/]);
 
@@ -170,7 +170,7 @@ ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/])
 		temp = pStcAES->w[i - 1];
 		if (0 == (i % pStcAES->Nk))
 		{
-			temp = SubWord(RotWord32(temp)) 
+			temp = SubWord(RotWord(temp)) 
 				^ Rcon[(i-1) / pStcAES->Nk];
 		}
 		else if ((pStcAES->Nk)> 6 && ((i % pStcAES->Nk) == 4))
@@ -449,7 +449,7 @@ ErrCrypto InvMixColumns(uint8_t* pState)
 }
 
 ErrCrypto aes_encrypt(StcAES* pStcAES
-	, uint8_t* in
+	, uint8_t* pIn
 	, uint32_t nIn/* = AES_BLOCK_SIZE*/
 	, uint8_t *pOut
 	, uint32_t nOut/* = AES_BLOCK_SIZE*/)
@@ -457,7 +457,7 @@ ErrCrypto aes_encrypt(StcAES* pStcAES
 	ErrCrypto errRet = ERR_OK;
 	uint8_t state[4][AES_Nb] = {0};
 	uint32_t i = 0;
-	if (!pStcAES || !in || !pOut)
+	if (!pStcAES || !pIn || !pOut)
 	{
 		return ERR_NULL;
 	}
@@ -469,7 +469,7 @@ ErrCrypto aes_encrypt(StcAES* pStcAES
 
 	for (i = 0; i < AES_BLOCK_SIZE; ++i)
 	{
-		state[i % 4][i / 4] = in[i];
+		state[i % 4][i / 4] = pIn[i];
 	}
 
 	AddRoundKey(pStcAES, state, 0);
