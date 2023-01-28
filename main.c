@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "Encode/b64.h"
+//#include <common/b64.h>
 //#include "Hash/md/mddriver.h"
 //#include "Hash/sha/sha1.h"
 //#include "./Hash/sha/sha256.h"

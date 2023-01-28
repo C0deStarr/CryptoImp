@@ -16,9 +16,6 @@
     <Filter Include="Hash">
       <UniqueIdentifier>{cfd116b3-7828-4c10-8c10-fa24f1104858}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Encode">
-      <UniqueIdentifier>{21663911-3a8b-4300-9efe-25d529710df7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Hash\md">
       <UniqueIdentifier>{7750a01c-eb47-4075-a120-930e6b425d97}</UniqueIdentifier>
     </Filter>
@@ -39,9 +36,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Encode\b64.h">
-      <Filter>Encode</Filter>
-    </ClInclude>
     <ClInclude Include="Hash\md\md5.h">
       <Filter>Hash\md</Filter>
     </ClInclude>
@@ -102,6 +96,9 @@
     <ClInclude Include="Cipher\BlockCipher\sm4.h">
       <Filter>Cipher\BlockCipher</Filter>
     </ClInclude>
+    <ClInclude Include="common\b64.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Hash\md\md5.c">
@@ -124,9 +121,6 @@
     </ClCompile>
     <ClCompile Include="Hash\sha\sha512.c">
       <Filter>Hash\sha</Filter>
-    </ClCompile>
-    <ClCompile Include="Encode\b64.c">
-      <Filter>Encode</Filter>
     </ClCompile>
     <ClCompile Include="Hash\sha\sha384.c">
       <Filter>Hash\sha</Filter>
@@ -166,6 +160,9 @@
     </ClCompile>
     <ClCompile Include="Cipher\BlockCipher\sm4.c">
       <Filter>Cipher\BlockCipher</Filter>
+    </ClCompile>
+    <ClCompile Include="common\b64.c">
+      <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
