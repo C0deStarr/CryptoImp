@@ -31,6 +31,9 @@ typedef struct {
 ErrCrypto RSA_Init(RSA * pCtx, RSA_BITS nBits);
 ErrCrypto RSA_UnInit(RSA * pCtx);
 
+ErrCrypto RSA_Encrypt(RSA* pCtx, big msg, big cipher);
+ErrCrypto RSA_Decrypt(RSA* pCtx, big cipher, big msg);
+
 void test_rsa();
 
 #endif // !_RSA_OAEP_H
