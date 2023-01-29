@@ -20,12 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\pubkey\mrutils.c" />
-    <ClCompile Include="..\pubkey\rsa\rsa_oeap.c" />
+    <ClCompile Include="..\pubkey\rsa\rsa.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\pubkey\mrutils.h" />
-    <ClInclude Include="..\pubkey\rsa\rsa_oaep.h" />
+    <ClInclude Include="..\pubkey\rsa\rsa.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

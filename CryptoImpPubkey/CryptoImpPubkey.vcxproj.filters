@@ -21,18 +21,18 @@
     <ClCompile Include="..\pubkey\mrutils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\pubkey\rsa\rsa_oeap.c">
-      <Filter>Rsa</Filter>
-    </ClCompile>
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pubkey\rsa\rsa.c">
+      <Filter>Rsa</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\pubkey\mrutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\pubkey\rsa\rsa_oaep.h">
+    <ClInclude Include="..\pubkey\rsa\rsa.h">
       <Filter>Rsa</Filter>
     </ClInclude>
   </ItemGroup>

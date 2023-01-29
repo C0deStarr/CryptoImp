@@ -1,4 +1,4 @@
-#include "rsa_oaep.h"
+#include "rsa.h"
 
 enum RSA_VARS{
 	RSA_PUB_E = 65537
@@ -103,7 +103,6 @@ static ErrCrypto GenerateKeys(RSA * pCtx)
 #endif
 			continue;
 		}
-		printf("*********************************\n");
 
 		if (pBigTmp == &p)
 		{
@@ -112,18 +111,23 @@ static ErrCrypto GenerateKeys(RSA * pCtx)
 		}
 		break;
 	} while (1);
+#ifdef _DEBUG
+	printf("*********************************\n");
 	printf("p:");
 	cotnum(p, stdout);
 	printf("q:");
 	cotnum(q, stdout);
-	
+	printf("*********************************\n");
+#endif
+
+
 	return errRet;
 }
 
 void test_rsa()
 {
 	RSA ctx;
-	RSA_Init(&ctx, 1024);
+	RSA_Init(&ctx, RSA_1024);
 
 	RSA_UnInit(&ctx);
 }
