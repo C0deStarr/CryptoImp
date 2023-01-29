@@ -23,6 +23,7 @@ typedef struct {
 
 typedef struct {
 	miracl * pMip;
+	int nKeyBits;
 	PubKey pubKey;
 	PriKey priKey;
 }RSA;
