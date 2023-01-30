@@ -6,9 +6,9 @@
 #define WORD_SIZE 8
 #define BLOCK_SIZE 128   // 16 * WORD_SIZE
 #define SCHEDULE_SIZE 80    // steps
-#define DIGEST_SIZE (512/8)
+#define SHA512_DIGEST_SIZE (512/8)
 
-typedef struct _HashState {
+typedef struct _SHA512HashState {
     uint64_t hash[8];
     // BLOCK_SIZE == 16 * WORD_SIZE bytes
     // 64 bytes == 512 bits for SHA-256
@@ -19,11 +19,11 @@ typedef struct _HashState {
     // 8 bytes == 64 bits for SHA-256
     // 16 bytes == 128 bits for SHA-512
     uint64_t nArrBitsLen[2];     
-} HashState;
+} SHA512HashState;
 
-ErrCrypto SHA512_init(HashState* pHashState);
-ErrCrypto SHA512_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen);
-ErrCrypto SHA512_final(HashState* pHashState, uint8_t* pDigest, int nDigest);
+ErrCrypto SHA512_init(SHA512HashState* pSHA512HashState);
+ErrCrypto SHA512_update(SHA512HashState* pSHA512HashState, const uint8_t* pBuf, uint64_t nLen);
+ErrCrypto SHA512_final(SHA512HashState* pSHA512HashState, uint8_t* pDigest, int nDigest);
 void test_sha512();
 void sha512_t_iv_generator();
 #endif

@@ -8,9 +8,9 @@
 #define DIGEST_SIZE (512/8)
 
 
-ErrCrypto SHA512_224_init(HashState* pHashState);
-ErrCrypto SHA512_224_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen);
-ErrCrypto SHA512_224_final(HashState* pHashState, uint8_t* pDigest, int nDigest);
+ErrCrypto SHA512_224_init(SHA512HashState* pHashState);
+ErrCrypto SHA512_224_update(SHA512HashState* pHashState, const uint8_t* pBuf, uint64_t nLen);
+ErrCrypto SHA512_224_final(SHA512HashState* pHashState, uint8_t* pDigest, int nDigest);
 void test_sha512_224();
 
 #endif

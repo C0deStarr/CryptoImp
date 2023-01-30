@@ -16,7 +16,7 @@ static const uint64_t H[8] = {
     0x0EB72DDC81C52CA2ULL
 };
 
-ErrCrypto SHA512_256_init(HashState* pHashState)
+ErrCrypto SHA512_256_init(SHA512HashState* pHashState)
 {
     ErrCrypto errRet = ERR_OK;
     int i = 0;
@@ -37,27 +37,27 @@ ErrCrypto SHA512_256_init(HashState* pHashState)
 
 
 
-ErrCrypto SHA512_256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
+ErrCrypto SHA512_256_update(SHA512HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 {
     return SHA512_update(pHashState, pBuf, nLen);
 }
 
-ErrCrypto SHA512_256_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
+ErrCrypto SHA512_256_final(SHA512HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
     return SHA512_final(pHashState, pDigest, nDigest);
 }
 
 void test_sha512_256()
 {
-    HashState hashState = { 0 };
+    SHA512HashState SHA512HashState = { 0 };
     ErrCrypto err = ERR_OK;
     uint8_t data[] = "abc";
     uint8_t digest[DIGEST_SIZE] = {0};
     uint8_t nDigestLen = 256/8;
     int i = 0;
-    SHA512_256_init(&hashState);
-    SHA512_256_update(&hashState, data, sizeof(data) - 1);
-    SHA512_256_final(&hashState, digest, DIGEST_SIZE);
+    SHA512_256_init(&SHA512HashState);
+    SHA512_256_update(&SHA512HashState, data, sizeof(data) - 1);
+    SHA512_256_final(&SHA512HashState, digest, DIGEST_SIZE);
 
     for (i = 0; i < nDigestLen; i++) {
         printf("%02x", digest[i]);
