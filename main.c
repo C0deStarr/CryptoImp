@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include "common/util.h"
+
 //#include <common/b64.h>
 //#include "Hash/md/mddriver.h"
 //#include "Hash/sha/sha1.h"
@@ -14,7 +16,7 @@
 //#include "./Cipher/BlockCipher/des.h"
 //#include "./Cipher/BlockCipher/des3.h"
 //#include "./Cipher/BlockCipher/aes.h"
-#include "./Cipher/BlockCipher/sm4.h"
+//#include "./Cipher/BlockCipher/sm4.h"
 
 //
 //	pubkey
@@ -38,7 +40,9 @@ int main()
 	//test_des();
 	//test_des3();
 	//test_aes_modes();
-	test_sm4();
+	//test_sm4();
+
+	test_mgf();
 
 	getchar();
 	return 0;

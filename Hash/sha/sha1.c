@@ -234,14 +234,14 @@ ErrCrypto SHA1_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 
 	while (nLen > 0)
 	{
-		nBytesNeeded = BLOCK_SIZE - pHashState->nBytesLen;
+		nBytesNeeded = SHA1_BLOCK_SIZE - pHashState->nBytesLen;
 		nBytesCopy = (nBytesNeeded > nLen) ? nLen : nBytesNeeded;
 		memcpy(pHashState->block, pBuf, nBytesCopy);
 		pBuf += nBytesCopy;
 		pHashState->nBytesLen += nBytesCopy;
 		nLen -= nBytesCopy;
 
-		if (BLOCK_SIZE == pHashState->nBytesLen)
+		if (SHA1_BLOCK_SIZE == pHashState->nBytesLen)
 		{
 			// let's do the 80 steps
 			errRet = sha1_compress(pHashState);
@@ -250,7 +250,7 @@ ErrCrypto SHA1_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 
 			// waiting for the next block
 			pHashState->nBytesLen = 0;
-			errRet = AddBitsLen(pHashState, BLOCK_SIZE*8);
+			errRet = AddBitsLen(pHashState, SHA1_BLOCK_SIZE*8);
 			if(errRet)
 				return errRet;
 		}
@@ -266,7 +266,7 @@ ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGE
     int i = 0;
     if(!pHashState || !pDigest)
         return ERR_NULL;
-    if (DIGEST_SIZE != nDigest)
+    if (SHA1_DIGEST_SIZE != nDigest)
         return ERR_DIGEST_SIZE;
 
     // After last SHA1_update()
@@ -280,15 +280,15 @@ ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGE
     // 1 + 0s + 8-byte msg length
     nPadLen = (pHashState->nBytesLen < 56)
         ? (56 - pHashState->nBytesLen) 
-        : (BLOCK_SIZE + 56 - pHashState->nBytesLen);
+        : (SHA1_BLOCK_SIZE + 56 - pHashState->nBytesLen);
     
     pHashState->block[(pHashState->nBytesLen)++] = 0x80;
     memset(&(pHashState->block[(pHashState->nBytesLen)])
         ,0
         , nPadLen - 1);
-    u32to8_big(&pHashState->block[BLOCK_SIZE - 8]
+    u32to8_big(&pHashState->block[SHA1_BLOCK_SIZE - 8]
         , pHashState->nBitsLen << 32);
-    u32to8_big(&pHashState->block[BLOCK_SIZE - 4]
+    u32to8_big(&pHashState->block[SHA1_BLOCK_SIZE - 4]
         , pHashState->nBitsLen );
     /*
       abcde-->
@@ -306,23 +306,50 @@ ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGE
 	return errRet;
 }
 
+ErrCrypto SHA1_digest(const uint8_t* pData, uint64_t nData, uint8_t* pDigest, int nDigest)
+{
+    ErrCrypto errRet = ERR_OK;
+    HashState hashState = { 0 };
+    if (!pData || !pDigest)
+    {
+        return ERR_NULL;
+    }
+    do {
+        errRet = SHA1_init(&hashState);
+        if(ERR_OK != errRet) break;
+
+        while (nData >= SHA1_DIGEST_SIZE)
+        {
+            errRet = SHA1_update(&hashState, pData, nData);
+            if (ERR_OK != errRet) break;
+            nData -= SHA1_DIGEST_SIZE;
+        }
+        errRet = SHA1_update(&hashState, pData, nData);
+        if (ERR_OK != errRet) break;
+        errRet = SHA1_final(&hashState, pDigest, SHA1_DIGEST_SIZE);
+        if (ERR_OK != errRet) break;
+    }while(0);
+    return errRet;
+}
+
+
 void test_sha1()
 {
 	HashState hashState = {0};
 	ErrCrypto err = ERR_OK;
     uint8_t data[] = "abcde";
     
-    uint8_t digest[DIGEST_SIZE] = {0};
+    uint8_t digest[SHA1_DIGEST_SIZE] = {0};
     int i = 0 ;
 	err = SHA1_init(&hashState);
 	err = SHA1_update(&hashState, data, sizeof(data) - 1);
-    err = SHA1_final(&hashState, digest, DIGEST_SIZE);
+    err = SHA1_final(&hashState, digest, SHA1_DIGEST_SIZE);
 
     /*
     * abcde-->
     *   03de6c570bfe24bfc328ccd7ca46b76eadaf4334
     */
-    for (i = 0; i < DIGEST_SIZE; i++) {
+    for (i = 0; i < SHA1_DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
     }
     printf("\n");
