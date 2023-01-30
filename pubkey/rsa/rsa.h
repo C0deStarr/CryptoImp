@@ -3,7 +3,7 @@
 
 #include "miracl.h"
 
-#include <common.h>
+#include <common/common.h>
 
 typedef enum {
 	RSA_1024 = 1024,

@@ -72,7 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)miracl\include;$(ProjectDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)miracl\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -92,10 +93,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <CompileAsManaged>false</CompileAsManaged>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>miracl.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -154,6 +157,7 @@
     <ClInclude Include="common\errors.h" />
     <ClInclude Include="common\util.h" />
     <ClInclude Include="Hash\gm\sm3.h" />
+    <ClInclude Include="Hash\hash.h" />
     <ClInclude Include="Hash\md\md5.h" />
     <ClInclude Include="Hash\md\mddriver.h" />
     <ClInclude Include="Hash\sha\sha3.h" />
@@ -164,6 +168,8 @@
     <ClInclude Include="Hash\sha\sha512.h" />
     <ClInclude Include="Hash\sha\sha512_224.h" />
     <ClInclude Include="Hash\sha\sha512_256.h" />
+    <ClInclude Include="pubkey\rsa\pkcs1_oaep.h" />
+    <ClInclude Include="pubkey\rsa\rsa.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cipher\BlockCipher\aes.c" />
@@ -187,6 +193,8 @@
     <ClCompile Include="Hash\sha\sha512_224.c" />
     <ClCompile Include="Hash\sha\sha512_256.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="pubkey\rsa\pkcs1_oaep.c" />
+    <ClCompile Include="pubkey\rsa\rsa.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

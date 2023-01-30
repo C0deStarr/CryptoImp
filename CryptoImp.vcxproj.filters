@@ -34,6 +34,12 @@
     <Filter Include="common">
       <UniqueIdentifier>{93d688ab-36a6-4ae6-8c5f-ff4e8815d5c5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="pubkey">
+      <UniqueIdentifier>{7496ab32-7f38-4228-829e-f0f161aab029}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pubkey\rsa">
+      <UniqueIdentifier>{2293402c-f185-4ded-af6a-9e0b6533775d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Hash\md\md5.h">
@@ -99,6 +105,15 @@
     <ClInclude Include="common\b64.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="Hash\hash.h">
+      <Filter>Hash</Filter>
+    </ClInclude>
+    <ClInclude Include="pubkey\rsa\pkcs1_oaep.h">
+      <Filter>pubkey\rsa</Filter>
+    </ClInclude>
+    <ClInclude Include="pubkey\rsa\rsa.h">
+      <Filter>pubkey\rsa</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Hash\md\md5.c">
@@ -163,6 +178,12 @@
     </ClCompile>
     <ClCompile Include="common\b64.c">
       <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="pubkey\rsa\pkcs1_oaep.c">
+      <Filter>pubkey\rsa</Filter>
+    </ClCompile>
+    <ClCompile Include="pubkey\rsa\rsa.c">
+      <Filter>pubkey\rsa</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
