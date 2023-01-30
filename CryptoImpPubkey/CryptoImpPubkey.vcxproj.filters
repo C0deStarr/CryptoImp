@@ -13,27 +13,27 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Rsa">
+    <Filter Include="rsa">
       <UniqueIdentifier>{ab559a35-04be-4df1-afe1-6152242fc397}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\pubkey\mrutils.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\pubkey\rsa\rsa.c">
-      <Filter>Rsa</Filter>
+    <ClCompile Include="mrutils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rsa\rsa.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\pubkey\mrutils.h">
+    <ClInclude Include="mrutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\pubkey\rsa\rsa.h">
-      <Filter>Rsa</Filter>
+    <ClInclude Include="rsa\rsa.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

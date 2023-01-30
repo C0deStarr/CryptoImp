@@ -1,4 +1,4 @@
-#include "../pubkey/rsa/rsa.h"
+#include "rsa/rsa.h"
 
 int main()
 {

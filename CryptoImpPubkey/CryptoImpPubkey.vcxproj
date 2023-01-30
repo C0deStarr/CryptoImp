@@ -19,13 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\pubkey\mrutils.c" />
-    <ClCompile Include="..\pubkey\rsa\rsa.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="mrutils.c" />
+    <ClCompile Include="rsa\rsa.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\pubkey\mrutils.h" />
-    <ClInclude Include="..\pubkey\rsa\rsa.h" />
+    <ClInclude Include="mrutils.h" />
+    <ClInclude Include="rsa\rsa.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
