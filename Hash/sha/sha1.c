@@ -324,8 +324,11 @@ ErrCrypto SHA1_digest(const uint8_t* pData, uint64_t nData, uint8_t* pDigest, in
             if (ERR_OK != errRet) break;
             nData -= SHA1_DIGEST_SIZE;
         }
-        errRet = SHA1_update(&hashState, pData, nData);
-        if (ERR_OK != errRet) break;
+        if (nData) 
+        {
+            errRet = SHA1_update(&hashState, pData, nData);
+            if (ERR_OK != errRet) break;
+        }
         errRet = SHA1_final(&hashState, pDigest, SHA1_DIGEST_SIZE);
         if (ERR_OK != errRet) break;
     }while(0);
