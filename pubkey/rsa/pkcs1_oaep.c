@@ -36,24 +36,30 @@ ErrCrypto pkcs1_oaep_uninit(OAEP* pCtx)
  EM =   |00|maskedSeed|          maskedDB          |
 		+--+----------+----------------------------+
 */
-ErrCrypto pkcs1_oaep(OAEP* pCtx
+ErrCrypto pkcs1_oaep_encrypt(OAEP* pCtx
 	, const uint8_t* pMsg
 	, uint32_t nMsg	// mLen
 	, enum_hash enumHash
 	, uint8_t *pLabel
 	, uint32_t nLabel
 	, uint8_t* pCipher
-	, uint32_t nCipher)
+	, uint32_t nCipher
+#ifdef _DEBUG
+	, big trueEM
+	, big trueCipher
+#endif // _DEBUG
+)
 {
 	ErrCrypto errRet = ERR_OK;
 	uint32_t nHash = 0;
 	uint32_t nKey = 0;
 	PFnHash pfnHash = NULL;
-	uint8_t* pEM = NULL;
+
+	uint8_t* pEM = NULL; // encoded message
 	uint8_t *pSeed = NULL;
-	uint8_t* pDB = NULL;
-	uint8_t* pPS = NULL;
-	uint8_t* pMGF = NULL;
+	uint8_t* pDB = NULL;	// data block
+	uint8_t* pPS = NULL;	// padding string
+	uint8_t* pMGF = NULL;	// mask generation function output
 	uint32_t nDB = 0;
 	big bigEM = NULL;
 	big bigCipher = NULL;
@@ -90,18 +96,22 @@ ErrCrypto pkcs1_oaep(OAEP* pCtx
 		pEM = (uint8_t *)calloc(nKey
 			+ nMGF
 			, 1);
-		if(!pEM) break;
-
+		if(!pEM) 
+		{
+			errRet = ERR_MEMORY;
+			break;
+		}
 		pDB = pEM + 1 + nHash;
 		// Step 2a
 		errRet = pfnHash(pLabel, nLabel, pDB, nHash);
 		if(errRet != ERR_OK) break;
+		
 
 		pPS = pDB + nHash;
 		// Step 2b
 		memset(pPS, 0, nPS);
-		// Step 2c
-		memset(pPS+nPS, 1, 1);
+		// Step 2c DB(data block)
+		pPS[nPS] = 1;
 		memcpy(pPS + nPS + 1, pMsg, nMsg);
 
 		// Step 2d
@@ -112,19 +122,21 @@ ErrCrypto pkcs1_oaep(OAEP* pCtx
 		pMGF = pEM + nKey;
 		errRet = MGF1(pSeed, nHash, nDB, enumHash, pMGF, nDB);
 		if(ERR_OK != errRet) break;
+		
 		// Step 2f
 		xor_buf(pMGF, pDB, nDB);
 
 		// Step 2g seedMask
-		errRet = MGF1(pMGF, nDB, nHash, enumHash, pMGF, nHash);
+		errRet = MGF1(pDB, nDB, nHash, enumHash, pMGF, nHash);
 		if (ERR_OK != errRet) break;
+		
 
 		// Step 2h
 		xor_buf(pMGF, pSeed, nHash);
 
 		
 		// Step 2i
-		pEM[0] = "\x00";
+		pEM[0] = '\x00';
 
 		// Step 3a(OS2IP)
 		bigEM = mirvar(0);
@@ -132,6 +144,12 @@ ErrCrypto pkcs1_oaep(OAEP* pCtx
 		bytes_to_big(nKey, pEM, bigEM);
 		errRet = RSA_Encrypt(&(pCtx->rsa), bigEM, bigCipher);
 		if(ERR_OK != errRet) break;
+#ifdef _DEBUG
+		copy(bigEM, trueEM);
+		copy(bigCipher, trueCipher);
+#endif // _DEBUG
+			
+
 		if (nKey != big_to_bytes(nKey, bigCipher, pCipher, 0))
 		{
 			errRet = ERR_ENCRYPT;
