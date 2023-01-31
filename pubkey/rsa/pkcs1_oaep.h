@@ -33,6 +33,21 @@ ErrCrypto pkcs1_oaep_encrypt(OAEP* pCtx
 #endif // _DEBUG
 
 	);
+
+ErrCrypto pkcs1_oaep_decrypt(OAEP* pCtx
+	, const uint8_t* pCipher
+	, uint32_t nCipher	// mLen
+	, enum_hash enumHash
+	, uint8_t* pLabel
+	, uint32_t nLabel
+	, uint8_t* pOut
+	, uint32_t nOut
+#ifdef _DEBUG
+	, big trueEM
+	, big trueCipher
+#endif // _DEBUG
+	);
+
 void test_rsa_oaep();
 
 #endif // !_PKCS1_OAEP_H

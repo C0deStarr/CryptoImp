@@ -5,6 +5,11 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef _DEBUG
+#include "rsa.h"
+#include <miracl.h>
+#include <stdio.h>
+#endif // _DEBUG
 
 ErrCrypto pkcs1_oaep_init(OAEP* pCtx, RSA_BITS nBits)
 {
@@ -166,22 +171,214 @@ ErrCrypto pkcs1_oaep_encrypt(OAEP* pCtx
 	return errRet;
 }
 
+ErrCrypto pkcs1_oaep_decrypt(OAEP* pCtx
+	, const uint8_t* pCipher
+	, uint32_t nCipher	// mLen
+	, enum_hash enumHash
+	, uint8_t* pLabel
+	, uint32_t nLabel
+	, uint8_t* pOut
+	, uint32_t nOut
+#ifdef _DEBUG
+	, big trueEM
+	, big trueCipher
+#endif // _DEBUG
+)
+{
+	ErrCrypto errRet = ERR_OK;
+	uint32_t nKey = 0;
+	uint32_t nHash = 0;
+	PFnHash pfnHash = NULL;
+	big bigEM = NULL;
+	big bigCipher = NULL;
+
+	uint8_t* pEM = NULL; // encoded message
+	uint8_t* pY = NULL;
+	uint8_t* pSeed = NULL;
+
+	uint8_t* pDB = NULL;	// data block
+	uint8_t* pHash = NULL;
+	uint8_t* pPS = NULL;	// padding string
+	uint8_t* pOne = NULL;
+	uint8_t* pMsg = NULL;
+	
+	uint8_t* pMGF = NULL;	// mask generation function output
+	uint8_t* pCalcHash = NULL;
+
+	uint32_t nMGF = 0;
+	uint32_t nDB = 0;
+	uint8_t bInvalid = 0;
+	uint32_t nTmp = 0;
+	
+	if (!pCtx || !pCipher || !pOut)
+	{
+		return ERR_NULL;
+	}
+
+	nKey = pCtx->rsa.nKeyBits / 8;
+	nHash = GetDigestSize(enumHash);
+	pfnHash = GetDigestFunc(enumHash);
+	if (!pfnHash) return ERR_PARAM;
+
+	// Step 1b and 1c
+	if((nCipher != nKey)
+		|| (nCipher < (2 * nHash + 2)))
+	{
+		return ERR_KEY_SIZE;
+	}
+
+	if (nOut < (2 * nHash + 2))
+	{
+		return ERR_MEMORY;
+	}
+
+	if (!pLabel)
+	{
+		pLabel = "";
+		nLabel = 1;
+	}
+
+	do {
+
+		nDB = nKey - 1 - nHash;
+		nMGF = MAX(nDB, nHash) + nHash;
+		pEM = (uint8_t*)calloc(nKey
+			+ nMGF
+			+ nHash // for calced hash
+			, 1);
+		if (!pEM)
+		{
+			errRet = ERR_MEMORY;
+			break;
+		}
+		pDB = pEM + 1 + nHash;
+
+
+		// Step 2a(O2SIP)
+		bigCipher = mirvar(0);
+		bigEM = mirvar(0);
+		bytes_to_big(nCipher, pCipher, bigCipher);
+
+		// Step 2b RSADP
+		errRet = RSA_Decrypt(&(pCtx->rsa), bigCipher, bigEM);
+		if (ERR_OK != errRet) break;
+#ifdef _DEBUG
+		if (0 == mr_compare(bigCipher, trueCipher))
+		{
+			printf("cipher ok\n");
+		}
+		if (0 == mr_compare(bigEM, trueEM))
+		{
+			printf("decrypt successfully\n");
+		}
+#endif // _DEBUG
+
+		// Step 2c I2OSP
+		nTmp = big_to_bytes(nKey
+			, bigEM
+			, pEM
+			, TRUE);	// 0 justified
+		if (nKey != nTmp)
+		{
+			errRet = ERR_DECRYPT;
+			break;
+		}
+
+		// Step 3a lHash
+		pCalcHash = pEM + nKey + nMGF;
+		errRet = pfnHash(pLabel, nLabel, pCalcHash, nHash);
+		if (errRet != ERR_OK) break;
+
+		// Step 3b separate EM
+		pY = pEM;
+		pSeed = pEM + 1; // Masked Seed 
+		pDB = pSeed + nHash; // Masked DB
+
+		// Step 3c seedMask
+		pMGF = pEM + nKey;
+		errRet = MGF1(pDB, nDB, nHash, enumHash, pMGF, nHash);
+		if (ERR_OK != errRet) break;
+		
+		// Step 3d seed
+		xor_buf(pMGF, pSeed, nHash);
+		// Step 3e dbMask
+		errRet = MGF1(pSeed, nHash, nDB, enumHash, pMGF, nDB);
+		if (ERR_OK != errRet) break;
+		
+		// Step 3f DB
+		xor_buf(pMGF, pDB, nDB);
+
+		// Step 3g separate DB
+		pHash = pDB;
+		pPS = pHash + nHash;
+		pOne = memchr(pDB, '\x01', nDB);
+		if (!pOne)
+		{
+			errRet = ERR_DECRYPT;
+			break;
+		}
+		bInvalid = *pY; // 0 
+		bInvalid |= memcmp(pHash, pCalcHash, nHash);
+		bInvalid |= (NULL == pOne);
+		for (; pPS != pOne; ++pPS)
+		{
+			// ps == "00000..."
+			// len == nKey - nMsg - 2 * nHash - 2 == nDB - nHash - 1 - nMsg
+			bInvalid |= *pPS;	
+		}
+		if (bInvalid)
+		{
+			errRet = ERR_DECRYPT;
+			break;
+		}
+		pMsg = pOne + 1;
+		memcpy(pOut, pMsg, pMGF - pMsg);
+
+	}while(0);
+
+	if (pEM)
+	{
+		free(pEM);
+		pEM = NULL;
+	}
+
+	return errRet;
+}
 
 void test_rsa_oaep()
 {
 	OAEP oaep = {0};
-	uint8_t msg[] = { "abc" };
+	uint8_t msg[] = { "abcdefgh" };
 	uint32_t nMsg = sizeof(msg) - 1;
 	uint8_t cipher[256] = { 0};
-	uint32_t nCipher = RSA_1024 / 8;
-	pkcs1_oaep_init(&oaep, RSA_1024);
-	pkcs1_oaep(&oaep
+	RSA_BITS enumBits = RSA_1024;
+	uint32_t nCipher = enumBits / 8;
+	uint8_t plain[256] = { 0 };
+	pkcs1_oaep_init(&oaep, enumBits);
+
+	big trueEM = mirvar(0);
+	big trueCipher = mirvar(0);
+	pkcs1_oaep_encrypt(&oaep
 		, msg , nMsg
 		, enum_sha1
 		, NULL , 0
 		, cipher
-		, nCipher);
+		, nCipher
+		, trueEM
+		, trueCipher);
 	printf("cipher:\n");
 	output_buf(cipher, nCipher);
+
+	pkcs1_oaep_decrypt(&oaep
+		, cipher, nCipher
+		, enum_sha1
+		, NULL, 0
+		, plain
+		, sizeof(plain)
+		, trueEM
+		, trueCipher);
+	printf("plaintext:\n");
+	output_buf(plain, nMsg);
+
 	pkcs1_oaep_uninit(&oaep);
 }
