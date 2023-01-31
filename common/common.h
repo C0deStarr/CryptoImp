@@ -6,6 +6,8 @@
 
 #include "./errors.h"
 
+#define MAX(a,b)  (((a) > (b)) ? (a) : (b))
+
  // POINTER defines a generic pointer type
 typedef unsigned char* POINTER;
 // UINT2 defines a 1-byte int

@@ -3,6 +3,22 @@
 #include <Hash/hash.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <stdio.h>
+
+void output_buf(const uint8_t* pBuf, uint32_t nBuf)
+{
+	uint32_t i = 0;
+	if (pBuf)
+	{
+		while (i != nBuf)
+		{
+			printf("%02x", pBuf[i]);
+			++i;
+		}
+		printf("\n");
+	}
+}
 
 void xor_buf(const uint8_t in[], uint8_t out[], uint32_t nLen)
 {
@@ -32,15 +48,6 @@ void increment_ctr(uint8_t* pCtr, uint32_t nCtr/* = BLOCK SIZE*/)
 	}
 }
 
-
-
-
-typedef
-ErrCrypto(*PFnHash)
-(const uint8_t* pData
-	, uint64_t nData
-	, uint8_t* pDigest
-	, int nDigest);
 ErrCrypto MGF1(uint8_t* pSeed
 	, uint32_t nSeed
 	, uint32_t nMaskLen
@@ -124,5 +131,25 @@ void test_mgf()
 	if (0 == memcmp(maskedDB, out, nMask))
 	{
 		printf("ok\n");
+	}
+}
+
+
+
+void GetRandomBytes(uint8_t* pBuf, uint32_t nLen)
+{
+	int nRand = 0;
+	uint32_t i = 0;
+	if (pBuf && nLen)
+	{
+		srand((unsigned int)time(NULL));
+		
+		for(i = 0; i < nLen ; ++i)
+		//while (nLen);
+		{
+			nRand = rand() % 0x100;
+			pBuf[i] = nRand;
+		}
+
 	}
 }

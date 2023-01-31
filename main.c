@@ -22,6 +22,7 @@
 //	pubkey
 //
 //#include "rsa/rsa.h"
+#include "./pubkey/rsa/pkcs1_oaep.h"
 
 int main()
 {
@@ -42,7 +43,8 @@ int main()
 	//test_aes_modes();
 	//test_sm4();
 
-	test_mgf();
+	//test_mgf();
+	test_rsa_oaep();
 
 	getchar();
 	return 0;
