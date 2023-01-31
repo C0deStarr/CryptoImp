@@ -155,7 +155,7 @@ ErrCrypto pkcs1_oaep_encrypt(OAEP* pCtx
 #endif // _DEBUG
 			
 
-		if (nKey != big_to_bytes(nKey, bigCipher, pCipher, 0))
+		if (nKey != big_to_bytes(nKey, bigCipher, pCipher, TRUE))
 		{
 			errRet = ERR_ENCRYPT;
 		}
