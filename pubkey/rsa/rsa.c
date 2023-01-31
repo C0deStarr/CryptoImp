@@ -1,7 +1,9 @@
 #include "rsa.h"
+#include <time.h>
 
 enum RSA_VARS{
 	RSA_PUB_E = 65537
+	//RSA_PUB_E = 3
 };
 
 
@@ -49,7 +51,6 @@ ErrCrypto RSA_UnInit(RSA* pCtx)
 static ErrCrypto GenerateKeys(RSA * pCtx)
 {
 	ErrCrypto errRet = ERR_OK;
-	mr_small nSeed = 0;
 	big * pBigTmp = NULL;
 	big p = mirvar(0);
 	big q = mirvar(0);
@@ -71,17 +72,19 @@ static ErrCrypto GenerateKeys(RSA * pCtx)
 	nPQ_Width = pCtx->nKeyBits / 2;
 	pBigTmp = &p;
 	do {
-		nSeed = brand();
+		irand((unsigned int)time(NULL));
 		bigbits(nPQ_Width, *pBigTmp);
 		printf("The randomize generated number :");
 		cotnum(*pBigTmp, stdout);
 		nxprime(*pBigTmp, *pBigTmp);
 		printf("The Next Prime number :");
 		cotnum(*pBigTmp, stdout);
-		if ((pBigTmp == q)
-			&& (*pBigTmp == p))
+		if ((pBigTmp == &q)
+			&& (0 == mr_compare(*pBigTmp, p)))
 		{
-			printf("Invalid q Prime for p==q($d==%d) \n", p, q);
+#ifdef _DEBUG
+			printf("Invalid q Prime for p==q \n");
+#endif
 			continue;
 		}
 
@@ -160,6 +163,12 @@ ErrCrypto RSA_Encrypt(RSA* pCtx, big msg, big cipher)
 		return ERR_NULL;
 	}
 
+	int nMsgSize = numdig(msg);
+	if (nMsgSize > pCtx->nKeyBits)
+	{
+		return ERR_BLOCK_SIZE;
+	}
+
 	if (!cipher)
 	{
 		cipher = mirvar(0);
@@ -168,6 +177,10 @@ ErrCrypto RSA_Encrypt(RSA* pCtx, big msg, big cipher)
 		, pCtx->pubKey.e
 		, pCtx->pubKey.n
 		, cipher);
+	//power(msg
+	//	, 65537
+	//	, pCtx->pubKey.n
+	//	, cipher);
 	return errRet;
 }
 ErrCrypto RSA_Decrypt(RSA* pCtx, big cipher, big msg)
@@ -194,7 +207,25 @@ void test_rsa()
 	big bigMsg = NULL;
 	big bigCipher = NULL;
 	big bigDecrypt = NULL;
-	uint8_t msg[] = {"abc"};
+	uint8_t msg[] = {
+		"\xff\x6f\xf8\x08\x00\x00\x00\x00"
+		"\x81\x9d\x0c\xaa\x33\x8a\x3a\xa2"
+		"\xa7\x1a\x98\xe8\x43\x9e\x39\x6b"
+		"\x5a\x26\x78\xc2\xe7\x08\xad\xf4"
+		"\x5d\x3a\xd2\x97\xef\x95\x57\xc4"
+		"\xbc\x59\x56\x49\xdd\x4a\x60\xff"
+		"\xa5\x17\xbb\x93\x4b\x9f\x13\x29"
+		"\x7a\xde\x7f\x9f\xf7\xf2\x2e\x4f"
+		"\xc6\x1d\xf3\x61\xf9\xde\xed\x51"
+		"\x28\x84\x86\xfd\x67\x13\x31\xaf"
+		"\x30\xf2\x4d\x8a\xb4\x89\x17\x09"
+		"\xe6\xbf\x34\x5c\xd1\x28\x9d\xde"
+		"\xd4\x97\x99\xfb\x41\x94\x34\xaf"
+		"\x13\x86\x38\x3d\x29\x7f\xff\x5b"
+		"\x45\xdf\x4d\x7a\x83\x3f\xfe\x27"
+		"\x83\x3c\xa7\x4e\x6f\xf1\x87\xFF"
+	};
+
 	uint32_t nMsg = sizeof(msg) - 1;
 	RSA_Init(&ctx, RSA_1024);
 
@@ -203,8 +234,10 @@ void test_rsa()
 	bigCipher = mirvar(0);
 	bigDecrypt = mirvar(0);
 	
-	bigrand(ctx.pubKey.n, bigMsg);
-	//bytes_to_big(nMsg, msg, bigMsg);
+	//bigrand(ctx.pubKey.n, bigMsg);
+	bytes_to_big(nMsg, msg, bigMsg);
+
+
 	printf("msg:\n");
 	cotnum(bigMsg, stdout);
 	
