@@ -5,8 +5,7 @@
 #include <common/common.h>
 #include <Hash/hash.h>
 
-ErrCrypto pkca1_pss_encode(RSA* pPriKey
-	, const uint8_t* pInMsg
+ErrCrypto emsa_pss_encode(const uint8_t* pInMsg
 	, uint32_t nMsg
 	, enum_hash enumHash
 	, uint32_t nSalt
@@ -14,8 +13,7 @@ ErrCrypto pkca1_pss_encode(RSA* pPriKey
 	, uint8_t* pOut
 	, uint32_t nOut);
 
-ErrCrypto pkca1_pss_verify(RSA* pPriKey
-	, const uint8_t* pInMsg
+ErrCrypto emsa_pss_verify(const uint8_t* pInMsg
 	, uint32_t nMsg
 	, const uint8_t* pInEM
 	, uint32_t nEM
