@@ -1,7 +1,13 @@
+/*
+Usage condition:
+	RSA_Init()
+*/
+
 #include "pkcs1_pss.h"
 #include <common/util.h>
 #include <string.h>
 #include <stdlib.h>
+
 
 
 /*
@@ -35,7 +41,7 @@ EM = |      maskedDB     |    H     |bc|
 	 +-------------------+
 */
 
-ErrCrypto emsa_pss_encode(const uint8_t* pInMsg
+uint32_t emsa_pss_encode(const uint8_t* pInMsg
 	, uint32_t nMsg
 	, enum_hash enumHash
 	, uint32_t nSalt
@@ -43,7 +49,7 @@ ErrCrypto emsa_pss_encode(const uint8_t* pInMsg
 	, uint8_t* pOut
 	, uint32_t nOut)
 {
-	ErrCrypto errRet = ERR_OK;
+	uint32_t nRet = 0;
 	uint32_t nEM = 0;
 	uint32_t nHash = 0;
 	PFnHash pfnHash = NULL;
@@ -74,6 +80,11 @@ ErrCrypto emsa_pss_encode(const uint8_t* pInMsg
 	nEM = nEmBits / 8;
 	if(nEmBits % 8)	++nEM;
 
+	if (nOut < nEM)
+	{
+		return ERR_NOT_ENOUGH_DATA;
+	}
+
 	nHash = GetDigestSize(enumHash);
 	pfnHash = GetDigestFunc(enumHash);
 	if (!pfnHash) return ERR_PARAM;
@@ -81,23 +92,23 @@ ErrCrypto emsa_pss_encode(const uint8_t* pInMsg
 	// step 1 length checking
 	if (nMsg > nHash)
 	{
-		return ERR_MAX_DATA;
+		return 0;
 	}
 	// step 3
 	if (nEM < (nHash + nSalt + 2))
 	{
-		return ERR_MAX_DATA;
+		return 0;
 	}
 	do {
 		nDB = nEM - nHash - 1;
 		nM1 = 8 + nHash + nSalt;
 		pEM = (uint8_t*)calloc(nEM
 			+ nM1
-			+ nDB	// for MGF
+			+ nDB + nHash	// for MGF
 			,1);
 		if (!pEM)
 		{
-			errRet = ERR_MEMORY;
+			//nRet = ERR_MEMORY;
 			break;
 		}
 
@@ -106,8 +117,7 @@ ErrCrypto emsa_pss_encode(const uint8_t* pInMsg
 			// step 2 hash
 			pM1 = pEM + nEM;
 			pMsgHash = pM1 + nPadding1;
-			errRet = pfnHash(pInMsg, nMsg, pMsgHash, nHash);
-			if (errRet != ERR_OK) break;
+			if (ERR_OK != pfnHash(pInMsg, nMsg, pMsgHash, nHash)) break;
 
 			// step 4
 			if (nSalt)
@@ -118,9 +128,8 @@ ErrCrypto emsa_pss_encode(const uint8_t* pInMsg
 		}
 
 		// step 6
-		pHash = pEM + nEM;
-		errRet = pfnHash(pM1, nM1, pHash, nHash);
-		if (errRet != ERR_OK) break;
+		pHash = pEM + nDB;
+		if (ERR_OK != pfnHash(pM1, nM1, pHash, nHash)) break;
 
 		// step 7 padding string in db
 		// done by calloc
@@ -135,8 +144,7 @@ ErrCrypto emsa_pss_encode(const uint8_t* pInMsg
 
 		// step 9
 		pMGF = pM1 + nM1;
-		errRet = MGF1(pHash, nHash, nDB, enum_sha1, pMGF, nDB);
-		if (errRet != ERR_OK) break;
+		if(ERR_OK != MGF1(pHash, nHash, nDB, enum_sha1, pMGF, nDB))	break;
 
 		// step 10
 		xor_buf(pMGF, pDB, nDB);
@@ -155,6 +163,7 @@ ErrCrypto emsa_pss_encode(const uint8_t* pInMsg
 
 
 		memcpy(pOut, pEM, nEM);
+		nRet = nEM;
 	}while(0);
 
 	if (pEM)
@@ -171,10 +180,61 @@ ErrCrypto emsa_pss_encode(const uint8_t* pInMsg
 		pMGF = NULL;
 	}
 
+	return nRet;
+}
+
+ErrCrypto emsa_pss_verify(const uint8_t* pInMsgHash
+	, uint32_t nMsgHash
+	, const uint8_t* pInEM
+	, uint32_t nEM
+	, enum_hash enumHash
+	, uint32_t nSalt
+	, uint32_t nEmBits)
+{
+	ErrCrypto errRet = ERR_OK;
+	if (!pInMsgHash || !pInEM)
+	{
+		return ERR_NULL;
+	}
 	return errRet;
 }
 
-ErrCrypto emsa_pss_verify(const uint8_t* pInMsg
+uint32_t pkcs1_pss_sign(RSA* pPriKey
+	, const uint8_t* pInMsgHash
+	, uint32_t nMsgHash
+	, enum_hash enumHash
+	, uint32_t nSalt
+	, uint32_t nEmBits
+	, uint8_t* pOut
+	, uint32_t nOut)
+{
+	uint32_t nRet = ERR_OK;
+	uint32_t nEncoding;
+	big bigEM = NULL;
+	big bigSignature = NULL;
+	if (!pPriKey || !pInMsgHash || !pOut)
+	{
+		return ERR_NULL;
+	}
+	
+	nEncoding = emsa_pss_encode(pInMsgHash, nMsgHash
+		, enum_sha1
+		, nSalt
+		, nEmBits
+		, pOut, nOut);
+	if (0 == nEncoding) return ERR_UNKNOWN;
+
+	bigEM = mirvar(0);
+	bigSignature = mirvar(0);
+	bytes_to_big(nEncoding, pOut, bigEM);
+	RSA_Encrypt(pPriKey, bigEM, bigSignature);
+	nRet = big_to_bytes(nEncoding, bigEM, pOut, TRUE);
+
+	return nRet;
+}
+
+ErrCrypto pkcs1_pss_verify(RSA* pPriKey
+	, const uint8_t* pInMsg
 	, uint32_t nMsg
 	, const uint8_t* pInEM
 	, uint32_t nEM
@@ -190,9 +250,36 @@ ErrCrypto emsa_pss_verify(const uint8_t* pInMsg
 	return errRet;
 }
 
-
-
 void test_pss()
 {
+	RSA rsa = { 0 };
+	RSA_BITS enumBits = RSA_1024;
+
+	uint8_t msg[] = { "abcdefgh" };
+	uint32_t nMsg = sizeof(msg) - 1;
+	uint8_t msgHash[MAX_SIZE_OF_DIGEST] = { 0 };
+	enum_hash enumHash = enum_sha1;
+	uint32_t nHash = 0;
+	PFnHash pfnHash = NULL;
+
+	uint8_t signature[384] = { 0 };
+	uint32_t nSignature = enumBits / 8;
+	nHash = GetDigestSize(enumHash);
+	pfnHash = GetDigestFunc(enumHash);
+
+	pfnHash(msg, nMsg, msgHash, nHash);
+
+	RSA_Init(&rsa, enumBits);
+
+
+	pkcs1_pss_sign(&rsa
+		, msgHash, nHash
+		, enumHash
+		, 0
+		, enumBits
+		, signature, nSignature);
+
+	printf("signature:\n");
+	output_buf(signature, nSignature);
 
 }
