@@ -172,6 +172,7 @@
     <ClInclude Include="Hash\sha\sha512_224.h" />
     <ClInclude Include="Hash\sha\sha512_256.h" />
     <ClInclude Include="pubkey\rsa\pkcs1_oaep.h" />
+    <ClInclude Include="pubkey\rsa\pkcs1_pss.h" />
     <ClInclude Include="pubkey\rsa\rsa.h" />
   </ItemGroup>
   <ItemGroup>
@@ -198,6 +199,7 @@
     <ClCompile Include="Hash\sha\sha512_256.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="pubkey\rsa\pkcs1_oaep.c" />
+    <ClCompile Include="pubkey\rsa\pkcs1_pss.c" />
     <ClCompile Include="pubkey\rsa\rsa.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
