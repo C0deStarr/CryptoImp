@@ -6,12 +6,7 @@
 #include <Hash/hash.h>
 
 
-typedef struct {
-	RSA rsa;
-}OAEP;
 
-ErrCrypto pkcs1_oaep_init(OAEP* pCtx, RSA_BITS nBits);
-ErrCrypto pkcs1_oaep_uninit(OAEP* pCtx);
 
 /**
  * @brief 
@@ -19,7 +14,7 @@ ErrCrypto pkcs1_oaep_uninit(OAEP* pCtx);
  * @param nCipher 
  *		size of pCipher in bytes
 */
-ErrCrypto pkcs1_oaep_encrypt(OAEP* pCtx
+ErrCrypto pkcs1_oaep_encrypt(RSA* pPubKey
 	, const uint8_t* pMsg
 	, uint32_t nMsg	// mLen
 	, enum_hash enumHash
@@ -34,7 +29,7 @@ ErrCrypto pkcs1_oaep_encrypt(OAEP* pCtx
 
 	);
 
-ErrCrypto pkcs1_oaep_decrypt(OAEP* pCtx
+ErrCrypto pkcs1_oaep_decrypt(RSA* pPriKey
 	, const uint8_t* pCipher
 	, uint32_t nCipher	// mLen
 	, enum_hash enumHash

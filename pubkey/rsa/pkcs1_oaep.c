@@ -5,21 +5,10 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifdef _DEBUG
 #include "rsa.h"
-#include <miracl.h>
 #include <stdio.h>
-#endif // _DEBUG
+#include <miracl.h>
 
-ErrCrypto pkcs1_oaep_init(OAEP* pCtx, RSA_BITS nBits)
-{
-	return RSA_Init(pCtx, nBits);
-}
-
-ErrCrypto pkcs1_oaep_uninit(OAEP* pCtx)
-{
-	return RSA_UnInit(pCtx);
-}
 
 /*
 						+----------+------+--+-------+
@@ -41,7 +30,7 @@ ErrCrypto pkcs1_oaep_uninit(OAEP* pCtx)
  EM =   |00|maskedSeed|          maskedDB          |
 		+--+----------+----------------------------+
 */
-ErrCrypto pkcs1_oaep_encrypt(OAEP* pCtx
+ErrCrypto pkcs1_oaep_encrypt(RSA* pCtx
 	, const uint8_t* pMsg
 	, uint32_t nMsg	// mLen
 	, enum_hash enumHash
@@ -74,7 +63,7 @@ ErrCrypto pkcs1_oaep_encrypt(OAEP* pCtx
 	{
 		return ERR_NULL;
 	}
-	nKey = pCtx->rsa.nKeyBits / 8;
+	nKey = pCtx->nKeyBits / 8;
 	if (nCipher < nKey)
 	{
 		return ERR_MEMORY;
@@ -147,7 +136,7 @@ ErrCrypto pkcs1_oaep_encrypt(OAEP* pCtx
 		bigEM = mirvar(0);
 		bigCipher = mirvar(0);
 		bytes_to_big(nKey, pEM, bigEM);
-		errRet = RSA_Encrypt(&(pCtx->rsa), bigEM, bigCipher);
+		errRet = RSA_Encrypt(pCtx, bigEM, bigCipher);
 		if(ERR_OK != errRet) break;
 #ifdef _DEBUG
 		copy(bigEM, trueEM);
@@ -171,7 +160,7 @@ ErrCrypto pkcs1_oaep_encrypt(OAEP* pCtx
 	return errRet;
 }
 
-ErrCrypto pkcs1_oaep_decrypt(OAEP* pCtx
+ErrCrypto pkcs1_oaep_decrypt(RSA* pCtx
 	, const uint8_t* pCipher
 	, uint32_t nCipher	// mLen
 	, enum_hash enumHash
@@ -215,7 +204,7 @@ ErrCrypto pkcs1_oaep_decrypt(OAEP* pCtx
 		return ERR_NULL;
 	}
 
-	nKey = pCtx->rsa.nKeyBits / 8;
+	nKey = pCtx->nKeyBits / 8;
 	nHash = GetDigestSize(enumHash);
 	pfnHash = GetDigestFunc(enumHash);
 	if (!pfnHash) return ERR_PARAM;
@@ -260,7 +249,7 @@ ErrCrypto pkcs1_oaep_decrypt(OAEP* pCtx
 		bytes_to_big(nCipher, pCipher, bigCipher);
 
 		// Step 2b RSADP
-		errRet = RSA_Decrypt(&(pCtx->rsa), bigCipher, bigEM);
+		errRet = RSA_Decrypt(pCtx, bigCipher, bigEM);
 		if (ERR_OK != errRet) break;
 #ifdef _DEBUG
 		if (0 == mr_compare(bigCipher, trueCipher))
@@ -347,18 +336,21 @@ ErrCrypto pkcs1_oaep_decrypt(OAEP* pCtx
 
 void test_rsa_oaep()
 {
-	OAEP oaep = {0};
+	RSA rsa = {0};
 	uint8_t msg[] = { "abcdefgh" };
 	uint32_t nMsg = sizeof(msg) - 1;
 	uint8_t cipher[256] = { 0};
 	RSA_BITS enumBits = RSA_1024;
 	uint32_t nCipher = enumBits / 8;
 	uint8_t plain[256] = { 0 };
-	pkcs1_oaep_init(&oaep, enumBits);
 
-	big trueEM = mirvar(0);
-	big trueCipher = mirvar(0);
-	pkcs1_oaep_encrypt(&oaep
+	big trueEM = NULL;
+	big trueCipher = NULL;
+
+	RSA_Init(&rsa, RSA_1024);
+	trueEM = mirvar(0);
+	trueCipher = mirvar(0);
+	pkcs1_oaep_encrypt(&rsa
 		, msg , nMsg
 		, enum_sha1
 		, NULL , 0
@@ -369,7 +361,7 @@ void test_rsa_oaep()
 	printf("cipher:\n");
 	output_buf(cipher, nCipher);
 
-	pkcs1_oaep_decrypt(&oaep
+	pkcs1_oaep_decrypt(&rsa
 		, cipher, nCipher
 		, enum_sha1
 		, NULL, 0
@@ -380,5 +372,5 @@ void test_rsa_oaep()
 	printf("plaintext:\n");
 	output_buf(plain, nMsg);
 
-	pkcs1_oaep_uninit(&oaep);
+	RSA_UnInit(&rsa);
 }
