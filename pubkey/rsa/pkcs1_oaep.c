@@ -156,6 +156,10 @@ ErrCrypto pkcs1_oaep_encrypt(RSA* pCtx
 	{
 		free(pEM);
 		pEM = NULL;
+		pSeed = NULL;
+		pDB = NULL;	// data block
+		pPS = NULL;	// padding string
+		pMGF = NULL;
 	}
 	return errRet;
 }
@@ -329,6 +333,15 @@ ErrCrypto pkcs1_oaep_decrypt(RSA* pCtx
 	{
 		free(pEM);
 		pEM = NULL;
+		pY = NULL;
+		pSeed = NULL;
+		pDB = NULL;	// data block
+		pHash = NULL;
+		pPS = NULL;	// padding string
+		pOne = NULL;
+		pMsg = NULL;
+		pMGF = NULL;	// mask generation function output
+		pCalcHash = NULL;
 	}
 
 	return errRet;
