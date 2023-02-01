@@ -92,7 +92,7 @@ ErrCrypto MGF1(uint8_t* pSeed
 	}
 
 	do {
-		pBuf = (uint8_t*)malloc(nBufLen);
+		pBuf = (uint8_t*)calloc(nBufLen, 1);
 		if (!pBuf) break;
 		memcpy(pBuf, pSeed, nSeed);
 		pCounter = pBuf + nSeed;
