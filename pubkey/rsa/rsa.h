@@ -9,7 +9,13 @@ typedef enum {
 	RSA_1024 = 1024,
 	RSA_2048 = 2048,
 	RSA_3072 = 3072,
+	RSA_MAX_BITS = RSA_3072
 }RSA_BITS;
+
+typedef struct {
+	big n;
+	big e_or_d;
+}RSA_KEY;
 
 typedef struct {
 	big n;
@@ -31,8 +37,9 @@ typedef struct {
 ErrCrypto RSA_Init(RSA * pCtx, RSA_BITS nBits);
 ErrCrypto RSA_UnInit(RSA * pCtx);
 
-ErrCrypto RSA_Encrypt(RSA* pCtx, big msg, big cipher);
-ErrCrypto RSA_Decrypt(RSA* pCtx, big cipher, big msg);
+ErrCrypto RSA_Encrypt(RSA_KEY* pKey, big msg, big cipher);
+ErrCrypto RSA_Decrypt(RSA_KEY* pKey, big cipher, big msg);
+
 
 void test_rsa();
 

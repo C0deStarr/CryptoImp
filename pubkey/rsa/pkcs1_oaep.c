@@ -30,7 +30,7 @@
  EM =   |00|maskedSeed|          maskedDB          |
 		+--+----------+----------------------------+
 */
-ErrCrypto pkcs1_oaep_encrypt(RSA* pCtx
+ErrCrypto pkcs1_oaep_encrypt(RSA_KEY* pPubKey
 	, const uint8_t* pMsg
 	, uint32_t nMsg	// mLen
 	, enum_hash enumHash
@@ -59,11 +59,11 @@ ErrCrypto pkcs1_oaep_encrypt(RSA* pCtx
 	big bigCipher = NULL;
 	int nPS = 0;
 	int nMGF = 0;
-	if (!pCtx || !pMsg || !pCipher)
+	if (!pPubKey || !pMsg || !pCipher)
 	{
 		return ERR_NULL;
 	}
-	nKey = pCtx->nKeyBits / 8;
+	nKey = numdig(pPubKey->n) / 8;
 	if (nCipher < nKey)
 	{
 		return ERR_MEMORY;
@@ -136,7 +136,7 @@ ErrCrypto pkcs1_oaep_encrypt(RSA* pCtx
 		bigEM = mirvar(0);
 		bigCipher = mirvar(0);
 		bytes_to_big(nKey, pEM, bigEM);
-		errRet = RSA_Encrypt(pCtx, bigEM, bigCipher);
+		errRet = RSA_Encrypt(pPubKey, bigEM, bigCipher);
 		if(ERR_OK != errRet) break;
 #ifdef _DEBUG
 		copy(bigEM, trueEM);
@@ -164,7 +164,7 @@ ErrCrypto pkcs1_oaep_encrypt(RSA* pCtx
 	return errRet;
 }
 
-ErrCrypto pkcs1_oaep_decrypt(RSA* pCtx
+ErrCrypto pkcs1_oaep_decrypt(RSA_KEY* pPriKey
 	, const uint8_t* pCipher
 	, uint32_t nCipher	// mLen
 	, enum_hash enumHash
@@ -203,12 +203,12 @@ ErrCrypto pkcs1_oaep_decrypt(RSA* pCtx
 	uint8_t bInvalid = 0;
 	uint32_t nTmp = 0;
 	
-	if (!pCtx || !pCipher || !pOut)
+	if (!pPriKey || !pCipher || !pOut)
 	{
 		return ERR_NULL;
 	}
 
-	nKey = pCtx->nKeyBits / 8;
+	nKey = numdig(pPriKey->n) / 8;
 	nHash = GetDigestSize(enumHash);
 	pfnHash = GetDigestFunc(enumHash);
 	if (!pfnHash) return ERR_PARAM;
@@ -253,7 +253,7 @@ ErrCrypto pkcs1_oaep_decrypt(RSA* pCtx
 		bytes_to_big(nCipher, pCipher, bigCipher);
 
 		// Step 2b RSADP
-		errRet = RSA_Decrypt(pCtx, bigCipher, bigEM);
+		errRet = RSA_Decrypt(pPriKey, bigCipher, bigEM);
 		if (ERR_OK != errRet) break;
 #ifdef _DEBUG
 		if (0 == mr_compare(bigCipher, trueCipher))
@@ -363,7 +363,7 @@ void test_rsa_oaep()
 	RSA_Init(&rsa, RSA_1024);
 	trueEM = mirvar(0);
 	trueCipher = mirvar(0);
-	pkcs1_oaep_encrypt(&rsa
+	pkcs1_oaep_encrypt(&(rsa.pubKey)
 		, msg , nMsg
 		, enum_sha1
 		, NULL , 0
@@ -374,7 +374,7 @@ void test_rsa_oaep()
 	printf("cipher:\n");
 	output_buf(cipher, nCipher);
 
-	pkcs1_oaep_decrypt(&rsa
+	pkcs1_oaep_decrypt(&(rsa.priKey)
 		, cipher, nCipher
 		, enum_sha1
 		, NULL, 0

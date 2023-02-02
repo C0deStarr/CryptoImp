@@ -1,6 +1,8 @@
 #include "rsa.h"
 #include <time.h>
 
+#include <common/mr_util.h>
+
 enum RSA_VARS{
 	RSA_PUB_E = 65537
 	//RSA_PUB_E = 3
@@ -24,7 +26,7 @@ ErrCrypto RSA_Init(RSA* pCtx, RSA_BITS nBits)
 		return ERR_KEY_SIZE;
 	}
 	pCtx->nKeyBits = nBits;
-	pCtx->pMip = mirsys(nBits, 2);
+	pCtx->pMip = InitMiracl(nBits, 2);
 	pCtx->pMip->IOBASE = 16;
 	pCtx->pubKey.n = mirvar(0);
 	pCtx->pubKey.e = mirvar(0);
@@ -155,16 +157,18 @@ static ErrCrypto GenerateKeys(RSA * pCtx)
 	return errRet;
 }
 
-ErrCrypto RSA_Encrypt(RSA* pCtx, big msg, big cipher)
+ErrCrypto RSA_Encrypt(RSA_KEY* pKey, big msg, big cipher)
 {
 	ErrCrypto errRet = ERR_OK;
-	if (!pCtx || !msg)
+	if (!pKey || !msg
+		|| !(pKey->e_or_d) || !(pKey->n))
 	{
 		return ERR_NULL;
 	}
 
 	int nMsgSize = numdig(msg);
-	if (nMsgSize > pCtx->nKeyBits)
+	int nKeySize = numdig(pKey->n);
+	if (nMsgSize > nKeySize)
 	{
 		return ERR_BLOCK_SIZE;
 	}
@@ -174,8 +178,8 @@ ErrCrypto RSA_Encrypt(RSA* pCtx, big msg, big cipher)
 		cipher = mirvar(0);
 	}
 	powmod(msg
-		, pCtx->pubKey.e
-		, pCtx->pubKey.n
+		, pKey->e_or_d
+		, pKey->n
 		, cipher);
 	//power(msg
 	//	, 65537
@@ -183,10 +187,11 @@ ErrCrypto RSA_Encrypt(RSA* pCtx, big msg, big cipher)
 	//	, cipher);
 	return errRet;
 }
-ErrCrypto RSA_Decrypt(RSA* pCtx, big cipher, big msg)
+ErrCrypto RSA_Decrypt(RSA_KEY* pKey, big cipher, big msg)
 {
 	ErrCrypto errRet = ERR_OK;
-	if (!pCtx || !cipher)
+	if (!pKey || !cipher
+		|| !(pKey->e_or_d) || !(pKey->n))
 	{
 		return ERR_NULL;
 	}
@@ -196,8 +201,8 @@ ErrCrypto RSA_Decrypt(RSA* pCtx, big cipher, big msg)
 		msg = mirvar(0);
 	}
 	powmod(cipher
-		, pCtx->priKey.d
-		, pCtx->priKey.n
+		, pKey->e_or_d
+		, pKey->n
 		, msg);
 	return errRet;
 }
@@ -241,11 +246,11 @@ void test_rsa()
 	printf("msg:\n");
 	cotnum(bigMsg, stdout);
 	
-	RSA_Encrypt(&ctx, bigMsg, bigCipher);
+	RSA_Encrypt(&(ctx.pubKey), bigMsg, bigCipher);
 	printf("cipher:\n");
 	cotnum(bigCipher, stdout);
 
-	RSA_Decrypt(&ctx, bigCipher, bigDecrypt);
+	RSA_Decrypt(&(ctx.priKey), bigCipher, bigDecrypt);
 	printf("decrypt:\n");
 	cotnum(bigMsg, stdout);
 	if (0 == mr_compare(bigMsg, bigDecrypt))
