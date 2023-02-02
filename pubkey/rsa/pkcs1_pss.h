@@ -22,16 +22,20 @@ ErrCrypto emsa_pss_verify(const uint8_t* pInMsg
 	, uint32_t nSalt
 	, uint32_t nEmBits);
 
-ErrCrypto pkcs1_pss_sign(RSA* pPriKey
+ErrCrypto pkcs1_pss_sign(PriKey* pPriKey
 	, const uint8_t* pInMsgHash
 	, uint32_t nMsgHash
 	, enum_hash enumHash
 	, uint32_t nSalt
 	//, uint32_t nEmBits
 	, uint8_t* pOut
-	, uint32_t nOut);
+	, uint32_t nOut
+#ifdef _DEBUG
+	, big bigOutEM
+#endif
+	);
 
-ErrCrypto pkcs1_pss_verify(RSA* pPubKey
+ErrCrypto pkcs1_pss_verify(PriKey* pPubKey
 	, const uint8_t* pInMsgHash
 	, uint32_t nMsgHash
 	, const uint8_t* pInSignature
@@ -39,6 +43,9 @@ ErrCrypto pkcs1_pss_verify(RSA* pPubKey
 	, enum_hash enumHash
 	, uint32_t nSalt
 	//, uint32_t nEmBits
+#ifdef _DEBUG
+	, big bigOriEM
+#endif
 	);
 
 void test_pss();
