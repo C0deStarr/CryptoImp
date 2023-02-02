@@ -151,7 +151,7 @@ uint32_t emsa_pss_encode(const uint8_t* pInMsg
 
 		// step 11
 		nMask = 8 * nEM - nEmBits;
-		while (nMask)
+		while (nMask--)
 		{
 			chMask = (chMask >> 1 ) | 0x80;
 		}
@@ -191,7 +191,7 @@ ErrCrypto emsa_pss_verify(const uint8_t* pInMsgHash
 	, uint32_t nSalt
 	, uint32_t nEmBits)
 {
-	ErrCrypto errRet = ERR_OK;
+	ErrCrypto errRet = ERR_SIGNATURE_VERIFY;
 	if (!pInMsgHash || !pInEM)
 	{
 		return ERR_NULL;
@@ -204,7 +204,7 @@ uint32_t pkcs1_pss_sign(RSA* pPriKey
 	, uint32_t nMsgHash
 	, enum_hash enumHash
 	, uint32_t nSalt
-	, uint32_t nEmBits
+	//, uint32_t nEmBits
 	, uint8_t* pOut
 	, uint32_t nOut)
 {
@@ -217,36 +217,73 @@ uint32_t pkcs1_pss_sign(RSA* pPriKey
 		return ERR_NULL;
 	}
 	
+	// step 1
 	nEncoding = emsa_pss_encode(pInMsgHash, nMsgHash
 		, enum_sha1
 		, nSalt
-		, nEmBits
+		, pPriKey->nKeyBits - 1
 		, pOut, nOut);
 	if (0 == nEncoding) return ERR_UNKNOWN;
 
+	// step 2a
 	bigEM = mirvar(0);
 	bigSignature = mirvar(0);
 	bytes_to_big(nEncoding, pOut, bigEM);
+	// step 2b
 	RSA_Encrypt(pPriKey, bigEM, bigSignature);
+	// step 2c
 	nRet = big_to_bytes(nEncoding, bigEM, pOut, TRUE);
 
 	return nRet;
 }
 
-ErrCrypto pkcs1_pss_verify(RSA* pPriKey
-	, const uint8_t* pInMsg
-	, uint32_t nMsg
-	, const uint8_t* pInEM
-	, uint32_t nEM
+ErrCrypto pkcs1_pss_verify(RSA* pPubKey
+	, const uint8_t* pInMsgHash
+	, uint32_t nMsgHash
+	, const uint8_t* pInSignature
+	, uint32_t nSignature
 	, enum_hash enumHash
 	, uint32_t nSalt
-	, uint32_t nEmBits)
+	//, uint32_t nEmBits
+	)
 {
-	ErrCrypto errRet = ERR_OK;
-	if (!pInMsg || !pInEM)
+	ErrCrypto errRet = ERR_SIGNATURE_VERIFY;
+	uint32_t nKey = 0;
+	big bigSignature = NULL;
+	big bigEM = NULL;
+	uint8_t em[RSA_MAX_BITS] = {0};
+	uint32_t nEM = 0;
+	if (!pPubKey || !pInMsgHash || !pInSignature)
 	{
 		return ERR_NULL;
 	}
+
+	nKey = pPubKey->nKeyBits / 8;
+
+	// step 1
+	if (nKey != nSignature)
+	{
+		return ERR_SIGNATURE_SIZE;
+	}
+
+	// step 2a
+	bigSignature = mirvar(0);
+	bytes_to_big(nKey, pInSignature, bigSignature);
+	// step 2b
+	bigEM = mirvar(0);
+	
+	RSA_Decrypt(pPubKey, bigSignature, bigEM);
+	nEM = numdig(bigEM);
+	if (nEM == big_to_bytes(nEM, bigEM, em, TRUE))
+	{
+		errRet = emsa_pss_verify(pInMsgHash, nMsgHash
+			, em, nEM
+			, enum_sha1
+			, nSalt
+			, pPubKey->nKeyBits - 1);
+	}
+	
+
 	return errRet;
 }
 
@@ -264,6 +301,9 @@ void test_pss()
 
 	uint8_t signature[384] = { 0 };
 	uint32_t nSignature = enumBits / 8;
+	uint32_t nRetSig = 0;
+	uint32_t nSalt = 0;
+	ErrCrypto errSig = ERR_OK;
 	nHash = GetDigestSize(enumHash);
 	pfnHash = GetDigestFunc(enumHash);
 
@@ -272,14 +312,26 @@ void test_pss()
 	RSA_Init(&rsa, enumBits);
 
 
-	pkcs1_pss_sign(&rsa
+	nRetSig = pkcs1_pss_sign(&rsa
 		, msgHash, nHash
 		, enumHash
-		, 0
-		, enumBits
+		, nSalt
+		//, enumBits
 		, signature, nSignature);
+	if (nRetSig == nSignature)
+	{
+		printf("sig len ok\n");
+		printf("signature:\n");
+		output_buf(signature, nRetSig);
+	}
 
-	printf("signature:\n");
-	output_buf(signature, nSignature);
-
+	errSig = pkcs1_pss_verify(&rsa
+		, msgHash, nHash
+		, signature, nRetSig
+		, enum_sha1
+		, nSalt);
+	if (ERR_OK == errSig)
+	{
+		printf("verify ok\n");
+	}
 }
