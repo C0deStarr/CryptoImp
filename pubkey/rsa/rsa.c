@@ -120,6 +120,9 @@ static ErrCrypto GenerateKeys(RSA * pCtx)
 			pBigTmp = &q;
 			continue;
 		}
+		multiply(p, q, pCtx->pubKey.n);
+		if(pCtx->nKeyBits != numdig(pCtx->pubKey.n))
+			continue;
 		break;
 	} while (1);
 #ifdef _DEBUG
@@ -129,7 +132,6 @@ static ErrCrypto GenerateKeys(RSA * pCtx)
 	printf("q:");
 	cotnum(q, stdout);
 #endif
-	multiply(p, q, pCtx->pubKey.n);
 	// n
 	copy(pCtx->pubKey.n, pCtx->priKey.n);
 
