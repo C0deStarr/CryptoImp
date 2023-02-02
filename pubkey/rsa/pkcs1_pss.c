@@ -308,7 +308,9 @@ ErrCrypto emsa_pss_verify(const uint8_t* pInMsgHash
 		pMGFInBuf[0] = pMGFInBuf[0] & (~chMask);
 		
 
-		// step 10
+		// step 10 check DB
+		//	padding2
+		//	0x1
 		nPadding2 = nEM - nHash - nSalt - 2;
 		for (i = 0; i < nPadding2; ++i)
 		{
@@ -318,14 +320,15 @@ ErrCrypto emsa_pss_verify(const uint8_t* pInMsgHash
 
 		if(1 != pMGFInBuf[nPadding2]) break;
 
-		// step 11 
+		// step 11 salt in DB
 		pSaltInDB = &pMGFInBuf[nPadding2+1];
 
-		// step 12
+		// step 12 
+		// M¡¯ = (0x)00 00 00 00 00 00 00 00 || mHash || salt
 		pSaltInM1 = pM1InBuf + nPadding1 + nHash;
 		memcpy(pSaltInM1, pSaltInDB, nSalt);
 
-		// step 13
+		// step 13 Hash(M')
 		if (ERR_OK != pfnHash(pM1InBuf, nM1, pHashInBuf, nHash)) break;
 
 		// step 14
@@ -470,7 +473,7 @@ void test_pss()
 	uint8_t signature[384] = { 0 };
 	uint32_t nSignature = enumBits / 8;
 	uint32_t nRetSig = 0;
-	uint32_t nSalt = 0;
+	uint32_t nSalt = 8;
 	ErrCrypto errSig = ERR_OK;
 	big bigEM = NULL;
 
