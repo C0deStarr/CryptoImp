@@ -11,12 +11,12 @@ uint32_t emsa_pss_encode(const uint8_t* pInMsgHash
 	, enum_hash enumHash
 	, uint32_t nSalt
 	, uint32_t nEmBits
-	, uint8_t* pOut
+	, uint8_t* pOut	// encoded message
 	, uint32_t nOut);
 
 ErrCrypto emsa_pss_verify(const uint8_t* pInMsg
 	, uint32_t nMsgHash
-	, const uint8_t* pInEM
+	, const uint8_t* pInEM	// encoded msg
 	, uint32_t nEM
 	, enum_hash enumHash
 	, uint32_t nSalt

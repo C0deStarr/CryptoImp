@@ -41,8 +41,8 @@ EM = |      maskedDB     |    H     |bc|
 	 +-------------------+
 */
 
-uint32_t emsa_pss_encode(const uint8_t* pInMsg
-	, uint32_t nMsg
+uint32_t emsa_pss_encode(const uint8_t* pInMsgHash
+	, uint32_t nMsgHash
 	, enum_hash enumHash
 	, uint32_t nSalt
 	, uint32_t nEmBits
@@ -69,11 +69,12 @@ uint32_t emsa_pss_encode(const uint8_t* pInMsg
 	uint8_t* pSaltInM1 = NULL;
 
 	uint8_t *pMGF = NULL;
+	uint32_t nMGF = 0;
 	
 	uint8_t  chMask = 0;
 	uint32_t nMask = 0;
 
-	if (!pInMsg || !pOut)
+	if (!pInMsgHash || !pOut)
 	{
 		return ERR_NULL;
 	}
@@ -90,7 +91,7 @@ uint32_t emsa_pss_encode(const uint8_t* pInMsg
 	if (!pfnHash) return ERR_PARAM;
 
 	// step 1 length checking
-	if (nMsg > nHash)
+	if (nMsgHash > nHash)
 	{
 		return 0;
 	}
@@ -100,11 +101,13 @@ uint32_t emsa_pss_encode(const uint8_t* pInMsg
 		return 0;
 	}
 	do {
-		nDB = nEM - nHash - 1;
-		nM1 = 8 + nHash + nSalt;
+		nDB = nEM - nHash
+			- 1;	// 0xbc
+		nMGF = nDB + nHash;
+		nM1 = nPadding1 + nHash + nSalt;
 		pEM = (uint8_t*)calloc(nEM
 			+ nM1
-			+ nDB + nHash	// for MGF
+			+ nMGF
 			,1);
 		if (!pEM)
 		{
@@ -117,7 +120,7 @@ uint32_t emsa_pss_encode(const uint8_t* pInMsg
 			// step 2 hash
 			pM1 = pEM + nEM;
 			pMsgHash = pM1 + nPadding1;
-			if (ERR_OK != pfnHash(pInMsg, nMsg, pMsgHash, nHash)) break;
+			if (ERR_OK != pfnHash(pInMsgHash, nMsgHash, pMsgHash, nHash)) break;
 
 			// step 4
 			if (nSalt)
@@ -144,7 +147,7 @@ uint32_t emsa_pss_encode(const uint8_t* pInMsg
 
 		// step 9
 		pMGF = pM1 + nM1;
-		if(ERR_OK != MGF1(pHash, nHash, nDB, enum_sha1, pMGF, nDB))	break;
+		if(0 == MGF1(pHash, nHash, nDB, enum_sha1, pMGF, nMGF))	break;
 
 		// step 10
 		xor_buf(pMGF, pDB, nDB);
@@ -192,10 +195,155 @@ ErrCrypto emsa_pss_verify(const uint8_t* pInMsgHash
 	, uint32_t nEmBits)
 {
 	ErrCrypto errRet = ERR_SIGNATURE_VERIFY;
+	uint32_t nHash = 0;
+	PFnHash pfnHash = NULL;
+
+	uint8_t* pDBInEM = NULL;
+	uint8_t *pHashInEM = NULL;
+
+	uint32_t nDB = 0;
+
+	uint8_t *pBuf = NULL;
+	uint8_t* pM1InBuf = NULL;
+	uint8_t* pSaltInM1 = NULL;
+
+	uint8_t* pHashInBuf = NULL;
+	uint8_t* pMGFInBuf = NULL;
+	uint8_t* pSaltInDB = NULL;
+
+	uint32_t nMGF = 0;
+	//uint8_t* pDBInBuf = NULL;
+	uint32_t nM1 = 0;
+
+
+	uint32_t nMask = 0;
+	uint8_t  chMask = 0;
+
+	const uint32_t nPadding1 = 8;	// should be 8
+	uint32_t nPadding2 = 0;
+	uint32_t i = 0;
+
 	if (!pInMsgHash || !pInEM)
 	{
 		return ERR_NULL;
 	}
+
+	nHash = GetDigestSize(enumHash);
+	pfnHash = GetDigestFunc(enumHash);
+	if (!pfnHash) return ERR_PARAM;
+
+	// step 1 length checking
+	if (nMsgHash > nHash)
+	{
+		return ERR_DIGEST_SIZE;
+	}
+	// step 3
+	if (nEM < (nHash + nSalt + 2))
+	{
+		return ERR_BLOCK_SIZE;
+	}
+
+	// step 4
+	if (pInEM[nEM - 1] != 0xbc)
+	{
+		return errRet;
+	}
+
+
+	do{
+		// step 5
+		pDBInEM = pInEM;
+		pHashInEM = pDBInEM + nDB;
+
+		// step 6
+		nMask = 8 * nEM - nEmBits;
+		while (nMask--)
+		{
+			chMask = (chMask >> 1) | 0x80;
+		}
+		if (chMask & pDBInEM[0]) break;
+
+		/* alloc buf
+			+ -------------------------- -
+			| M'  len = 8 + nHash + nSalt
+			+ -------------------------- -
+			| MGF 
+			+------------------ - +
+		*/
+		nDB = nEM - nHash
+			- 1;	// 0xbc
+		nMGF = nDB + nHash;
+		nM1 = nPadding1 + nHash + nSalt;
+		pBuf = (uint8_t*)calloc(nM1
+			+ nMGF
+			, 1);
+		if (!pBuf)
+		{
+			errRet = ERR_MEMORY;
+			break;
+		}
+		// step 2
+		pM1InBuf = pBuf;
+		pHashInBuf = pM1InBuf + nPadding1;
+		if (ERR_OK != pfnHash(
+			pInMsgHash, nMsgHash
+			, pHashInBuf, nHash)) break;
+
+
+
+		// step 7
+		pMGFInBuf = pBuf + nM1;
+		if (0 == MGF1(pHashInEM, nHash, nDB, enum_sha1, pMGFInBuf, nMGF))	break;
+
+		// step 8
+		xor_buf(pDBInEM, pMGFInBuf, nDB);
+
+		// step 9
+		nMask = 8 * nEM - nEmBits;
+		while (nMask--)
+		{
+			chMask = (chMask >> 1) | 0x80;
+		}
+		//pDBInBuf = pMGFInBuf;
+		pMGFInBuf[0] = pMGFInBuf[0] & (~chMask);
+		
+
+		// step 10
+		nPadding2 = nEM - nHash - nSalt - 2;
+		for (i = 0; i < nPadding2; ++i)
+		{
+			if(0 != pMGFInBuf[i]) break;
+		}
+		if( i != nPadding2 ) break;
+
+		if(1 != pMGFInBuf[nPadding2]) break;
+
+		// step 11 
+		pSaltInDB = &pMGFInBuf[nPadding2+1];
+
+		// step 12
+		pSaltInM1 = pM1InBuf + nPadding1 + nHash;
+		memcpy(pSaltInM1, pSaltInDB, nSalt);
+
+		// step 13
+		if (ERR_OK != pfnHash(pM1InBuf, nM1, pHashInBuf, nHash)) break;
+
+		// step 14
+		if (0 == memcmp(pHashInBuf, pHashInEM, nHash))
+		{
+			errRet = ERR_OK;
+		}
+
+	}while(0);
+
+	if (pBuf)
+	{
+		free(pBuf);
+		pBuf = NULL;
+		pHashInBuf = NULL;
+		pMGFInBuf = NULL;
+	}
+
 	return errRet;
 }
 
