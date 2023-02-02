@@ -158,6 +158,7 @@
     <ClInclude Include="common\common.h" />
     <ClInclude Include="common\endianess.h" />
     <ClInclude Include="common\errors.h" />
+    <ClInclude Include="common\mr_util.h" />
     <ClInclude Include="common\util.h" />
     <ClInclude Include="Hash\gm\sm3.h" />
     <ClInclude Include="Hash\hash.h" />
@@ -184,6 +185,7 @@
     <ClCompile Include="Cipher\BlockCipher\sm4.c" />
     <ClCompile Include="common\b64.c" />
     <ClCompile Include="common\endianess.c" />
+    <ClCompile Include="common\mr_util.c" />
     <ClCompile Include="common\util.c" />
     <ClCompile Include="Hash\gm\sm3.c" />
     <ClCompile Include="Hash\hash.c" />

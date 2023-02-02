@@ -117,6 +117,9 @@
     <ClInclude Include="pubkey\rsa\pkcs1_pss.h">
       <Filter>pubkey\rsa</Filter>
     </ClInclude>
+    <ClInclude Include="common\mr_util.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Hash\md\md5.c">
@@ -193,6 +196,9 @@
     </ClCompile>
     <ClCompile Include="pubkey\rsa\pkcs1_pss.c">
       <Filter>pubkey\rsa</Filter>
+    </ClCompile>
+    <ClCompile Include="common\mr_util.c">
+      <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

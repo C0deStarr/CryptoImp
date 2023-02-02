@@ -38,16 +38,10 @@ ErrCrypto RSA_Init(RSA* pCtx, RSA_BITS nBits)
 	return errRet;
 }
 
-ErrCrypto RSA_UnInit(RSA* pCtx)
+ErrCrypto RSA_UnInit()
 {
-	ErrCrypto errRet = ERR_OK;
-	if (!pCtx)
-	{
-		return ERR_NULL;
-	}
-
-	mirexit();
-	return errRet;
+	UninitMiracl();
+	return ERR_OK;
 }
 
 static ErrCrypto GenerateKeys(RSA * pCtx)

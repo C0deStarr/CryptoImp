@@ -35,7 +35,7 @@ typedef struct {
 }RSA;
 
 ErrCrypto RSA_Init(RSA * pCtx, RSA_BITS nBits);
-ErrCrypto RSA_UnInit(RSA * pCtx);
+ErrCrypto RSA_UnInit();
 
 ErrCrypto RSA_Encrypt(RSA_KEY* pKey, big msg, big cipher);
 ErrCrypto RSA_Decrypt(RSA_KEY* pKey, big cipher, big msg);
