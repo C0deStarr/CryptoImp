@@ -48,14 +48,14 @@ void increment_ctr(uint8_t* pCtr, uint32_t nCtr/* = BLOCK SIZE*/)
 	}
 }
 
-ErrCrypto MGF1(uint8_t* pSeed
+uint32_t MGF1(uint8_t* pSeed
 	, uint32_t nSeed
 	, uint32_t nMaskLen
 	, enum_hash enumHash
 	, uint8_t* pOut
 	, uint32_t nOut)
 {
-	ErrCrypto errRet = ERR_OK;
+	uint32_t nRet = 0;
 	uint32_t nLoop = 0;
 	uint32_t counter = 0;
 	uint8_t* pBuf = NULL;
@@ -63,16 +63,13 @@ ErrCrypto MGF1(uint8_t* pSeed
 	uint8_t* pHash = NULL;
 	uint32_t nDigest = 0;
 	uint32_t nBufLen = nSeed + 4;
-	PFnHash pFnHash = NULL;
+	PFnHash  pFnHash = NULL;
 
 	if (!pSeed || !pOut)
 	{
-		return ERR_NULL;
+		return 0;
 	}
-	if (nOut < nMaskLen)
-	{
-		return ERR_MEMORY;
-	}
+
 
 	switch (enumHash)
 	{
@@ -88,9 +85,12 @@ ErrCrypto MGF1(uint8_t* pSeed
 	}
 	break;
 	default:
-		return ERR_UNKNOWN;
+		return 0;
 	}
-
+	if (nOut < (nLoop * nDigest))
+	{
+		return 0;
+	}
 	do {
 		pBuf = (uint8_t*)calloc(nBufLen, 1);
 		if (!pBuf) break;
@@ -100,20 +100,23 @@ ErrCrypto MGF1(uint8_t* pSeed
 		for (counter = 0; counter < nLoop; ++counter)
 		{
 			u32to8_big(pCounter, counter);
-			errRet = pFnHash(pBuf, nBufLen, pHash, nOut - nDigest * counter);
-			if (errRet) break;
+			if(ERR_OK != pFnHash(
+							pBuf, nBufLen
+							, pHash, nOut - nDigest * counter))
+				break;
 			pHash += nDigest;
 		}
-
+		nRet = nLoop * nDigest;
 	} while (0);
 
 	if (pBuf)
 	{
 		free(pBuf);
 		pBuf = NULL;
+		pCounter = NULL;
 	}
 
-	return errRet;
+	return nRet;
 }
 
 void test_mgf()

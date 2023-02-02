@@ -11,7 +11,7 @@ void increment_ctr(uint8_t* pCtr/*ctr[BLOCK SIZE]*/, uint32_t nCtr);
  * @brief 
  *		rfc 8017 B.2.1
 */
-ErrCrypto MGF1(uint8_t* pSeed
+uint32_t MGF1(uint8_t* pSeed
 	, uint32_t nSeed
 	, uint32_t nMaskLen
 	, enum_hash enumHash

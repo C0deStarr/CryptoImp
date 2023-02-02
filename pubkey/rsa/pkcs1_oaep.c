@@ -114,15 +114,15 @@ ErrCrypto pkcs1_oaep_encrypt(RSA* pCtx
 
 		// Step 2e
 		pMGF = pEM + nKey;
-		errRet = MGF1(pSeed, nHash, nDB, enumHash, pMGF, nDB);
-		if(ERR_OK != errRet) break;
+		if(0 == MGF1(pSeed, nHash, nDB, enumHash, pMGF, nMGF))
+			break;
 		
 		// Step 2f
 		xor_buf(pMGF, pDB, nDB);
 
 		// Step 2g seedMask
-		errRet = MGF1(pDB, nDB, nHash, enumHash, pMGF, nHash);
-		if (ERR_OK != errRet) break;
+		if(0 == MGF1(pDB, nDB, nHash, enumHash, pMGF, nMGF))
+			break;
 		
 
 		// Step 2h
@@ -289,14 +289,14 @@ ErrCrypto pkcs1_oaep_decrypt(RSA* pCtx
 
 		// Step 3c seedMask
 		pMGF = pEM + nKey;
-		errRet = MGF1(pDB, nDB, nHash, enumHash, pMGF, nHash);
-		if (ERR_OK != errRet) break;
+		if(0 == MGF1(pDB, nDB, nHash, enumHash, pMGF, nMGF))
+			break;
 		
 		// Step 3d seed
 		xor_buf(pMGF, pSeed, nHash);
 		// Step 3e dbMask
-		errRet = MGF1(pSeed, nHash, nDB, enumHash, pMGF, nDB);
-		if (ERR_OK != errRet) break;
+		if(0 == MGF1(pSeed, nHash, nDB, enumHash, pMGF, nMGF))
+			break;
 		
 		// Step 3f DB
 		xor_buf(pMGF, pDB, nDB);
