@@ -252,6 +252,8 @@ ErrCrypto emsa_pss_verify(const uint8_t* pInMsgHash
 
 	do{
 		// step 5
+		nDB = nEM - nHash
+			- 1;	// 0xbc
 		pDBInEM = pInEM;
 		pHashInEM = pDBInEM + nDB;
 
@@ -270,8 +272,7 @@ ErrCrypto emsa_pss_verify(const uint8_t* pInMsgHash
 			| MGF 
 			+------------------ - +
 		*/
-		nDB = nEM - nHash
-			- 1;	// 0xbc
+		
 		nMGF = nDB + nHash;
 		nM1 = nPadding1 + nHash + nSalt;
 		pBuf = (uint8_t*)calloc(nM1
