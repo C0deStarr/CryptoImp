@@ -40,6 +40,9 @@
     <Filter Include="pubkey\rsa">
       <UniqueIdentifier>{2293402c-f185-4ded-af6a-9e0b6533775d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="pubkey\ecc">
+      <UniqueIdentifier>{04078960-771a-4d8a-aff2-59536d676b41}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Hash\md\md5.h">
@@ -120,6 +123,9 @@
     <ClInclude Include="common\mr_util.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="pubkey\ecc\ecc.h">
+      <Filter>pubkey\ecc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Hash\md\md5.c">
@@ -199,6 +205,9 @@
     </ClCompile>
     <ClCompile Include="common\mr_util.c">
       <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="pubkey\ecc\ecc.c">
+      <Filter>pubkey\ecc</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

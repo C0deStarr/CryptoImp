@@ -23,7 +23,8 @@
 //
 //#include "./pubkey/rsa/rsa.h"
 //#include "./pubkey/rsa/pkcs1_oaep.h"
-#include "./pubkey/rsa/pkcs1_pss.h"
+//#include "./pubkey/rsa/pkcs1_pss.h"
+#include "./pubkey/ecc/ecc.h"
 
 int main()
 {
@@ -47,7 +48,7 @@ int main()
 	//test_mgf();
 	//test_rsa();
 	//test_rsa_oaep();
-	test_pss();
+	//test_pss();
 
 
 	getchar();
