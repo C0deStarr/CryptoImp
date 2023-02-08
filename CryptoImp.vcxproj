@@ -173,6 +173,7 @@
     <ClInclude Include="Hash\sha\sha512_224.h" />
     <ClInclude Include="Hash\sha\sha512_256.h" />
     <ClInclude Include="pubkey\ecc\ecc.h" />
+    <ClInclude Include="pubkey\ecc\ecdsa.h" />
     <ClInclude Include="pubkey\rsa\pkcs1_oaep.h" />
     <ClInclude Include="pubkey\rsa\pkcs1_pss.h" />
     <ClInclude Include="pubkey\rsa\rsa.h" />
@@ -202,6 +203,7 @@
     <ClCompile Include="Hash\sha\sha512_256.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="pubkey\ecc\ecc.c" />
+    <ClCompile Include="pubkey\ecc\ecdsa.c" />
     <ClCompile Include="pubkey\rsa\pkcs1_oaep.c" />
     <ClCompile Include="pubkey\rsa\pkcs1_pss.c" />
     <ClCompile Include="pubkey\rsa\rsa.c" />
