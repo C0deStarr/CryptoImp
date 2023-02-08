@@ -50,6 +50,7 @@ int main()
 	//test_rsa_oaep();
 	//test_pss();
 
+	test_ecc();
 
 	getchar();
 	return 0;
