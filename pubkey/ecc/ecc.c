@@ -1,7 +1,97 @@
 #include "ecc.h"
 
 #include<stdio.h>
+#include "string.h"
 #include "miracl.h"
+
+/*
+* Weierstrass curve parameters
+*/
+typedef struct{
+	uint32_t nBits;
+	int nA;
+	uint8_t* pB;
+	uint8_t* pP;
+	uint8_t* pN;
+	uint8_t* pGx;
+	uint8_t *pGy;
+}W_curve_parameters;
+
+/*
+* Montgomery curve parameters
+*/
+typedef struct {
+	uint32_t nBits;
+}M_curve_parameters;
+
+/*
+* Edwards curve parameters
+*/
+typedef struct {
+	uint32_t nBits;
+}Ed_curve_parameters;
+
+typedef union{
+	W_curve_parameters *pW_curve;
+	M_curve_parameters *pM_curve;
+	Ed_curve_parameters *pEd_curve;
+}curve_parameter;
+
+
+static W_curve_parameters g_pEC[SUPPORTED_EC_TYPES] = {
+	// EC_P192
+	{
+		192,	// bits
+		-3,		// a
+		"64210519E59C80E70FA7E9AB72243049FEB8DEECC146B9B1",	// b
+		"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF",	// p
+		"FFFFFFFFFFFFFFFFFFFFFFFF99DEF836146BC9B1B4D22831",	// n
+		"188DA80EB03090F67CBF20EB43A18800F4FF0AFD82FF1012",	// gx
+		"07192B95FFC8DA78631011ED6B24CDD573F977A11E794811"	// gy
+	}
+};
+
+ErrCrypto InitEc(EC* pEC, enum_ec typeEC)
+{
+	ErrCrypto err = ERR_OK;
+	curve_parameter param = {0};
+	miracl *pMips = NULL;
+	if (!pEC) {
+		return ERR_NULL;
+	}
+
+	memset(pEC, 0, sizeof(EC));
+
+	switch (typeEC)
+	{
+	case EC_P192:
+		{
+			param.pW_curve = &g_pEC[EC_P192];
+			InitMiracl(param.pW_curve->nBits/ 4, 16);
+			pEC->uniCurve.W_curve.a = mirvar(0);
+			pEC->uniCurve.W_curve.b = mirvar(0);
+			pEC->uniCurve.W_curve.p = mirvar(0);
+			pEC->uniCurve.W_curve.n = mirvar(0);
+			pEC->uniCurve.W_curve.gx = mirvar(0);
+			pEC->uniCurve.W_curve.gy = mirvar(0);
+			convert(param.pW_curve->nA, pEC->uniCurve.W_curve.a);
+			instr(pEC->uniCurve.W_curve.b, param.pW_curve->pB);
+			instr(pEC->uniCurve.W_curve.p, param.pW_curve->pP);
+			instr(pEC->uniCurve.W_curve.n, param.pW_curve->pN);
+			instr(pEC->uniCurve.W_curve.gx, param.pW_curve->pGx);
+			instr(pEC->uniCurve.W_curve.gy, param.pW_curve->pGy);
+		}
+		break;
+	// for implementing
+	default:
+		return ERR_PARAM;
+	}
+	pEC->typeEC = typeEC;
+
+	return err;
+}
+
+
 
 void print_point(epoint* p)
 {
