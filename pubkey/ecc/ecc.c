@@ -55,7 +55,6 @@ ErrCrypto InitEc(EC* pEC, enum_ec typeEC)
 {
 	ErrCrypto err = ERR_OK;
 	curve_parameter param = {0};
-	miracl *pMips = NULL;
 	if (!pEC) {
 		return ERR_NULL;
 	}
@@ -71,13 +70,13 @@ ErrCrypto InitEc(EC* pEC, enum_ec typeEC)
 			pEC->uniCurve.W_curve.a = mirvar(0);
 			pEC->uniCurve.W_curve.b = mirvar(0);
 			pEC->uniCurve.W_curve.p = mirvar(0);
-			pEC->uniCurve.W_curve.n = mirvar(0);
+			pEC->uniCurve.W_curve.n_or_q = mirvar(0);
 			pEC->uniCurve.W_curve.gx = mirvar(0);
 			pEC->uniCurve.W_curve.gy = mirvar(0);
 			convert(param.pW_curve->nA, pEC->uniCurve.W_curve.a);
 			instr(pEC->uniCurve.W_curve.b, param.pW_curve->pB);
 			instr(pEC->uniCurve.W_curve.p, param.pW_curve->pP);
-			instr(pEC->uniCurve.W_curve.n, param.pW_curve->pN);
+			instr(pEC->uniCurve.W_curve.n_or_q, param.pW_curve->pN);
 			instr(pEC->uniCurve.W_curve.gx, param.pW_curve->pGx);
 			instr(pEC->uniCurve.W_curve.gy, param.pW_curve->pGy);
 		}
@@ -86,7 +85,32 @@ ErrCrypto InitEc(EC* pEC, enum_ec typeEC)
 	default:
 		return ERR_PARAM;
 	}
+
 	pEC->typeEC = typeEC;
+
+	ecurve_init(pEC->uniCurve.W_curve.a
+		, pEC->uniCurve.W_curve.b
+		, pEC->uniCurve.W_curve.p
+		, MR_PROJECTIVE);
+
+	pEC->uniCurve.W_curve.G = epoint_init();
+	if (!epoint_set(pEC->uniCurve.W_curve.gx
+		, pEC->uniCurve.W_curve.gy
+		, 0
+		, pEC->uniCurve.W_curve.G))
+	{
+		// G not on the curve
+		return ERR_EC_CURVE;
+	}
+
+	epoint * pointTmp = epoint_init();
+	ecurve_mult(pEC->uniCurve.W_curve.n_or_q
+		, pEC->uniCurve.W_curve.G
+		, pointTmp);
+	if (!point_at_infinity(pointTmp))
+	{
+		return  ERR_EC_CURVE;
+	}
 
 	return err;
 }

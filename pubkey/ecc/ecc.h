@@ -14,14 +14,13 @@ typedef struct {
 	union {
 		struct {
 			big p;
-			big q;
-			big n;
+			big n_or_q;
 			big a;
 			big b;
 
 			big gx;
 			big gy;
-			epoint G;	// base point
+			epoint* G;	// base point
 			big d;	// private key
 		}W_curve;	// Weierstrass curve
 
@@ -40,11 +39,21 @@ typedef struct {
 
 ErrCrypto InitEc(EC *pEC, enum_ec typeEC);
 
-typedef union {
+typedef struct {
 	big d;	// private key
-	epoint Q;	// public key
-}EC_KEY;
+	epoint *Q;	// public key
+}EC_PRIKEY;
 
+typedef struct {
+	epoint* Q;	// public key
+	big xq;
+	
+	// reconstruct a point from 
+	//		its x coordinate 
+	//		and just the least significant bit of y
+	//big yq;
+	int nLSB_y;		// yq is + or -
+}EC_PUBKEY;
 
 
 void test_ecc();
