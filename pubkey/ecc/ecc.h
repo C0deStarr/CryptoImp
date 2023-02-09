@@ -11,37 +11,41 @@ typedef enum {
 
 typedef struct {
 	enum_ec typeEC;
-	union {
-		struct {
-			big p;
-			big n_or_q;
-			big a;
-			big b;
+	struct {
+		big gx;
+		big gy;
+		epoint* G;	// base point
+		big d;	// private key
+		uint8_t* pSeed;
 
-			big gx;
-			big gy;
-			epoint* G;	// base point
-			big d;	// private key
-		}W_curve;	// Weierstrass curve
+		big n_or_q;
+		uint32_t nSizeOfN;	// eg. P192 -> 24
+
+		union {
+			struct {
+				big p;
+				big a;
+				big b;
+			}W_curve;	// Weierstrass curve
 
 
-		struct {
-			big a;
-			big b;
-		}M_curve;	// Montgomery Curve
+			struct {
+				big a;
+				big b;
+			}M_curve;	// Montgomery Curve
 
-		struct {
-			big a;
-			big d;
-		}Ed_curve;	// Edwards Curve
-	}uniCurve;
+			struct {
+				big a;
+				big d;
+			}Ed_curve;	// Edwards Curve
+		}uniCurve;
+	}stcCurve;
 }EC;
 
 ErrCrypto InitEc(EC *pEC, enum_ec typeEC);
 
 typedef struct {
 	big d;	// private key
-	epoint *Q;	// public key
 }EC_PRIKEY;
 
 typedef struct {
