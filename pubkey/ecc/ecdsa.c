@@ -146,6 +146,85 @@ ErrCrypto ecdsa_sign(ecdsa* pCtx
 	return err;
 }
 
+ErrCrypto ecdsa_verify(ecdsa* pCtx
+	, const uint8_t* pHash, uint32_t nHash
+	, const uint8_t* pInR, uint32_t nR
+	, const uint8_t* pInS, uint32_t nS)
+{
+	ErrCrypto err = ERR_SIGNATURE_VERIFY;
+
+	big r = NULL;
+	big s = NULL;
+	big e = NULL;
+	int nBits = 0;
+	big u = NULL;
+	big v = NULL;
+	epoint *R1 = NULL;
+
+	if (!pCtx || !(pCtx->pubKey.xq) || !(pCtx->pubKey.Q)
+		|| !pHash || !pInR || !pInS
+		)
+	{
+		return ERR_NULL;
+	}
+
+	do{
+		// step 1
+		r = mirvar(0);
+		s = mirvar(0);
+		bytes_to_big(pCtx->ec.stcCurve.nSizeOfN, pInR, r);
+		bytes_to_big(pCtx->ec.stcCurve.nSizeOfN, pInS, s);
+		if ((mr_compare(pCtx->ec.stcCurve.n_or_q, r) <= 0)
+			|| (mr_compare(pCtx->ec.stcCurve.n_or_q, s) <= 0)
+			)
+		{
+			break;
+		}
+		// step 3
+		e = mirvar(0);
+		bytes_to_big(nHash, pHash, e);
+		if (pCtx->ec.stcCurve.nSizeOfN <= nHash)
+		{
+			// left bits: math.ceil(math.log(n, 2))
+			nBits = logb2(pCtx->ec.stcCurve.n_or_q);
+			nBits = pCtx->ec.stcCurve.nSizeOfN * 8 - nBits;
+			nBits = 0 - nBits;
+			sftbit(e, nBits, e);
+		}
+		// step 4 s_inv = 1/s mod n
+		xgcd(s, pCtx->ec.stcCurve.n_or_q, s, s, s);
+
+		// step 5
+		u = mirvar(0);
+		v = mirvar(0);
+		// u = e*s_inv % q
+		mad(e, s, s
+			, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q
+			, u);   
+		// v = r*s_inv % q
+		mad(r, s, s
+			, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q
+			, v);
+		// step 6
+		R1 = epoint_init();
+		ecurve_mult2(u, pCtx->ec.stcCurve.G
+			, v, pCtx->pubKey.Q
+			, R1);
+
+		// step 7 xr
+		epoint_get(R1, u, u);
+		// step 8
+		// step 9 
+		// u = u % n
+		divide(u, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+		if (0 == mr_compare(u, r))
+		{
+			err = ERR_OK;
+		}
+	}while(0);
+	return err;
+}
+
 void test_ecdsa()
 {
 	ecdsa ctx = {0};
@@ -187,4 +266,13 @@ void test_ecdsa()
 	output_buf(r, nP192);
 	printf("s:");
 	output_buf(s, nP192);
+
+	printf("====verify====\n");
+	if (ERR_OK == ecdsa_verify(&ctx
+		, digest, SHA1_DIGEST_SIZE
+		, r, nP192
+		, s, nP192))
+	{
+		printf("verify ok\n");
+	}
 }
