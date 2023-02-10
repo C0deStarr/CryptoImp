@@ -275,4 +275,6 @@ void test_ecdsa()
 	{
 		printf("verify ok\n");
 	}
+
+	UninitMiracl();
 }
