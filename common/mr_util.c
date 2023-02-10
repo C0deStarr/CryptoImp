@@ -26,3 +26,16 @@ void UninitMiracl()
 	}
 }
 
+
+void print_point(epoint* p)
+{
+	big bx = mirvar(0);
+	big by = mirvar(0);
+	char x = 0, y = 0;
+
+	epoint_get(p, bx, by);
+
+	big_to_bytes(1, bx, &x, TRUE);
+	big_to_bytes(1, by, &y, TRUE);
+	printf("(%d, %d)\n", x, y);
+}
