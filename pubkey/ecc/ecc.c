@@ -2,7 +2,8 @@
 #include<stdio.h>
 
 
-void test_ecc()
+
+void test_ecc_demo()
 {
 
 	miracl* mip = mirsys(10, 10);

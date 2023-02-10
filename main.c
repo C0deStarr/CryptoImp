@@ -51,7 +51,7 @@ int main()
 	//test_rsa_oaep();
 	//test_pss();
 
-	//test_ecc();
+	//test_ecc_demo();
 	test_ecdsa();
 
 	getchar();

@@ -7,5 +7,5 @@
 #include "ec.h"
 
 
-void test_ecc();
+void test_ecc_demo();
 #endif // !_ECC_H
