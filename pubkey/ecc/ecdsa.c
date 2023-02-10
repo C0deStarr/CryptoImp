@@ -3,60 +3,9 @@
 #include <Hash/hash.h>
 #include <common/util.h>
 
-ErrCrypto InitECDSA(ecdsa* pCtx, enum_ec typeEC)
-{
-	ErrCrypto err = ERR_OK;
-	if (!pCtx)
-	{
-		return  ERR_NULL;
-	}
-	if (ERR_OK != (err = InitEc(&(pCtx->ec), typeEC)))
-	{
-		return err;
-	}
 
 
-	if (ERR_OK != (err = GenerateEcdsaKeys(pCtx)))
-	{
-		return err;
-	}
-
-
-
-
-	return err;
-}
-
-ErrCrypto GenerateEcdsaKeys(ecdsa* pCtx)
-{
-	ErrCrypto err = ERR_OK;
-	epoint * Q = NULL;
-	if (!pCtx)
-	{
-		return ERR_NULL;
-	}
-
-	pCtx->priKey.d = mirvar(0);
-	pCtx->pubKey.xq = mirvar(0);
-	Q = epoint_init();
-	
-	// private key d = rand()
-	irand(pCtx->ec.stcCurve.pSeed);
-	bigrand(pCtx->ec.stcCurve.n_or_q
-		, pCtx->priKey.d);
-	// Q = dG
-	ecurve_mult(pCtx->priKey.d
-		, pCtx->ec.stcCurve.G
-		, Q);
-	pCtx->pubKey.nLSB_y = epoint_get(Q
-		, pCtx->pubKey.xq
-		, pCtx->pubKey.xq);
-	
-
-	return err;
-}
-
-ErrCrypto ecdsa_sign(ecdsa* pCtx
+ErrCrypto ecdsa_sign(ecc* pCtx
 	, const uint8_t* pHash, uint32_t nHash
 	, uint8_t* pOutR, uint32_t nOutR
 	, uint8_t* pOutS, uint32_t nOutS)
@@ -149,7 +98,7 @@ ErrCrypto ecdsa_sign(ecdsa* pCtx
 	return err;
 }
 
-ErrCrypto ecdsa_verify(ecdsa* pCtx
+ErrCrypto ecdsa_verify(ecc* pCtx
 	, const uint8_t* pHash, uint32_t nHash
 	, const uint8_t* pInR, uint32_t nR
 	, const uint8_t* pInS, uint32_t nS)
@@ -236,7 +185,7 @@ ErrCrypto ecdsa_verify(ecdsa* pCtx
 
 void test_ecdsa()
 {
-	ecdsa ctx = {0};
+	ecc ctx = {0};
 
 	uint8_t msg[] = {"abcdef"};
 	uint32_t nMsg = sizeof(msg) - 1;
@@ -244,7 +193,7 @@ void test_ecdsa()
 	uint8_t r[24] = { 0 };
 	uint8_t s[24] = { 0 };
 	uint32_t nP192 = 24;
-	if (ERR_OK != InitECDSA(&ctx, EC_P192))
+	if (ERR_OK != InitECC(&ctx, EC_P192))
 	{
 		return;
 	}

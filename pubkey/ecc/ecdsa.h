@@ -3,23 +3,14 @@
 
 #include <common/common.h>
 
-#include "ec.h"
+#include "ecc.h"
 
-typedef struct {
-	EC ec;
-	EC_PRIKEY priKey;
-	EC_PUBKEY pubKey;
-}ecdsa;
-
-ErrCrypto InitECDSA(ecdsa* pCtx, enum_ec typeEC);
-ErrCrypto GenerateEcdsaKeys(ecdsa* pCtx);
-
-ErrCrypto ecdsa_sign(ecdsa* pCtx
+ErrCrypto ecdsa_sign(ecc* pCtx
 	, const uint8_t* pHash, uint32_t nHash
 	, uint8_t* pOutR, uint32_t nOutR
 	, uint8_t* pOutS, uint32_t nOutS);
 
-ErrCrypto ecdsa_verify(ecdsa* pCtx
+ErrCrypto ecdsa_verify(ecc* pCtx
 	, const uint8_t* pHash, uint32_t nHash
 	, const uint8_t* pInR, uint32_t nR
 	, const uint8_t* pInS, uint32_t nS);

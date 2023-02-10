@@ -129,3 +129,56 @@ decrypt: C - kX1
 	getchar();
 	return 0;
 }
+
+ErrCrypto InitECC(ecc* pCtx, enum_ec typeEC)
+{
+	ErrCrypto err = ERR_OK;
+	if (!pCtx)
+	{
+		return  ERR_NULL;
+	}
+	if (ERR_OK != (err = InitEc(&(pCtx->ec), typeEC)))
+	{
+		return err;
+	}
+
+
+	if (ERR_OK != (err = GenerateEccKeys(pCtx)))
+	{
+		return err;
+	}
+
+
+
+
+	return err;
+}
+
+ErrCrypto GenerateEccKeys(ecc* pCtx)
+{
+	ErrCrypto err = ERR_OK;
+	epoint* Q = NULL;
+	if (!pCtx)
+	{
+		return ERR_NULL;
+	}
+
+	pCtx->priKey.d = mirvar(0);
+	pCtx->pubKey.xq = mirvar(0);
+	Q = epoint_init();
+
+	// private key d = rand()
+	irand(pCtx->ec.stcCurve.pSeed);
+	bigrand(pCtx->ec.stcCurve.n_or_q
+		, pCtx->priKey.d);
+	// Q = dG
+	ecurve_mult(pCtx->priKey.d
+		, pCtx->ec.stcCurve.G
+		, Q);
+	pCtx->pubKey.nLSB_y = epoint_get(Q
+		, pCtx->pubKey.xq
+		, pCtx->pubKey.xq);
+
+
+	return err;
+}
