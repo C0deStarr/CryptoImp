@@ -114,8 +114,8 @@ ErrCrypto ecdsa_verify(ecc* pCtx
 	epoint* Q = NULL;
 	epoint *R1 = NULL;
 
-	if (!pCtx || !(pCtx->pubKey.xq) || !(pCtx->pubKey.xq)
-		|| !pHash || !pInR || !pInS
+	if (!pCtx || !(pCtx->pubKey.xq)
+			|| !pHash || !pInR || !pInS
 		)
 	{
 		return ERR_NULL;
