@@ -30,6 +30,7 @@ ErrCrypto InitECDSA(ecdsa* pCtx, enum_ec typeEC)
 ErrCrypto GenerateEcdsaKeys(ecdsa* pCtx)
 {
 	ErrCrypto err = ERR_OK;
+	epoint * Q = NULL;
 	if (!pCtx)
 	{
 		return ERR_NULL;
@@ -37,15 +38,17 @@ ErrCrypto GenerateEcdsaKeys(ecdsa* pCtx)
 
 	pCtx->priKey.d = mirvar(0);
 	pCtx->pubKey.xq = mirvar(0);
-	pCtx->pubKey.Q = epoint_init();
+	Q = epoint_init();
 	
+	// private key d = rand()
 	irand(pCtx->ec.stcCurve.pSeed);
 	bigrand(pCtx->ec.stcCurve.n_or_q
 		, pCtx->priKey.d);
+	// Q = dG
 	ecurve_mult(pCtx->priKey.d
 		, pCtx->ec.stcCurve.G
-		, pCtx->pubKey.Q);
-	pCtx->pubKey.nLSB_y = epoint_get(pCtx->pubKey.Q
+		, Q);
+	pCtx->pubKey.nLSB_y = epoint_get(Q
 		, pCtx->pubKey.xq
 		, pCtx->pubKey.xq);
 	
@@ -159,9 +162,10 @@ ErrCrypto ecdsa_verify(ecdsa* pCtx
 	int nBits = 0;
 	big u = NULL;
 	big v = NULL;
+	epoint* Q = NULL;
 	epoint *R1 = NULL;
 
-	if (!pCtx || !(pCtx->pubKey.xq) || !(pCtx->pubKey.Q)
+	if (!pCtx || !(pCtx->pubKey.xq) || !(pCtx->pubKey.xq)
 		|| !pHash || !pInR || !pInS
 		)
 	{
@@ -206,9 +210,14 @@ ErrCrypto ecdsa_verify(ecdsa* pCtx
 			, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q
 			, v);
 		// step 6
+		// R1 = uG + vQ
+		Q = epoint_init();
 		R1 = epoint_init();
+		if(!epoint_set(pCtx->pubKey.xq, pCtx->pubKey.xq
+			, pCtx->pubKey.nLSB_y
+			, Q)) break;
 		ecurve_mult2(u, pCtx->ec.stcCurve.G
-			, v, pCtx->pubKey.Q
+			, v, Q
 			, R1);
 
 		// step 7 xr
@@ -243,7 +252,7 @@ void test_ecdsa()
 	miracl* pMips = get_mip();
 	pMips->IOBASE = 16;
 	printf("pubkey:\n");
-	printf("y==%d\nxq==", ctx.pubKey.nLSB_y);
+	printf("y(lsb)==%d\nxq==", ctx.pubKey.nLSB_y);
 	cotnum(ctx.pubKey.xq, stdout);
 
 	printf("prikey:\n");

@@ -46,7 +46,7 @@ typedef struct {
 }EC_PRIKEY;
 
 typedef struct {
-	epoint* Q;	// public key
+	//epoint* Q;	// public key
 	big xq;
 
 	// reconstruct a point from 
