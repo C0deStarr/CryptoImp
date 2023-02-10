@@ -3,7 +3,7 @@
 
 #include <common/common.h>
 
-#include "ecc.h"
+#include "ec.h"
 
 typedef struct {
 	EC ec;
