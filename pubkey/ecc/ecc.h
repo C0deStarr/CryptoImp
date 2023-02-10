@@ -17,15 +17,19 @@ void test_ecc_demo();
 ErrCrypto InitECC(ecc* pCtx, enum_ec typeEC);
 ErrCrypto GenerateEccKeys(ecc* pCtx);
 
+
+/*
+	ECC ElGamal
+*/
 ErrCrypto ecc_encrypt(ecc* pCtx
 	, const uint8_t* pMsg, uint32_t nMsg
-	, uint8_t* pOutXc, uint32_t nXc
+	, uint8_t* pOutXc, uint32_t nCx
 	, int* pnOutLsbYc
 	, uint8_t* pOutXx1, uint32_t nXx1
 	, int* pnOutLsbYx1
 #ifdef _DEBUG
-	, epoint *C
-	, epoint *X1
+	, big C
+	, big X2
 #endif
 	);
 ErrCrypto ecc_decrypt(ecc* pCtx
@@ -35,8 +39,8 @@ ErrCrypto ecc_decrypt(ecc* pCtx
 	, int nLsbYx1
 	, uint8_t *pOutDec, uint32_t nOutDec
 #ifdef _DEBUG
-	, epoint* C
-	, epoint* X2
+	, big C
+	, big X2
 #endif
 );
 

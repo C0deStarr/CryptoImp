@@ -13,7 +13,6 @@ typedef struct {
 		big gx;
 		big gy;
 		epoint* G;	// base point
-		big d;	// private key
 		uint8_t* pSeed;
 
 		big n_or_q;

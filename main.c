@@ -52,7 +52,8 @@ int main()
 	//test_pss();
 
 	//test_ecc_demo();
-	test_ecdsa();
+	//test_ecdsa();
+	test_ecc();
 
 	getchar();
 	return 0;
