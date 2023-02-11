@@ -18,7 +18,7 @@ ErrCrypto SM3_update(SM3_HashState* pHashState, const uint8_t* pBuf, uint64_t nL
 ErrCrypto SM3_final(SM3_HashState* pHashState, uint8_t* pDigest, int nDigest);
 ErrCrypto SM3_digest(
 	const uint8_t* pData, uint64_t nData
-	, uint8_t* pDigest, int nDigest);
+	, uint8_t* pDigest, uint32_t nDigest);
 void test_sm3();
 
 #endif

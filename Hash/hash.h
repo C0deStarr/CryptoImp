@@ -20,7 +20,7 @@ ErrCrypto(*PFnHash)
 (const uint8_t* pData
 	, uint64_t nData
 	, uint8_t* pDigest
-	, int nDigest);
+	, uint32_t nDigest);
 PFnHash GetDigestFunc(enum_hash enumHash);
 
 

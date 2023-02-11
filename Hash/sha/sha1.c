@@ -306,13 +306,17 @@ ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGE
 	return errRet;
 }
 
-ErrCrypto SHA1_digest(const uint8_t* pData, uint64_t nData, uint8_t* pDigest, int nDigest)
+ErrCrypto SHA1_digest(const uint8_t* pData, uint64_t nData, uint8_t* pDigest, uint32_t nDigest)
 {
     ErrCrypto errRet = ERR_OK;
     HashState hashState = { 0 };
     if (!pData || !pDigest)
     {
         return ERR_NULL;
+    }
+    if (nDigest <= SHA1_DIGEST_SIZE)
+    {
+        return ERR_MAX_OFFSET;
     }
     do {
         errRet = SHA1_init(&hashState);

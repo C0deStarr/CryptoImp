@@ -16,6 +16,7 @@ typedef struct _HashState {
 ErrCrypto SHA1_init(HashState* pHashState);
 ErrCrypto SHA1_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen);
 ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */);
-ErrCrypto SHA1_digest(const uint8_t* pData, uint64_t nData, uint8_t* pDigest, int nDigest);
+ErrCrypto SHA1_digest(const uint8_t* pData, uint64_t nData
+    , uint8_t* pDigest, uint32_t nDigest);
 void test_sha1();
 #endif

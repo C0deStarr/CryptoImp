@@ -278,7 +278,7 @@ ErrCrypto SM3_final(SM3_HashState* pHashState, uint8_t* pDigest, int nDigest)
 
 ErrCrypto SM3_digest(
     const uint8_t* pData, uint64_t nData
-    , uint8_t* pDigest, int nDigest)
+    , uint8_t* pDigest, uint32_t nDigest)
 {
     ErrCrypto err = ERR_OK;
     SM3_HashState hashState = { 0 };
@@ -289,7 +289,7 @@ ErrCrypto SM3_digest(
     }
     if (SM3_DIGEST_SIZE > nDigest)
     {
-        return ERR_MEMORY;
+        return ERR_MAX_OFFSET;
     }
     do {
         if(ERR_OK != (err = SM3_init(&hashState)))
