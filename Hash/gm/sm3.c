@@ -1,7 +1,7 @@
 #include "sm3.h"
 #include <common/endianess.h>
 #include <string.h>
-
+#include <stdio.h>
 #define SM3_NUMBER_OF_ROUNDS 64
 
 #define ROTL(x,y) ( ((x) << (y)) | (x) >> (32-(y)) )
@@ -77,7 +77,7 @@ static uint32_t P1(uint32_t x)
 }
 
 
-static int SM3_ProcessBlock(HashState* pState)
+static int SM3_ProcessBlock(SM3_HashState* pState)
 {
     ErrCrypto errRet = ERR_OK;
     uint32_t j;
@@ -174,7 +174,7 @@ static int SM3_ProcessBlock(HashState* pState)
 }
 
 
-ErrCrypto SM3_init(HashState* pHashState)
+ErrCrypto SM3_init(SM3_HashState* pHashState)
 {
     ErrCrypto errRet = ERR_OK;
     uint8_t i = 0;
@@ -191,14 +191,14 @@ ErrCrypto SM3_init(HashState* pHashState)
     return errRet;
 }
 
-static ErrCrypto AddBitsLen(HashState* pHashState, uint64_t nBits)
+static ErrCrypto AddBitsLen(SM3_HashState* pHashState, uint64_t nBits)
 {
     // Maximum message length is 2**64 bits 
     pHashState->nBitsLen += nBits;
     return (pHashState->nBitsLen < nBits) ? ERR_MAX_DATA : ERR_OK;
 }
 
-ErrCrypto SM3_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
+ErrCrypto SM3_update(SM3_HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 {
     ErrCrypto errRet = ERR_OK;
     uint32_t nBytesNeeded = 0;
@@ -210,14 +210,14 @@ ErrCrypto SM3_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 
     while (nLen > 0)
     {
-        nBytesNeeded = BLOCK_SIZE - pHashState->nBytesLen;
+        nBytesNeeded = SM3_BLOCK_SIZE - pHashState->nBytesLen;
         nBytesCopy = (nBytesNeeded > nLen) ? nLen : nBytesNeeded;
         memcpy(pHashState->block, pBuf, nBytesCopy);
         pBuf += nBytesCopy;
         pHashState->nBytesLen += nBytesCopy;
         nLen -= nBytesCopy;
 
-        if (BLOCK_SIZE == pHashState->nBytesLen)
+        if (SM3_BLOCK_SIZE == pHashState->nBytesLen)
         {
             // let's do the 64 steps
             errRet = SM3_ProcessBlock(pHashState);
@@ -226,14 +226,14 @@ ErrCrypto SM3_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 
             // waiting for the next block
             pHashState->nBytesLen = 0;
-            errRet = AddBitsLen(pHashState, BLOCK_SIZE * 8);
+            errRet = AddBitsLen(pHashState, SM3_BLOCK_SIZE * 8);
             if (errRet)
                 return errRet;
         }
     }
     return errRet;
 }
-ErrCrypto SM3_final(HashState* pHashState, uint8_t* pDigest, int nDigest)
+ErrCrypto SM3_final(SM3_HashState* pHashState, uint8_t* pDigest, int nDigest)
 
 {
     ErrCrypto errRet = ERR_OK;
@@ -254,15 +254,15 @@ ErrCrypto SM3_final(HashState* pHashState, uint8_t* pDigest, int nDigest)
     // 1 + 0s + 8-byte msg length
     nPadLen = (pHashState->nBytesLen < 56)
         ? (56 - pHashState->nBytesLen)
-        : (BLOCK_SIZE + 56 - pHashState->nBytesLen);
+        : (SM3_BLOCK_SIZE + 56 - pHashState->nBytesLen);
 
     pHashState->block[(pHashState->nBytesLen)++] = 0x80;
     memset(&(pHashState->block[(pHashState->nBytesLen)])
         , 0
         , nPadLen - 1);
-    u32to8_big(&pHashState->block[BLOCK_SIZE - 8]   // - 2 * WORD_SIZE
+    u32to8_big(&pHashState->block[SM3_BLOCK_SIZE - 8]   // - 2 * WORD_SIZE
         , pHashState->nBitsLen >> 32);
-    u32to8_big(&pHashState->block[BLOCK_SIZE - 4]   // - WORD_SIZE
+    u32to8_big(&pHashState->block[SM3_BLOCK_SIZE - 4]   // - WORD_SIZE
         , pHashState->nBitsLen);
 
     SM3_ProcessBlock(pHashState, pHashState->block);
@@ -275,18 +275,88 @@ ErrCrypto SM3_final(HashState* pHashState, uint8_t* pDigest, int nDigest)
     return errRet;
 }
 
+
+ErrCrypto SM3_digest(
+    const uint8_t* pData, uint64_t nData
+    , uint8_t* pDigest, int nDigest)
+{
+    ErrCrypto err = ERR_OK;
+    SM3_HashState hashState = { 0 };
+
+    if (!pData || !pDigest)
+    {
+        return ERR_NULL;
+    }
+    if (SM3_DIGEST_SIZE > nDigest)
+    {
+        return ERR_MEMORY;
+    }
+    do {
+        if(ERR_OK != (err = SM3_init(&hashState)))
+            break;
+        while (nData >= SM3_BLOCK_SIZE)
+        {
+            if(ERR_OK != (err = SM3_update(&hashState, pData, nData)))
+                break;
+            nData -= SM3_BLOCK_SIZE;
+            pData += SM3_BLOCK_SIZE;
+        }
+        if (nData)
+        {
+            if (ERR_OK != (err = SM3_update(&hashState, pData, nData)))
+                break;
+        }
+        if(ERR_OK != (err = SM3_final(&hashState, pDigest, SM3_DIGEST_SIZE)))
+            break;
+
+    }while(0);
+    return err;
+}
+
 void test_sm3()
 {
-    HashState hashState = { 0 };
+    SM3_HashState hashState = { 0 };
     ErrCrypto err = ERR_OK;
-    uint8_t data[] = "abc";
-    uint8_t digest[DIGEST_SIZE] = { 0 };
+    uint8_t data[64] = "abc";
+    uint8_t digest[SM3_DIGEST_SIZE] = { 0 };
+	uint8_t true_digest[SM3_DIGEST_SIZE] = {
+		"\x66\xc7\xf0\xf4\x62\xee\xed\xd9"
+		"\xd1\xf2\xd4\x6b\xdc\x10\xe4\xe2"
+		"\x41\x67\xc4\x87\x5c\xf2\xf7\xa2"
+		"\x29\x7d\xa0\x2b\x8f\x4b\xa8\xe0"
+	};
     int i = 0;
     SM3_init(&hashState);
-    SM3_update(&hashState, data, sizeof(data) - 1);
-    SM3_final(&hashState, digest, DIGEST_SIZE);
-    for (i = 0; i < DIGEST_SIZE; i++) {
-        printf("%02x", digest[i]);
+    SM3_update(&hashState, data, 3);
+    SM3_final(&hashState, digest, SM3_DIGEST_SIZE);
+    if (0 == memcmp(true_digest, digest, SM3_DIGEST_SIZE))
+    {
+        printf("sm3(\"abc\") ok\n");
     }
-    printf("\n");
+    
+
+    memcpy(data, 
+        "\x61\x62\x63\x64\x61\x62\x63\x64"
+        "\x61\x62\x63\x64\x61\x62\x63\x64"
+        "\x61\x62\x63\x64\x61\x62\x63\x64"
+        "\x61\x62\x63\x64\x61\x62\x63\x64"
+        "\x61\x62\x63\x64\x61\x62\x63\x64"
+        "\x61\x62\x63\x64\x61\x62\x63\x64"
+        "\x61\x62\x63\x64\x61\x62\x63\x64"
+        "\x61\x62\x63\x64\x61\x62\x63\x64",
+        64);
+    memcpy(true_digest,
+        "\xde\xbe\x9f\xf9\x22\x75\xb8\xa1"
+        "\x38\x60\x48\x89\xc1\x8e\x5a\x4d"
+        "\x6f\xdb\x70\xe5\x38\x7e\x57\x65"
+        "\x29\x3d\xcb\xa3\x9c\x0c\x57\x32",
+        SM3_DIGEST_SIZE);
+    SM3_digest(data, 64,
+        digest, SM3_DIGEST_SIZE 
+    );
+    
+    if (0 == memcmp(true_digest, digest, SM3_DIGEST_SIZE))
+    {
+        printf("sm3_digest(512 bits) ok\n");
+    }
 }
