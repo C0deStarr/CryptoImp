@@ -7,7 +7,8 @@
 */
 typedef struct {
 	uint32_t nBytes;
-	int nA;
+	//int nA;
+	uint8_t* pA;
 	uint8_t* pB;
 	uint8_t* pP;
 	uint8_t* pN;
@@ -41,7 +42,7 @@ static W_curve_parameters g_pEC[SUPPORTED_EC_TYPES] = {
 	// EC_P192
 	{
 		24,		//bytes == 192 bits
-		-3,		// a
+		"-3",		// a
 		"64210519E59C80E70FA7E9AB72243049FEB8DEECC146B9B1",	// b
 		"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF",	// p
 		"FFFFFFFFFFFFFFFFFFFFFFFF99DEF836146BC9B1B4D22831",	// n
@@ -52,6 +53,16 @@ static W_curve_parameters g_pEC[SUPPORTED_EC_TYPES] = {
 		"\x28\x95\x57\xed"
 		"\x64\x2f\x42\xc8"
 		"\x6f\xae\x45\x30"
+	},
+	// sm2
+	{
+		32, // 256 bits
+		"FFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFFFFFFFFFC", //a
+		"28E9FA9E9D9F5E344D5A9E4BCF6509A7F39789F515AB8F92DDBCBD414D940E93",// b 
+		"FFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFFFFFFFFFF",// p 
+		"FFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFF7203DF6B21C6052B53BBF40939D54123",// n 
+		"32C4AE2C1F1981195F9904466A39C9948FE30BBFF2660BE1715A4589334C74C7",// Gx
+		"BC3736A2F4F6779C59BDCEE36B692153D0A9877CC62A474002DF32E52139F0A0" // Gy
 	}
 };
 
@@ -68,10 +79,12 @@ ErrCrypto InitEc(EC* pEC, enum_ec typeEC)
 	switch (typeEC)
 	{
 	case EC_P192:
+	case EC_SM2:
 	{
 		param.pW_curve = &g_pEC[EC_P192];
 		InitMiracl(param.pW_curve->nBytes * 4 // >= param.pW_curve->nBytes * 2
 			, 16);
+
 		pEC->stcCurve.nSizeOfN = param.pW_curve->nBytes;
 		pEC->stcCurve.uniCurve.W_curve.a = mirvar(0);
 		pEC->stcCurve.uniCurve.W_curve.b = mirvar(0);
@@ -79,7 +92,7 @@ ErrCrypto InitEc(EC* pEC, enum_ec typeEC)
 		pEC->stcCurve.n_or_q = mirvar(0);
 		pEC->stcCurve.gx = mirvar(0);
 		pEC->stcCurve.gy = mirvar(0);
-		convert(param.pW_curve->nA, pEC->stcCurve.uniCurve.W_curve.a);
+		instr(pEC->stcCurve.uniCurve.W_curve.a, param.pW_curve->pA);
 		instr(pEC->stcCurve.uniCurve.W_curve.b, param.pW_curve->pB);
 		instr(pEC->stcCurve.uniCurve.W_curve.p, param.pW_curve->pP);
 		instr(pEC->stcCurve.n_or_q, param.pW_curve->pN);

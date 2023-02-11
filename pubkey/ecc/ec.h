@@ -2,9 +2,10 @@
 #include <common/common.h>
 #include <common/mr_util.h>
 
-#define SUPPORTED_EC_TYPES	1
+#define SUPPORTED_EC_TYPES	2
 typedef enum {
-	EC_P192 = 0
+	EC_P192 = 0,
+	EC_SM2 = 1
 }enum_ec;
 
 typedef struct {
