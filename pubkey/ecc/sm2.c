@@ -153,6 +153,8 @@ ErrCrypto sm2_encrypt(ecc* pCtx
 		// step A1 random K
 		irand(time(NULL));
 		bigrand(pCtx->ec.stcCurve.n_or_q, bigK);
+		// test for Appendix A
+		//instr(bigK, "4C62EEFD6ECFC2B95B92FD6C3D9575148AFA17425546D49018E5388D49DD7B4F");
 
 		// step A2 : C1
 		ecurve_mult(bigK, pCtx->ec.stcCurve.G, epointC1);
@@ -170,7 +172,7 @@ ErrCrypto sm2_encrypt(ecc* pCtx
 			, pCtx->pubKey.nLSB_y
 			, epointQ);
 		ecurve_mult(bigK, epointQ, epointQ);
-		epoint_get(epointC1, bigX, bigY);
+		epoint_get(epointQ, bigX, bigY);
 
 		// step A5 KDF(x2 || y2 , nMsg)
 		nBuf = pCtx->ec.stcCurve.nSizeOfN * 2 + nMsgC2 + nHashC3;
@@ -200,7 +202,7 @@ ErrCrypto sm2_encrypt(ecc* pCtx
 		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN, bigY
 			, pBuf + pCtx->ec.stcCurve.nSizeOfN + nMsgC2
 			, TRUE);
-		if(ERR_OK != pfnHash(pBuf, nBuf
+		if(ERR_OK != pfnHash(pBuf, pCtx->ec.stcCurve.nSizeOfN * 2 + nMsgC2
 			, pOutCipher + nC1 + nMsgC2, nHashC3))
 			break;
 
@@ -218,7 +220,9 @@ void test_sm2()
 {
 	ecc ctx = { 0 };
 
-	uint8_t msg[] = { "abcdefghijklmn" };
+	uint8_t msg[] = { 
+		"\x65\x6E\x63\x72\x79\x70\x74\x69\x6F\x6E\x20\x73\x74\x61\x6E\x64\x61\x72\x64"
+	};
 	uint32_t nMsg = sizeof(msg) - 1;
 	uint8_t *pCipher = NULL;
 	uint32_t nCipher = NULL;
@@ -226,6 +230,8 @@ void test_sm2()
 	{
 		return;
 	}
+	instr(ctx.priKey.d, "1649AB77A00637BD5E2EFE283FBF353534AA7F7CB89463F208DDBC2920BB0DA0");
+
 	sm2_encrypt(&ctx
 		, msg, nMsg
 		, pCipher, nCipher
