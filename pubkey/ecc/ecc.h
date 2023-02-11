@@ -18,9 +18,7 @@ ErrCrypto InitECC(ecc* pCtx, enum_ec typeEC);
 ErrCrypto GenerateEccKeys(ecc* pCtx);
 
 
-/*
-	ECC ElGamal
-*/
+
 ErrCrypto ecc_encrypt(ecc* pCtx
 	, const uint8_t* pMsg, uint32_t nMsg
 	, uint8_t* pOutXc, uint32_t nCx
