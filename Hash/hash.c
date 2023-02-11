@@ -1,6 +1,8 @@
 #include "hash.h"
 #include <stdlib.h>
 
+
+
 uint32_t GetDigestSize(enum_hash enumHash)
 {
 	if (enumHash >= NUMBER_OF_HASHES)
@@ -8,7 +10,8 @@ uint32_t GetDigestSize(enum_hash enumHash)
 		return NULL;
 	}
 	static uint32_t s_arrDigestSizeTable[NUMBER_OF_HASHES] = {
-		SHA1_DIGEST_SIZE
+		SHA1_DIGEST_SIZE,
+		SM3_DIGEST_SIZE
 	};
 	return s_arrDigestSizeTable[enumHash];
 }

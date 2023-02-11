@@ -5,12 +5,13 @@
 
 #include "sha/sha1.h"
 #include "sha/sha512.h"
+#include "gm/sm3.h"
 
-
-#define NUMBER_OF_HASHES	1
 #define MAX_SIZE_OF_DIGEST	SHA512_DIGEST_SIZE
+#define NUMBER_OF_HASHES	2
 typedef enum {
-	enum_sha1 = 0
+	enum_sha1 = 0,
+	enum_sm3 = 1
 }enum_hash;
 
 uint32_t GetDigestSize(enum_hash enumHash);

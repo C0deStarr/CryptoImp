@@ -25,7 +25,8 @@
 //#include "./pubkey/rsa/pkcs1_oaep.h"
 //#include "./pubkey/rsa/pkcs1_pss.h"
 //#include "./pubkey/ecc/ecc.h"
-#include "./pubkey/ecc/ecdsa.h"
+//#include "./pubkey/ecc/ecdsa.h"
+#include "./pubkey/ecc/sm2.h"
 
 int main()
 {
@@ -53,7 +54,10 @@ int main()
 
 	//test_ecc_demo();
 	//test_ecdsa();
-	test_ecc();
+	//test_ecc();
+
+	test_sm2();
+	
 
 	getchar();
 	return 0;
