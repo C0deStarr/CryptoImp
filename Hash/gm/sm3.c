@@ -1,5 +1,6 @@
 #include "sm3.h"
 #include <common/endianess.h>
+#include <common/util.h>
 #include <string.h>
 #include <stdio.h>
 #define SM3_NUMBER_OF_ROUNDS 64
@@ -212,7 +213,7 @@ ErrCrypto SM3_update(SM3_HashState* pHashState, const uint8_t* pBuf, uint64_t nL
     {
         nBytesNeeded = SM3_BLOCK_SIZE - pHashState->nBytesLen;
         nBytesCopy = (nBytesNeeded > nLen) ? nLen : nBytesNeeded;
-        memcpy(pHashState->block, pBuf, nBytesCopy);
+        memcpy(&(pHashState->block[pHashState->nBytesLen]), pBuf, nBytesCopy);
         pBuf += nBytesCopy;
         pHashState->nBytesLen += nBytesCopy;
         nLen -= nBytesCopy;
@@ -240,6 +241,7 @@ ErrCrypto SM3_final(SM3_HashState* pHashState, uint8_t* pDigest, int nDigest)
     uint8_t nPadLen = 0;
     uint8_t nWordInDigest = 0;
     uint8_t i = 0;
+    uint8_t arrMsgLength[8] = {0};
     static uint8_t PADDING[64] = {
         0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -248,6 +250,11 @@ ErrCrypto SM3_final(SM3_HashState* pHashState, uint8_t* pDigest, int nDigest)
     if (!pHashState)
     {
         return ERR_NULL;
+    }
+
+    if (nDigest < SM3_DIGEST_SIZE)
+    {
+        return ERR_MAX_OFFSET;
     }
 
     errRet = AddBitsLen(pHashState, (pHashState->nBytesLen) * 8);
@@ -263,16 +270,12 @@ ErrCrypto SM3_final(SM3_HashState* pHashState, uint8_t* pDigest, int nDigest)
 
     SM3_update(pHashState, PADDING, nPadLen);
     
- 
-    u32to8_big(&pHashState->block[SM3_BLOCK_SIZE - 8]   // - 2 * WORD_SIZE
-        , pHashState->nBitsLen >> 32);
-    u32to8_big(&pHashState->block[SM3_BLOCK_SIZE - 4]   // - WORD_SIZE
-        , pHashState->nBitsLen);
+    u64to8_big(arrMsgLength, pHashState->nBitsLen);
+    SM3_update(pHashState, arrMsgLength, 8);
 
-    SM3_ProcessBlock(pHashState, pHashState->block);
-    nWordInDigest = nDigest / WORD_SIZE;
-    nWordInDigest = (nWordInDigest < 8) ? nWordInDigest : 8;
-    for (i = 0; i < nWordInDigest; i++) {
+
+   
+    for (i = 0; i < 8; i++) {
         u32to8_big(pDigest, pHashState->hash[i]);
         pDigest += WORD_SIZE;
     }
@@ -298,18 +301,9 @@ ErrCrypto SM3_digest(
     do {
         if(ERR_OK != (err = SM3_init(&hashState)))
             break;
-        while (nData >= SM3_BLOCK_SIZE)
-        {
-            if(ERR_OK != (err = SM3_update(&hashState, pData, nData)))
-                break;
-            nData -= SM3_BLOCK_SIZE;
-            pData += SM3_BLOCK_SIZE;
-        }
-        if (nData)
-        {
-            if (ERR_OK != (err = SM3_update(&hashState, pData, nData)))
-                break;
-        }
+        if(ERR_OK != (err = SM3_update(&hashState, pData, nData)))
+            break;
+        
         if(ERR_OK != (err = SM3_final(&hashState, pDigest, SM3_DIGEST_SIZE)))
             break;
 
