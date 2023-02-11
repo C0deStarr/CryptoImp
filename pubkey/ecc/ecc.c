@@ -5,7 +5,7 @@
 
 void test_ecc_demo()
 {
-	// ÁíÒ»ÖÖ½âÊÍ
+	// ecc ElGamal
 	miracl* mip = mirsys(10, 10);
 	int i;
 
@@ -184,18 +184,17 @@ ErrCrypto GenerateEccKeys(ecc* pCtx)
 ErrCrypto ecc_encrypt(ecc* pCtx
 	, const uint8_t* pMsg, uint32_t nMsg
 	, uint8_t* pOutXc, uint32_t nCx
-	, int* pnOutLsbYc
+	//, int* pnOutLsbYc
 	, uint8_t* pOutXx1, uint32_t nXx1
 	, int* pnOutLsbYx1
 #ifdef _DEBUG
-	, big C
 	, big X2
 #endif
 )
 {
 	ErrCrypto err = ERR_EC_ENC;
 	big bigMsg = NULL;
-	epoint *epointMsg = NULL;
+	//epoint *epointMsg = NULL;
 	epoint *Q = NULL;
 	epoint *epointX1 = NULL;
 	epoint *epointX2 = NULL;
@@ -206,11 +205,10 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 	epoint* epointC = NULL;
 
 	big x = NULL;
-
 	if (!pCtx || !(pCtx->pubKey.xq)
 		|| !pMsg
 		|| !pOutXc || !pOutXx1
-		|| !pnOutLsbYc || !pnOutLsbYx1)
+		|| !pnOutLsbYx1)
 	{
 		return ERR_NULL;
 	}
@@ -220,6 +218,8 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 	{
 		return ERR_MEMORY;
 	}
+
+	x = mirvar(0);
 
 	do {
 		// msg : bytes -> big
@@ -238,8 +238,6 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 		cotnum(bigMsg, stdout);
 #endif
 		divide(bigMsg, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
-		epointMsg = epoint_init();
-		epoint_set(bigMsg, bigMsg, 1/*or 0*/, epointMsg);
 
 		// reconstruct public key
 		Q = epoint_init();
@@ -269,20 +267,12 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 		epointX2 = epoint_init();
 		ecurve_mult(bigR, Q, epointX2);
 
-		// C = M + X2 = M + R*Q
-		epointC = epoint_init();
-		epoint_copy(epointMsg, epointC);
-		ecurve_add(epointX2, epointC);
-
-		err = ERR_OK;
-
-	}while(0);
-
-	if (ERR_OK == err)
-	{
-		x = mirvar(0);
-		*pnOutLsbYc = epoint_get(epointC, x, x);
+		// c = msg * x2 mod n
+		epoint_get(epointX2, x, x);
+		multiply(x, bigMsg, x);
 		divide(x, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+
+		// output
 		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN
 			, x
 			, pOutXc
@@ -294,37 +284,34 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 			, x
 			, pOutXx1
 			, TRUE);
-	}
-#ifdef _DEBUG
-	epoint_get(epointC, C, C);
-	epoint_get(epointX2, X2, X2);
-	ecurve_sub(epointX2, epointC);
-	if (epoint_comp(epointC, epointMsg))
-	{
-		printf("decrypt in encrypt() ok\n");
-	}
 
+		err = ERR_OK;
+
+	}while(0);
+
+#ifdef _DEBUG
+	 epoint_get(epointX2, X2, X2);
 #endif
 	return err;
 }
 ErrCrypto ecc_decrypt(ecc* pCtx
 	, const uint8_t* pInXc, uint32_t nXc
-	, int nLsbYc
+	//, int nLsbYc
 	, const uint8_t* pInXx1, uint32_t nXx1
 	, int nLsbYx1
 	, uint8_t* pOutDec, uint32_t nOutDec
 #ifdef _DEBUG
-	, big C
 	, big X2
 #endif
 )
 {
 	ErrCrypto err = ERR_EC_DEC;
 	big x = NULL;
-	//big y = NULL;
 	epoint* epointX1 = NULL;
-	epoint* epointC = NULL;
-	epoint* epointDec = NULL;
+	//epoint* epointC = NULL;
+	//epoint* epointDec = NULL;
+	big cipher = NULL;
+
 	if (!pCtx || !(pCtx->priKey.d)
 		|| !pInXc || !pInXx1
 		|| !pOutDec)
@@ -340,20 +327,11 @@ ErrCrypto ecc_decrypt(ecc* pCtx
 
 	do {
 		x = mirvar(0);
-		//y = mirvar(0);
 
-		// reconstruct C
-		epointC = epoint_init();
-		bytes_to_big(nXc, pInXc, x);
-		divide(x, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
-		if(!epoint_set(x, x, nLsbYc, epointC)) break;
-#ifdef _DEBUG
-		epoint_get(epointC, x, x);
-		if (0 == mr_compare(x, C))
-		{
-			printf("reconstruct point Cipher ok\n");
-		}
-#endif
+		cipher = mirvar(0);
+		bytes_to_big(nXc, pInXc, cipher);
+		divide(cipher, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+
 		// reconstruct X1
 		epointX1 = epoint_init();
 		bytes_to_big(nXx1, pInXx1, x);
@@ -361,57 +339,46 @@ ErrCrypto ecc_decrypt(ecc* pCtx
 		if (!epoint_set(x, x, nLsbYx1, epointX1)) break;
 
 		// X1 = X2 = d*X1
-		epointDec = epoint_init();
-		epoint_copy(epointC, epointDec);
+		//epointDec = epoint_init();
 		ecurve_mult(pCtx->priKey.d
 			, epointX1, epointX1);
-		// msg = C - X2
-		ecurve_sub(epointX1, epointDec);
-
-		err = ERR_OK;
-#ifdef _DEBUG
+		// msg = c * 1/x2 mod n
 		epoint_get(epointX1, x, x);
+#ifdef _DEBUG
 		if (0 == mr_compare(x, X2))
 		{
 			printf("reconstruct point X2 ok\n");
 		}
-		epoint_get(epointDec, x, x);
-		printf("decrypt msg:\n");
-		cotnum(x, stdout);
 #endif
-	}while(0);
-
-
-	int n = 0;
-
-	if (ERR_OK == err)
-	{
-		n = epoint_get(epointDec, x, x);
+		// x = 1/x2
+		xgcd(x, pCtx->ec.stcCurve.n_or_q, x, x, x);
+		multiply(cipher, x, x);
 		divide(x, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
-		n = big_to_bytes(pCtx->ec.stcCurve.nSizeOfN
+
+		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN
 			, x
 			, pOutDec
 			, TRUE);
-	}
+		err = ERR_OK;
+
+	}while(0);
+
 	return err;
 }
 
 void test_ecc()
 {
-	// not always successful
 	ecc ctx = { 0 };
 
-	uint8_t msg[] = { "abcdefghijklmnopq" };
+	uint8_t msg[] = { "abcdefghijklmn" };
 	uint32_t nMsg = sizeof(msg) - 1;
 	uint8_t Xc[24] = { 0 };
 	uint8_t Xx1[24] = { 0 };
 	uint8_t decrypt[24] = { 0 };
-	int nLsbYc = 0;
 	int nLsbYx1 = 0;
 	uint32_t nP192 = 0;
 #ifdef _DEBUG
 	big X2 = NULL;
-	big C = NULL;
 #endif
 	if (ERR_OK != InitECC(&ctx, EC_P192))
 	{
@@ -422,29 +389,24 @@ void test_ecc()
 
 	nP192 = ctx.ec.stcCurve.nSizeOfN;
 #ifdef _DEBUG
-	C = epoint_init();
 	X2 = epoint_init();
 #endif
 	ecc_encrypt(&ctx
 		, msg, nMsg
 		, Xc, nP192
-		, &nLsbYc
 		, Xx1, nP192
 		, &nLsbYx1
 #ifdef _DEBUG
-		,C
 		,X2
 #endif
 	);
 
 	ecc_decrypt(&ctx
 		, Xc, nP192
-		, &nLsbYc
 		, Xx1, nP192
 		, &nLsbYx1
 		, decrypt, nP192
 #ifdef _DEBUG
-		, C
 		, X2
 #endif
 	);

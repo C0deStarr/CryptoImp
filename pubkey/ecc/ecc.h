@@ -24,22 +24,20 @@ ErrCrypto GenerateEccKeys(ecc* pCtx);
 ErrCrypto ecc_encrypt(ecc* pCtx
 	, const uint8_t* pMsg, uint32_t nMsg
 	, uint8_t* pOutXc, uint32_t nCx
-	, int* pnOutLsbYc
+	//, int* pnOutLsbYc	// C is not needed to reconstruct
 	, uint8_t* pOutXx1, uint32_t nXx1
 	, int* pnOutLsbYx1
 #ifdef _DEBUG
-	, big C
 	, big X2
 #endif
 	);
 ErrCrypto ecc_decrypt(ecc* pCtx
 	, const uint8_t* pInXc, uint32_t nXc
-	, int nLsbYc
+	//, int nLsbYc
 	, const uint8_t* pInXx1, uint32_t nXx1
 	, int nLsbYx1
 	, uint8_t *pOutDec, uint32_t nOutDec
 #ifdef _DEBUG
-	, big C
 	, big X2
 #endif
 );

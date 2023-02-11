@@ -70,7 +70,8 @@ ErrCrypto InitEc(EC* pEC, enum_ec typeEC)
 	case EC_P192:
 	{
 		param.pW_curve = &g_pEC[EC_P192];
-		InitMiracl(param.pW_curve->nBytes * 2, 16);
+		InitMiracl(param.pW_curve->nBytes * 4 // >= param.pW_curve->nBytes * 2
+			, 16);
 		pEC->stcCurve.nSizeOfN = param.pW_curve->nBytes;
 		pEC->stcCurve.uniCurve.W_curve.a = mirvar(0);
 		pEC->stcCurve.uniCurve.W_curve.b = mirvar(0);
