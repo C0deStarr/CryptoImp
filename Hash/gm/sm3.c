@@ -240,13 +240,18 @@ ErrCrypto SM3_final(SM3_HashState* pHashState, uint8_t* pDigest, int nDigest)
     uint8_t nPadLen = 0;
     uint8_t nWordInDigest = 0;
     uint8_t i = 0;
+    static uint8_t PADDING[64] = {
+        0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
     if (!pHashState)
     {
         return ERR_NULL;
     }
 
     errRet = AddBitsLen(pHashState, (pHashState->nBytesLen) * 8);
-    if (errRet) {
+    if (ERR_OK != errRet) {
         return ERR_MAX_DATA;
     }
 
@@ -256,10 +261,9 @@ ErrCrypto SM3_final(SM3_HashState* pHashState, uint8_t* pDigest, int nDigest)
         ? (56 - pHashState->nBytesLen)
         : (SM3_BLOCK_SIZE + 56 - pHashState->nBytesLen);
 
-    pHashState->block[(pHashState->nBytesLen)++] = 0x80;
-    memset(&(pHashState->block[(pHashState->nBytesLen)])
-        , 0
-        , nPadLen - 1);
+    SM3_update(pHashState, PADDING, nPadLen);
+    
+ 
     u32to8_big(&pHashState->block[SM3_BLOCK_SIZE - 8]   // - 2 * WORD_SIZE
         , pHashState->nBitsLen >> 32);
     u32to8_big(&pHashState->block[SM3_BLOCK_SIZE - 4]   // - WORD_SIZE
