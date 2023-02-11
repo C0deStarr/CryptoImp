@@ -186,8 +186,7 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 	, const uint8_t* pMsg, uint32_t nMsg
 	, uint8_t* pOutXc, uint32_t nCx
 	//, int* pnOutLsbYc
-	, uint8_t* pOutXx1, uint32_t nXx1
-	, int* pnOutLsbYx1
+	, uint8_t* pOutX1, uint32_t nX1
 #ifdef _DEBUG
 	, big X2
 #endif
@@ -208,14 +207,13 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 	big x = NULL;
 	if (!pCtx || !(pCtx->pubKey.xq)
 		|| !pMsg
-		|| !pOutXc || !pOutXx1
-		|| !pnOutLsbYx1)
+		|| !pOutXc || !pOutX1)
 	{
 		return ERR_NULL;
 	}
 
 	if ((pCtx->ec.stcCurve.nSizeOfN > nCx)
-		|| pCtx->ec.stcCurve.nSizeOfN > nXx1)
+		|| (pCtx->ec.stcCurve.nSizeOfN + 1) > nX1)
 	{
 		return ERR_MEMORY;
 	}
@@ -279,11 +277,11 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 			, pOutXc
 			, TRUE);
 
-		*pnOutLsbYx1 = epoint_get(epointX1, x, x);
-		divide(x, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+		pOutX1[0] = epoint_get(epointX1, x, x);
+		//divide(x, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
 		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN
 			, x
-			, pOutXx1
+			, &(pOutX1[1])
 			, TRUE);
 
 		err = ERR_OK;
@@ -298,8 +296,7 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 ErrCrypto ecc_decrypt(ecc* pCtx
 	, const uint8_t* pInXc, uint32_t nXc
 	//, int nLsbYc
-	, const uint8_t* pInXx1, uint32_t nXx1
-	, int nLsbYx1
+	, const uint8_t* pInX1, uint32_t nX1
 	, uint8_t* pOutDec, uint32_t nOutDec
 #ifdef _DEBUG
 	, big X2
@@ -314,13 +311,13 @@ ErrCrypto ecc_decrypt(ecc* pCtx
 	big cipher = NULL;
 
 	if (!pCtx || !(pCtx->priKey.d)
-		|| !pInXc || !pInXx1
+		|| !pInXc || !pInX1
 		|| !pOutDec)
 	{
 		return ERR_NULL;
 	}
 	if ((pCtx->ec.stcCurve.nSizeOfN > nXc)
-		|| pCtx->ec.stcCurve.nSizeOfN > nXx1
+		|| (pCtx->ec.stcCurve.nSizeOfN + 1) > nX1
 		|| pCtx->ec.stcCurve.nSizeOfN > nOutDec)
 	{
 		return ERR_MEMORY;
@@ -331,13 +328,13 @@ ErrCrypto ecc_decrypt(ecc* pCtx
 
 		cipher = mirvar(0);
 		bytes_to_big(nXc, pInXc, cipher);
-		divide(cipher, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+		//divide(cipher, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
 
 		// reconstruct X1
 		epointX1 = epoint_init();
-		bytes_to_big(nXx1, pInXx1, x);
-		divide(x, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
-		if (!epoint_set(x, x, nLsbYx1, epointX1)) break;
+		bytes_to_big(pCtx->ec.stcCurve.nSizeOfN, &(pInX1[1]), x);
+		//divide(x, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+		if (!epoint_set(x, x, pInX1[0], epointX1)) break;
 
 		// X1 = X2 = d*X1
 		//epointDec = epoint_init();
@@ -351,7 +348,7 @@ ErrCrypto ecc_decrypt(ecc* pCtx
 			printf("reconstruct point X2 ok\n");
 		}
 #endif
-		// x = 1/x2
+		// x = 1/x2 mod n
 		xgcd(x, pCtx->ec.stcCurve.n_or_q, x, x, x);
 		multiply(cipher, x, x);
 		divide(x, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
@@ -374,9 +371,8 @@ void test_ecc()
 	uint8_t msg[] = { "abcdefghijklmn" };
 	uint32_t nMsg = sizeof(msg) - 1;
 	uint8_t Xc[24] = { 0 };
-	uint8_t Xx1[24] = { 0 };
+	uint8_t X1[25] = { 0 };
 	uint8_t decrypt[24] = { 0 };
-	int nLsbYx1 = 0;
 	uint32_t nP192 = 0;
 #ifdef _DEBUG
 	big X2 = NULL;
@@ -395,8 +391,7 @@ void test_ecc()
 	ecc_encrypt(&ctx
 		, msg, nMsg
 		, Xc, nP192
-		, Xx1, nP192
-		, &nLsbYx1
+		, X1, nP192 + 1
 #ifdef _DEBUG
 		,X2
 #endif
@@ -404,8 +399,7 @@ void test_ecc()
 
 	ecc_decrypt(&ctx
 		, Xc, nP192
-		, Xx1, nP192
-		, &nLsbYx1
+		, X1, nP192 + 1
 		, decrypt, nP192
 #ifdef _DEBUG
 		, X2

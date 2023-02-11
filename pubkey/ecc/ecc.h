@@ -18,13 +18,18 @@ ErrCrypto InitECC(ecc* pCtx, enum_ec typeEC);
 ErrCrypto GenerateEccKeys(ecc* pCtx);
 
 
-
+/**
+ * @brief 
+ * @param pX1 
+ *		size == ctx.ec.stcCurve.nSizeOfN + 1
+ *			LsbY || x
+ * @return 
+*/
 ErrCrypto ecc_encrypt(ecc* pCtx
 	, const uint8_t* pMsg, uint32_t nMsg
 	, uint8_t* pOutXc, uint32_t nCx
 	//, int* pnOutLsbYc	// C is not needed to reconstruct
-	, uint8_t* pOutXx1, uint32_t nXx1
-	, int* pnOutLsbYx1
+	, uint8_t* pOutX1, uint32_t nX1
 #ifdef _DEBUG
 	, big X2
 #endif
@@ -32,8 +37,7 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 ErrCrypto ecc_decrypt(ecc* pCtx
 	, const uint8_t* pInXc, uint32_t nXc
 	//, int nLsbYc
-	, const uint8_t* pInXx1, uint32_t nXx1
-	, int nLsbYx1
+	, const uint8_t* pInX1, uint32_t nX1
 	, uint8_t *pOutDec, uint32_t nOutDec
 #ifdef _DEBUG
 	, big X2
