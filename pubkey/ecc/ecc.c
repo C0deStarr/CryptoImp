@@ -1,5 +1,6 @@
 #include "ecc.h"
 #include<stdio.h>
+#include <time.h>
 #include <common/util.h>
 
 
@@ -166,7 +167,7 @@ ErrCrypto GenerateEccKeys(ecc* pCtx)
 	Q = epoint_init();
 
 	// private key d = rand()
-	irand(pCtx->ec.stcCurve.pSeed);
+	irand(time(NULL));
 	bigrand(pCtx->ec.stcCurve.n_or_q
 		, pCtx->priKey.d);
 	// Q = dG
@@ -257,7 +258,7 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 
 		// step 3 random r, 0 < r < n
 		bigR = mirvar(0);
-		irand(pCtx->ec.stcCurve.pSeed);
+		irand(time(NULL));
 		bigrand(pCtx->ec.stcCurve.n_or_q, bigR);
 		// X1 = R * G
 		epointX1 = epoint_init();

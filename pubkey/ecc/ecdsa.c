@@ -2,6 +2,7 @@
 
 #include <Hash/hash.h>
 #include <common/util.h>
+#include <time.h>
 
 
 
@@ -49,7 +50,7 @@ ErrCrypto ecdsa_sign(ecc* pCtx
 
 	// step 3 random k
 	// random k: 0 < k < n
-	irand(pCtx->ec.stcCurve.pSeed);
+	irand(time(NULL));
 	bigrand(pCtx->ec.stcCurve.n_or_q, k);
 
 	// step 5
