@@ -175,6 +175,7 @@
     <ClInclude Include="pubkey\ecc\ec.h" />
     <ClInclude Include="pubkey\ecc\ecc.h" />
     <ClInclude Include="pubkey\ecc\ecdsa.h" />
+    <ClInclude Include="pubkey\ecc\sm2.h" />
     <ClInclude Include="pubkey\rsa\pkcs1_oaep.h" />
     <ClInclude Include="pubkey\rsa\pkcs1_pss.h" />
     <ClInclude Include="pubkey\rsa\rsa.h" />
@@ -206,6 +207,7 @@
     <ClCompile Include="pubkey\ecc\ec.c" />
     <ClCompile Include="pubkey\ecc\ecc.c" />
     <ClCompile Include="pubkey\ecc\ecdsa.c" />
+    <ClCompile Include="pubkey\ecc\sm2.c" />
     <ClCompile Include="pubkey\rsa\pkcs1_oaep.c" />
     <ClCompile Include="pubkey\rsa\pkcs1_pss.c" />
     <ClCompile Include="pubkey\rsa\rsa.c" />

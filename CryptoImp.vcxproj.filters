@@ -132,6 +132,9 @@
     <ClInclude Include="pubkey\ecc\ec.h">
       <Filter>pubkey\ecc</Filter>
     </ClInclude>
+    <ClInclude Include="pubkey\ecc\sm2.h">
+      <Filter>pubkey\ecc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Hash\md\md5.c">
@@ -219,6 +222,9 @@
       <Filter>pubkey\ecc</Filter>
     </ClCompile>
     <ClCompile Include="pubkey\ecc\ec.c">
+      <Filter>pubkey\ecc</Filter>
+    </ClCompile>
+    <ClCompile Include="pubkey\ecc\sm2.c">
       <Filter>pubkey\ecc</Filter>
     </ClCompile>
   </ItemGroup>
