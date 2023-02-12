@@ -64,7 +64,7 @@ ErrCrypto sm2_encrypt(ecc* pCtx
 	, uint32_t *pnNeededOutBuffer
 )
 {
-	ErrCrypto err = ERR_OK;
+	ErrCrypto err = ERR_ENCRYPT;
 
 	big bigK = NULL;	// random
 	epoint* epointC1 = NULL;
@@ -179,6 +179,7 @@ ErrCrypto sm2_encrypt(ecc* pCtx
 			, pOutCipher + nC1 + nMsgC2, nHashC3))
 			break;
 
+		err = ERR_OK;
 	}while(0);
 
 	if (pBuf)

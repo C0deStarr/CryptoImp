@@ -192,7 +192,7 @@ ErrCrypto ecc_encrypt(ecc* pCtx
 #endif
 )
 {
-	ErrCrypto err = ERR_EC_ENC;
+	ErrCrypto err = ERR_ENCRYPT;
 	big bigMsg = NULL;
 	//epoint *epointMsg = NULL;
 	epoint *Q = NULL;
@@ -303,7 +303,7 @@ ErrCrypto ecc_decrypt(ecc* pCtx
 #endif
 )
 {
-	ErrCrypto err = ERR_EC_DEC;
+	ErrCrypto err = ERR_DECRYPT;
 	big x = NULL;
 	epoint* epointX1 = NULL;
 	//epoint* epointC = NULL;
