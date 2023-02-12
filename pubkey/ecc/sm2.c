@@ -51,35 +51,7 @@ static int KDF(const uint8_t* pData
 	return nRet;
 }
 
-static void CompressPointY(int nLsbY, uint8_t *p)
-{
-	if (p)
-	{
-		if (0 == nLsbY)
-		{
-			*p = 2;
-		}
-		else // 1 == nLsbY
-		{
-			*p = 3;
-		}
-	}
 
-}
-
-static int DecompressPointY(uint8_t c)
-{
-	
-	if (2 == c)
-	{
-		return 0;
-	}
-	else // 3 == c
-	{
-		return 1;
-	}
-
-}
 
 /*
 Output:
@@ -158,13 +130,14 @@ ErrCrypto sm2_encrypt(ecc* pCtx
 
 		// step A2 : C1
 		ecurve_mult(bigK, pCtx->ec.stcCurve.G, epointC1);
-		// compress x || y
+		// compress PaddingChar
 		nLsbY = epoint_get(epointC1, bigX, bigX);
-		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN, bigX
+		CompressPoint(enum_compress
+			, pCtx->ec.stcCurve.nSizeOfN
+			, nLsbY
+			, bigX, NULL
 			, pOutCipher
-			, TRUE);
-		CompressPointY(nLsbY, pOutCipher + pCtx->ec.stcCurve.nSizeOfN);
-	
+			, 1 + pCtx->ec.stcCurve.nSizeOfN);
 
 		// step A4
 		// reconstruct public key
