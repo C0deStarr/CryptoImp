@@ -4,7 +4,7 @@
 #include <common/util.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdio.h>
 
 
 // Key Derivation Function
@@ -137,7 +137,8 @@ ErrCrypto sm2_encrypt(ecc* pCtx
 		epoint_get(epointQ, bigX, bigY);
 
 		// step A5 KDF(x2 || y2 , nMsg)
-		nBuf = pCtx->ec.stcCurve.nSizeOfN * 2 + nMsgC2 + nHashC3;
+		nBuf = pCtx->ec.stcCurve.nSizeOfN * 2 + nMsgC2
+			+ nHashC3;	// prevent stack overflow in KDF
 		pBuf = (uint8_t*)calloc(nBuf, 1);
 		if(!pBuf) break;
 		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN, bigX
@@ -189,9 +190,21 @@ ErrCrypto sm2_decrypt(ecc* pCtx
 	uint32_t nHashC3 = 0;
 	enum_hash enumHash = enum_sm3;
 
+	epoint *epointC1 = NULL;
 	uint32_t nC1 = 0;
 
-	if (!pCtx || !pCipher || !pnOutMsg)
+
+	big bigX = NULL;
+	big bigY = NULL;
+	int nLsbY = 0;
+
+	uint8_t* pBuf = NULL;	// as KDF and hash input
+	uint32_t nBuf = 0;
+
+	uint32_t nMsgC2 = 0;
+
+	if (!pCtx || !(pCtx->priKey.d)
+		|| !pCipher || !pnOutMsg)
 	{
 		return ERR_NULL;
 	}
@@ -200,23 +213,86 @@ ErrCrypto sm2_decrypt(ecc* pCtx
 	pfnHash = GetDigestFunc(enumHash);
 	if (!pfnHash) return ERR_UNKNOWN;
 
-	if ((nCipher - nC1 - nHashC3) > nCipher)
+	nC1 = pCtx->ec.stcCurve.nSizeOfN + 1; // compressed point C1: PC || x
+	nMsgC2 = nCipher - nC1 - nHashC3;
+	if (nMsgC2 > nCipher)
 	{
 		return ERR_PARAM;
 	}
 
-	nC1 = pCtx->ec.stcCurve.nSizeOfN + 1; // compressed point C1: PC || x
 	if (*pnOutMsg < (nCipher - nC1 - nHashC3))
 	{
 
-		*pnOutMsg = nCipher - nC1 - nHashC3;
+		*pnOutMsg = nMsgC2;
 		return ERR_MAX_OFFSET;
 	}
 	if (!pOutMsg)
 	{
 		return ERR_NULL;
 	}
+
+	bigX = mirvar(0);
+	bigY = mirvar(0);
+	epointC1 = epoint_init();
 	do {
+
+		// B1 reconstruct C1
+		// check C1
+		DecompressPoint(enum_compress
+			, pCipher, nC1
+			, pCtx->ec.stcCurve.nSizeOfN
+			, &bigX, NULL, &nLsbY);
+		epoint_set(bigX, bigX, nLsbY, epointC1);
+		if(point_at_infinity(epointC1)) break;
+
+		// B3 reconstruct (x2, y2)
+		ecurve_mult(pCtx->priKey.d, epointC1, epointC1);
+		epoint_get(epointC1, bigX, bigY);
+
+		// step B4 KDF(x2 || y2 , nMsg)
+		// cipher: | pc+x1 | xored msg | hash
+		// buf max: | x2 | msg | y2
+		nBuf = pCtx->ec.stcCurve.nSizeOfN + nCipher
+			+ nHashC3;	// prevent stack overflow in KDF
+		pBuf = (uint8_t*)calloc(nBuf, 1);
+		if (!pBuf) break;
+		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN, bigX
+			, pBuf
+			, TRUE);
+		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN, bigY
+			, pBuf + pCtx->ec.stcCurve.nSizeOfN
+			, TRUE);
+		if (0 == KDF(pBuf, pCtx->ec.stcCurve.nSizeOfN * 2
+			, nMsgC2
+			, pfnHash, nHashC3
+			, pBuf + pCtx->ec.stcCurve.nSizeOfN * 2))
+		{
+			break;
+		}
+		/*
+		* pBuf:
+		*	| x2 | y2 | KDF |
+		*/
+
+
+		// step B5 
+		memcpy(pOutMsg, pCipher + nC1, nMsgC2);
+		xor_buf(pBuf + pCtx->ec.stcCurve.nSizeOfN * 2, pOutMsg, nMsgC2);
+
+
+		// step B6 check C3 == hash(x2 || M || y2)
+		memcpy(pBuf + pCtx->ec.stcCurve.nSizeOfN
+			, pOutMsg
+			, nMsgC2);
+		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN, bigY
+			, pBuf + pCtx->ec.stcCurve.nSizeOfN + nMsgC2
+			, TRUE);
+		if (ERR_OK != pfnHash(pBuf, pCtx->ec.stcCurve.nSizeOfN * 2 + nMsgC2
+			, pBuf, nHashC3))
+			break;
+
+		if(0 != memcmp(pBuf, pCipher + nC1 + nMsgC2, nHashC3))
+			break;
 
 		err = ERR_OK;
 	}while(0);
@@ -252,6 +328,7 @@ void test_sm2()
 		, pCipher, &nCipher
 		, NULL);
 
+	printf("cipher:\n");
 	output_buf(pCipher, nCipher);
 
 
@@ -259,6 +336,19 @@ void test_sm2()
 		, pCipher, nCipher
 		, pDecrypt , &nDecrypt);
 
+
+	pDecrypt = (uint8_t*)calloc(nDecrypt, 1);
+	sm2_decrypt(&ctx
+		, pCipher, nCipher
+		, pDecrypt, &nDecrypt);
+
+	if (0 == memcmp(msg, pDecrypt, nMsg))
+	{
+		printf("decrypt ok\n");
+	}
+
+	free(pDecrypt);
+	pDecrypt = NULL;
 
 	free(pCipher);
 	pCipher = NULL;
