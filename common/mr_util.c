@@ -100,7 +100,7 @@ void CompressPoint(EnumCompress compress
 	}
 }
 
-void DecompressPointY(EnumCompress compress
+void DecompressPoint(EnumCompress compress
 	, const uint8_t* pIn
 	, uint32_t nIn
 	, uint32_t nSizeX
