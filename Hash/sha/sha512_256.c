@@ -44,7 +44,15 @@ ErrCrypto SHA512_256_update(SHA512HashState* pHashState, const uint8_t* pBuf, ui
 
 ErrCrypto SHA512_256_final(SHA512HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
-    return SHA512_final(pHashState, pDigest, nDigest);
+    ErrCrypto err = ERR_OK;
+    uint8_t buf[SHA512_DIGEST_SIZE] = { 0 };
+    if (nDigest < SHA512_256_DIGEST_SIZE)
+    {
+        return ERR_MAX_OFFSET;
+    }
+    err = SHA512_final(pHashState, buf, SHA512_DIGEST_SIZE);
+    memcpy(pDigest, buf, SHA512_256_DIGEST_SIZE);
+    return err;
 }
 
 void test_sha512_256()
@@ -52,14 +60,13 @@ void test_sha512_256()
     SHA512HashState SHA512HashState = { 0 };
     ErrCrypto err = ERR_OK;
     uint8_t data[] = "abc";
-    uint8_t digest[DIGEST_SIZE] = {0};
-    uint8_t nDigestLen = 256/8;
+    uint8_t digest[SHA512_256_DIGEST_SIZE] = {0};
     int i = 0;
     SHA512_256_init(&SHA512HashState);
     SHA512_256_update(&SHA512HashState, data, sizeof(data) - 1);
-    SHA512_256_final(&SHA512HashState, digest, DIGEST_SIZE);
+    SHA512_256_final(&SHA512HashState, digest, SHA512_256_DIGEST_SIZE);
 
-    for (i = 0; i < nDigestLen; i++) {
+    for (i = 0; i < SHA512_256_DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
     }
     printf("\n");

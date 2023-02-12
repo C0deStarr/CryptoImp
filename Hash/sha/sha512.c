@@ -311,8 +311,8 @@ ErrCrypto SHA512_final(SHA512HashState* pHashState, uint8_t* pDigest, int nDiges
 
     if (!pHashState || !pDigest)
         return ERR_NULL;
-    //if (SHA512_DIGEST_SIZE != nDigest)
-    //    return ERR_DIGEST_SIZE;
+    if (SHA512_DIGEST_SIZE > nDigest)
+        return ERR_MAX_OFFSET;
 
     // After last SHA1_update()
     // maybe 0 < nBytesLen <= BLOCK_SIZE

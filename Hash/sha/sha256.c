@@ -248,7 +248,7 @@ ErrCrypto SHA256_final(SHA256_HashState* pHashState, uint8_t* pDigest, int nDige
     if (!pHashState || !pDigest)
         return ERR_NULL;
     if (SHA256_DIGEST_SIZE > nDigest)
-        return ERR_DIGEST_SIZE;
+        return ERR_MAX_OFFSET;
 
     // After last SHA1_update()
     // maybe 0 < nBytesLen <= BLOCK_SIZE

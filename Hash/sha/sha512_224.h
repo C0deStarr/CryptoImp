@@ -5,7 +5,7 @@
 #include "./sha512.h"
 
 
-#define DIGEST_SIZE (512/8)
+#define SHA512_224_DIGEST_SIZE  28// (224/8)
 
 
 ErrCrypto SHA512_224_init(SHA512HashState* pHashState);

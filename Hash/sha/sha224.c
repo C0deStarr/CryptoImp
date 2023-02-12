@@ -42,7 +42,15 @@ ErrCrypto SHA224_update(SHA256_HashState* pHashState, const uint8_t* pBuf, uint6
 
 ErrCrypto SHA224_final(SHA256_HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
-    return SHA256_final(pHashState, pDigest, nDigest);
+    ErrCrypto err = ERR_OK;
+    uint8_t buf[SHA256_DIGEST_SIZE] = {0};
+    if (nDigest < SHA224_DIGEST_SIZE)
+    {
+        return ERR_MAX_OFFSET;
+    }
+    err = SHA256_final(pHashState, buf, SHA256_DIGEST_SIZE);
+    memcpy(pDigest, buf, SHA224_DIGEST_SIZE);
+    return err;
 }
 
 void test_sha224()
