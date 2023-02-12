@@ -5,11 +5,11 @@
 #include "./sha256.h"
 
 
-#define DIGEST_SIZE (224/8)
+#define SHA224_DIGEST_SIZE 28 // (224/8)
 
-ErrCrypto SHA224_init(HashState* pHashState);
-ErrCrypto SHA224_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen);
-ErrCrypto SHA224_final(HashState* pHashState, uint8_t* pDigest, int nDigest);
+ErrCrypto SHA224_init(SHA256_HashState* pHashState);
+ErrCrypto SHA224_update(SHA256_HashState* pHashState, const uint8_t* pBuf, uint64_t nLen);
+ErrCrypto SHA224_final(SHA256_HashState* pHashState, uint8_t* pDigest, int nDigest);
 void test_sha224();
 
 #endif

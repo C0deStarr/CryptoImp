@@ -3,7 +3,7 @@
 #include <common/endianess.h>
 #include <string.h>
 
-static const uint32_t K[SCHEDULE_SIZE] = {
+static const uint32_t K[SHA256_SCHEDULE_SIZE] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b,
     0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01,
     0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7,
@@ -52,7 +52,7 @@ static const uint32_t H[8] = {
     0x5be0cd19
 };
 
-ErrCrypto SHA256_init(HashState* pHashState)
+ErrCrypto SHA256_init(SHA256_HashState* pHashState)
 {
     ErrCrypto errRet = ERR_OK;
     int i = 0;
@@ -72,7 +72,7 @@ ErrCrypto SHA256_init(HashState* pHashState)
 
 
 
-static ErrCrypto AddBitsLen(HashState* pHashState, uint64_t nBits)
+static ErrCrypto AddBitsLen(SHA256_HashState* pHashState, uint64_t nBits)
 {
     // Maximum message length is 2**64 bits 
     pHashState->nBitsLen += nBits;
@@ -81,7 +81,7 @@ static ErrCrypto AddBitsLen(HashState* pHashState, uint64_t nBits)
 
 
 
-ErrCrypto sha256_compress(HashState* pHashState)
+ErrCrypto sha256_compress(SHA256_HashState* pHashState)
 {
     ErrCrypto errRet = ERR_OK;
 
@@ -94,15 +94,15 @@ ErrCrypto sha256_compress(HashState* pHashState)
     uint32_t g = 0;
     uint32_t h = 0;
 
-    uint32_t W[SCHEDULE_SIZE] = {0};
+    uint32_t W[SHA256_SCHEDULE_SIZE] = {0};
     unsigned int i = 0;
 
     // Prepare the message schedule
     for (i = 0; i < 16; ++i)
     {
-        W[i] = u8to32_big(&(pHashState->block[WORD_SIZE * i]));
+        W[i] = u8to32_big(&(pHashState->block[SHA256_WORD_SIZE * i]));
     }
-    for (; i < SCHEDULE_SIZE; i++) {
+    for (; i < SHA256_SCHEDULE_SIZE; i++) {
         W[i] = SCHEDULE(i);
     }
 
@@ -197,7 +197,7 @@ ErrCrypto sha256_compress(HashState* pHashState)
     return errRet;
 }
 
-ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
+ErrCrypto SHA256_update(SHA256_HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 {
     ErrCrypto errRet = ERR_OK;
     uint8_t nBytesNeeded = 0;
@@ -208,14 +208,14 @@ ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
 
     while (nLen > 0)
     {
-        nBytesNeeded = BLOCK_SIZE - pHashState->nBytesLen;
+        nBytesNeeded = SHA256_BLOCK_SIZE - pHashState->nBytesLen;
         nBytesCopy = (nBytesNeeded > nLen) ? nLen : nBytesNeeded;
-        memcpy(pHashState->block, pBuf, nBytesCopy);
+        memcpy(&(pHashState->block[pHashState->nBytesLen]), pBuf, nBytesCopy);
         pBuf += nBytesCopy;
         pHashState->nBytesLen += nBytesCopy;
         nLen -= nBytesCopy;
 
-        if (BLOCK_SIZE == pHashState->nBytesLen)
+        if (SHA256_BLOCK_SIZE == pHashState->nBytesLen)
         {
             // let's do the 64 steps
             errRet = sha256_compress(pHashState);
@@ -224,7 +224,7 @@ ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
 
             // waiting for the next block
             pHashState->nBytesLen = 0;
-            errRet = AddBitsLen(pHashState, BLOCK_SIZE * 8);
+            errRet = AddBitsLen(pHashState, SHA256_BLOCK_SIZE * 8);
             if (errRet)
                 return errRet;
         }
@@ -232,12 +232,19 @@ ErrCrypto SHA256_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLe
     return errRet;
 }
 
-ErrCrypto SHA256_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
+ErrCrypto SHA256_final(SHA256_HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGEST_SIZE */)
 {
     ErrCrypto errRet = ERR_OK;
     uint8_t nPadLen = 0;
     int i = 0;
     int nWordInDigest = 0;
+    uint8_t arrMsgLength[8] = { 0 };
+    static uint8_t PADDING[64] = {
+       0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
+
     if (!pHashState || !pDigest)
         return ERR_NULL;
     //if (DIGEST_SIZE != nDigest)
@@ -254,23 +261,15 @@ ErrCrypto SHA256_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DI
     // 1 + 0s + 8-byte msg length
     nPadLen = (pHashState->nBytesLen < 56)
         ? (56 - pHashState->nBytesLen)
-        : (BLOCK_SIZE + 56 - pHashState->nBytesLen);
+        : (SHA256_BLOCK_SIZE + 56 - pHashState->nBytesLen);
 
-    pHashState->block[(pHashState->nBytesLen)++] = 0x80;
-    memset(&(pHashState->block[(pHashState->nBytesLen)])
-        , 0
-        , nPadLen - 1);
-    u32to8_big(&pHashState->block[BLOCK_SIZE - 8]   // - 2 * WORD_SIZE
-        , pHashState->nBitsLen >> 32);
-    u32to8_big(&pHashState->block[BLOCK_SIZE - 4]   // - WORD_SIZE
-        , pHashState->nBitsLen);
+    SHA256_update(pHashState, PADDING, nPadLen);
+    u64to8_big(arrMsgLength, pHashState->nBitsLen);
+    SHA256_update(pHashState, arrMsgLength, 8);
 
-    sha256_compress(pHashState);
-    nWordInDigest = nDigest / WORD_SIZE;
-    nWordInDigest = (nWordInDigest < 8) ? nWordInDigest : 8;
-    for (i = 0; i < nWordInDigest; i++) {
+    for (i = 0; i < 8; i++) {
         u32to8_big(pDigest, pHashState->hash[i]);
-        pDigest += WORD_SIZE;
+        pDigest += SHA256_WORD_SIZE;
     }
     return errRet;
 }
@@ -281,23 +280,23 @@ ErrCrypto SHA1256_HMAC(const uint8_t* pKey, int nKey,
     uint8_t* md, uint32_t* nMd)
 {
     ErrCrypto errRet = ERR_OK;
-    HashState hashState = {0};
-    uint8_t key_ipad[BLOCK_SIZE] = { 0 };
-    uint8_t key_opad[BLOCK_SIZE] = {0};
+    SHA256_HashState hashState = {0};
+    uint8_t key_ipad[SHA256_BLOCK_SIZE] = { 0 };
+    uint8_t key_opad[SHA256_BLOCK_SIZE] = {0};
     uint32_t i = 0;
     if(!pKey || !pData)
         return ERR_NULL;
-    if(nMd < DIGEST_SIZE)
+    if(nMd < SHA256_DIGEST_SIZE)
         return ERR_DIGEST_SIZE;
 
     // 1. pad key
-    if (nKey > BLOCK_SIZE)
+    if (nKey > SHA256_BLOCK_SIZE)
     {
         // hash then pad
         SHA256_init(&hashState);
         SHA256_update(&hashState, pKey, nKey);
-        SHA256_final(&hashState, md, DIGEST_SIZE);
-        nKey = DIGEST_SIZE;
+        SHA256_final(&hashState, md, SHA256_DIGEST_SIZE);
+        nKey = SHA256_DIGEST_SIZE;
         
         memcpy(key_ipad, md, nKey);
         memcpy(key_opad, md, nKey);
@@ -308,7 +307,7 @@ ErrCrypto SHA1256_HMAC(const uint8_t* pKey, int nKey,
         memcpy(key_opad, pKey, nKey);
     }
 
-    for (i = 0; i < BLOCK_SIZE; ++i)
+    for (i = 0; i < SHA256_BLOCK_SIZE; ++i)
     {
         key_ipad[i] ^= 0x36;
         key_opad[i] ^= 0x5c;
@@ -316,30 +315,30 @@ ErrCrypto SHA1256_HMAC(const uint8_t* pKey, int nKey,
 
     // inner hash
     SHA256_init(&hashState);
-    SHA256_update(&hashState, key_ipad, BLOCK_SIZE);
+    SHA256_update(&hashState, key_ipad, SHA256_BLOCK_SIZE);
     SHA256_update(&hashState, pData, nData);
-    SHA256_final(&hashState, md, DIGEST_SIZE);
+    SHA256_final(&hashState, md, SHA256_DIGEST_SIZE);
 
     // outer hash
     SHA256_init(&hashState);
-    SHA256_update(&hashState, key_opad, BLOCK_SIZE);
-    SHA256_update(&hashState, md, DIGEST_SIZE);
-    SHA256_final(&hashState, md, DIGEST_SIZE);
+    SHA256_update(&hashState, key_opad, SHA256_BLOCK_SIZE);
+    SHA256_update(&hashState, md, SHA256_DIGEST_SIZE);
+    SHA256_final(&hashState, md, SHA256_DIGEST_SIZE);
 
     return errRet;
 }
 
 void test_sha256()
 {
-    HashState hashState = { 0 };
+    SHA256_HashState hashState = { 0 };
     ErrCrypto err = ERR_OK;
-    uint8_t data[] = "abcde";
-    uint8_t digest[DIGEST_SIZE] = {0};
+    uint8_t data[] = "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd";
+    uint8_t digest[SHA256_DIGEST_SIZE] = {0};
     int i = 0;
     SHA256_init(&hashState);
     SHA256_update(&hashState, data, sizeof(data) - 1);
-    SHA256_final(&hashState, digest, DIGEST_SIZE);
-    for (i = 0; i < DIGEST_SIZE; i++) {
+    SHA256_final(&hashState, digest, SHA256_DIGEST_SIZE);
+    for (i = 0; i < SHA256_DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
     }
     printf("\n");
@@ -349,12 +348,12 @@ void test_sha256_hmac()
 {
     uint8_t data[] = "Hello";
     uint8_t key[] = "Swordfish";
-    uint8_t digest[DIGEST_SIZE] = { 0 };
+    uint8_t digest[SHA256_DIGEST_SIZE] = { 0 };
     int i = 0;
     SHA1256_HMAC(key, sizeof(key)-1,
         data, sizeof(data)-1,
-        digest, DIGEST_SIZE);
-    for (i = 0; i < DIGEST_SIZE; i++) {
+        digest, SHA256_DIGEST_SIZE);
+    for (i = 0; i < SHA256_DIGEST_SIZE; i++) {
         printf("%02x", digest[i]);
     }
     printf("\n");
