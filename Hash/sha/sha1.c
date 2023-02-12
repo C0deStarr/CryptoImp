@@ -274,8 +274,8 @@ ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGE
 
     if(!pHashState || !pDigest)
         return ERR_NULL;
-    if (SHA1_DIGEST_SIZE != nDigest)
-        return ERR_DIGEST_SIZE;
+    if (SHA1_DIGEST_SIZE > nDigest)
+        return ERR_MAX_OFFSET;
 
     // After last SHA1_update()
     // maybe 0 < nBytesLen <= BLOCK_SIZE
@@ -283,6 +283,7 @@ ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGE
     if (errRet) {
         return ERR_MAX_DATA;
     }
+    u64to8_big(arrMsgLength, pHashState->nBitsLen);
 
     // Padding the Message
     // 1 + 0s + 8-byte msg length
@@ -290,11 +291,7 @@ ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGE
         ? (56 - pHashState->nBytesLen) 
         : (SHA1_BLOCK_SIZE + 56 - pHashState->nBytesLen);
 
-    //SHA1_update(pHashState, "\x80", 1);
-    //pHashState->block[(pHashState->nBytesLen)++] = 0x80;
-    
     SHA1_update(pHashState, PADDING, nPadLen);
-    u64to8_big(arrMsgLength, pHashState->nBitsLen);
     /*
       abcde-->
         61626364 65800000 00000000 00000000
@@ -340,8 +337,7 @@ void test_sha1()
 {
 	HashState hashState = {0};
 	ErrCrypto err = ERR_OK;
-    uint8_t data[] = "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd";
-    
+    uint8_t data[] = "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd";
     uint8_t digest[SHA1_DIGEST_SIZE] = {0};
     int i = 0 ;
     /*

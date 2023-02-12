@@ -4,7 +4,7 @@
 #include <common/endianess.h>
 #include <string.h>
 
-static const uint64_t K[SCHEDULE_SIZE] = {
+static const uint64_t K[SHA512_SCHEDULE_SIZE] = {
     0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL, 0xb5c0fbcfec4d3b2fULL, 0xe9b5dba58189dbbcULL,
     0x3956c25bf348b538ULL, 0x59f111f1b605d019ULL, 0x923f82a4af194f9bULL, 0xab1c5ed5da6d8118ULL,
     0xd807aa98a3030242ULL, 0x12835b0145706fbeULL, 0x243185be4ee4b28cULL, 0x550c7dc3d5ffb4e2ULL,
@@ -135,15 +135,15 @@ ErrCrypto sha512_compress(SHA512HashState* pHashState)
     uint64_t g = 0;
     uint64_t h = 0;
 
-    uint64_t W[SCHEDULE_SIZE] = {0};
+    uint64_t W[SHA512_SCHEDULE_SIZE] = {0};
     unsigned int i = 0;
 
     // Prepare the message schedule
     for (i = 0; i < 16; ++i)
     {
-        W[i] = u8to64_big(&(pHashState->block[WORD_SIZE * i]));
+        W[i] = u8to64_big(&(pHashState->block[SHA512_WORD_SIZE * i]));
     }
-    for (; i < SCHEDULE_SIZE; i++) {
+    for (; i < SHA512_SCHEDULE_SIZE; i++) {
         W[i] = SCHEDULE(i);
     }
 
@@ -265,14 +265,14 @@ ErrCrypto SHA512_update(SHA512HashState* pHashState, const uint8_t* pBuf, uint64
 
     while (nLen > 0)
     {
-        nBytesNeeded = BLOCK_SIZE - pHashState->nBytesLen;
+        nBytesNeeded = SHA512_BLOCK_SIZE - pHashState->nBytesLen;
         nBytesCopy = (nBytesNeeded > nLen) ? nLen : nBytesNeeded;
-        memcpy(pHashState->block, pBuf, nBytesCopy);
+        memcpy(&(pHashState->block[pHashState->nBytesLen]), pBuf, nBytesCopy);
         pBuf += nBytesCopy;
         pHashState->nBytesLen += nBytesCopy;
         nLen -= nBytesCopy;
 
-        if (BLOCK_SIZE == pHashState->nBytesLen)
+        if (SHA512_BLOCK_SIZE == pHashState->nBytesLen)
         {
             // let's do the 80 steps
             errRet = sha512_compress(pHashState);
@@ -281,7 +281,7 @@ ErrCrypto SHA512_update(SHA512HashState* pHashState, const uint8_t* pBuf, uint64
 
             // waiting for the next block
             pHashState->nBytesLen = 0;
-            errRet = AddBitsLen(pHashState, BLOCK_SIZE * 8);
+            errRet = AddBitsLen(pHashState, SHA512_BLOCK_SIZE * 8);
             if (errRet)
                 return errRet;
         }
@@ -294,7 +294,21 @@ ErrCrypto SHA512_final(SHA512HashState* pHashState, uint8_t* pDigest, int nDiges
     ErrCrypto errRet = ERR_OK;
     uint8_t nPadLen = 0;
     int i = 0;
-    int nWordInDigest = 0;
+    uint8_t arrMsgLength[16] = { 0 };
+
+    static uint8_t PADDING[128] = {
+        0x80, 
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    };
+
     if (!pHashState || !pDigest)
         return ERR_NULL;
     //if (SHA512_DIGEST_SIZE != nDigest)
@@ -306,28 +320,22 @@ ErrCrypto SHA512_final(SHA512HashState* pHashState, uint8_t* pDigest, int nDiges
     if (errRet) {
         return ERR_MAX_DATA;
     }
+    u64to8_big(arrMsgLength
+        , pHashState->nArrBitsLen[1]);
+    u64to8_big(&(arrMsgLength)[8]
+        , pHashState->nArrBitsLen[0]);
 
     // Padding the Message
     // 1 + 0s + 16-byte msg length
     nPadLen = (pHashState->nBytesLen < 112)
         ? (112 - pHashState->nBytesLen)
-        : (BLOCK_SIZE + 112 - pHashState->nBytesLen);
+        : (SHA512_BLOCK_SIZE + 112 - pHashState->nBytesLen);
+    SHA512_update(pHashState, PADDING, nPadLen);
+    SHA512_update(pHashState, arrMsgLength, 16);
 
-    pHashState->block[(pHashState->nBytesLen)++] = 0x80;
-    memset(&(pHashState->block[(pHashState->nBytesLen)])
-        , 0
-        , nPadLen - 1);
-    // Note: big endian 
-    u64to8_big(&pHashState->block[BLOCK_SIZE - 16]  // - 2 * WORD_SIZE
-        , pHashState->nArrBitsLen[1]);
-    u64to8_big(&pHashState->block[BLOCK_SIZE - 8]   // - WORD_SIZE
-        , pHashState->nArrBitsLen[0]);
-
-    sha512_compress(pHashState);
-    nWordInDigest = nDigest / WORD_SIZE;
-    for (i = 0; i < nWordInDigest; i++) {
+    for (i = 0; i < 8; i++) {
         u64to8_big(pDigest, pHashState->hash[i]);
-        pDigest += WORD_SIZE;
+        pDigest += SHA512_WORD_SIZE;
     }
     return errRet;
 }
@@ -336,7 +344,7 @@ void test_sha512()
 {
     SHA512HashState SHA512HashState = { 0 };
     ErrCrypto err = ERR_OK;
-    uint8_t data[] = "abc";
+    uint8_t data[] = "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd";
     uint8_t digest[SHA512_DIGEST_SIZE] = {0};
     int i = 0;
     SHA512_init(&SHA512HashState);

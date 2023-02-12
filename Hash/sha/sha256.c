@@ -247,8 +247,8 @@ ErrCrypto SHA256_final(SHA256_HashState* pHashState, uint8_t* pDigest, int nDige
 
     if (!pHashState || !pDigest)
         return ERR_NULL;
-    //if (DIGEST_SIZE != nDigest)
-    //    return ERR_DIGEST_SIZE;
+    if (SHA256_DIGEST_SIZE > nDigest)
+        return ERR_DIGEST_SIZE;
 
     // After last SHA1_update()
     // maybe 0 < nBytesLen <= BLOCK_SIZE
@@ -256,6 +256,7 @@ ErrCrypto SHA256_final(SHA256_HashState* pHashState, uint8_t* pDigest, int nDige
     if (errRet) {
         return ERR_MAX_DATA;
     }
+    u64to8_big(arrMsgLength, pHashState->nBitsLen);
 
     // Padding the Message
     // 1 + 0s + 8-byte msg length
@@ -264,7 +265,6 @@ ErrCrypto SHA256_final(SHA256_HashState* pHashState, uint8_t* pDigest, int nDige
         : (SHA256_BLOCK_SIZE + 56 - pHashState->nBytesLen);
 
     SHA256_update(pHashState, PADDING, nPadLen);
-    u64to8_big(arrMsgLength, pHashState->nBitsLen);
     SHA256_update(pHashState, arrMsgLength, 8);
 
     for (i = 0; i < 8; i++) {
