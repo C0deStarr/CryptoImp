@@ -1,6 +1,7 @@
 #include <string.h>
 #include "sha1.h"
 #include <common/endianess.h>
+#include <common/util.h>
 
 #define CH(x,y,z)       ((x & y) ^ (~x & z))            /** 0  <= t <= 19 **/
 #define PARITY(x,y,z)   (x ^ y ^ z)                     /** 20 <= t <= 39  and 60 <= t <= 79 **/
@@ -236,7 +237,7 @@ ErrCrypto SHA1_update(HashState* pHashState, const uint8_t* pBuf, uint64_t nLen)
 	{
 		nBytesNeeded = SHA1_BLOCK_SIZE - pHashState->nBytesLen;
 		nBytesCopy = (nBytesNeeded > nLen) ? nLen : nBytesNeeded;
-		memcpy(pHashState->block, pBuf, nBytesCopy);
+		memcpy(&(pHashState->block[pHashState->nBytesLen]), pBuf, nBytesCopy);
 		pBuf += nBytesCopy;
 		pHashState->nBytesLen += nBytesCopy;
 		nLen -= nBytesCopy;
@@ -264,6 +265,13 @@ ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGE
 	ErrCrypto errRet = ERR_OK;
     uint8_t nPadLen = 0;
     int i = 0;
+    uint8_t arrMsgLength[8] = { 0 };
+    static uint8_t PADDING[64] = {
+        0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
+
     if(!pHashState || !pDigest)
         return ERR_NULL;
     if (SHA1_DIGEST_SIZE != nDigest)
@@ -281,15 +289,12 @@ ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGE
     nPadLen = (pHashState->nBytesLen < 56)
         ? (56 - pHashState->nBytesLen) 
         : (SHA1_BLOCK_SIZE + 56 - pHashState->nBytesLen);
+
+    //SHA1_update(pHashState, "\x80", 1);
+    //pHashState->block[(pHashState->nBytesLen)++] = 0x80;
     
-    pHashState->block[(pHashState->nBytesLen)++] = 0x80;
-    memset(&(pHashState->block[(pHashState->nBytesLen)])
-        ,0
-        , nPadLen - 1);
-    u32to8_big(&pHashState->block[SHA1_BLOCK_SIZE - 8]
-        , pHashState->nBitsLen << 32);
-    u32to8_big(&pHashState->block[SHA1_BLOCK_SIZE - 4]
-        , pHashState->nBitsLen );
+    SHA1_update(pHashState, PADDING, nPadLen);
+    u64to8_big(arrMsgLength, pHashState->nBitsLen);
     /*
       abcde-->
         61626364 65800000 00000000 00000000
@@ -297,7 +302,8 @@ ErrCrypto SHA1_final(HashState* pHashState, uint8_t* pDigest, int nDigest/* DIGE
         00000000 00000000 00000000 00000000
         00000000 00000000 00000000 00000028
     */
-    sha1_compress(pHashState);
+
+    SHA1_update(pHashState, arrMsgLength, 8);
 
     for (i = 0; i < 5; i++) {
         u32to8_big(pDigest, pHashState->hash[i]);
@@ -321,20 +327,8 @@ ErrCrypto SHA1_digest(const uint8_t* pData, uint64_t nData, uint8_t* pDigest, ui
     do {
         errRet = SHA1_init(&hashState);
         if(ERR_OK != errRet) break;
-
-        while (nData >= SHA1_BLOCK_SIZE)
-        {
-            errRet = SHA1_update(&hashState, pData, nData);
-            if (ERR_OK != errRet) break;
-            nData -= SHA1_BLOCK_SIZE;
-            pData += SHA1_BLOCK_SIZE;
-        }
-
-        if (nData)
-        {
-            errRet = SHA1_update(&hashState, pData, nData);
-            if (ERR_OK != errRet) break;
-        }
+        errRet = SHA1_update(&hashState, pData, nData);
+        if (ERR_OK != errRet) break;
         errRet = SHA1_final(&hashState, pDigest, SHA1_DIGEST_SIZE);
         if (ERR_OK != errRet) break;
     }while(0);
@@ -346,20 +340,19 @@ void test_sha1()
 {
 	HashState hashState = {0};
 	ErrCrypto err = ERR_OK;
-    uint8_t data[] = "abcde";
+    uint8_t data[] = "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd";
     
     uint8_t digest[SHA1_DIGEST_SIZE] = {0};
     int i = 0 ;
+    /*
+    * 17c21161345819046652e358d69182560ed9ac34
+    */
 	err = SHA1_init(&hashState);
 	err = SHA1_update(&hashState, data, sizeof(data) - 1);
     err = SHA1_final(&hashState, digest, SHA1_DIGEST_SIZE);
+    output_buf(digest, SHA1_DIGEST_SIZE);
 
-    /*
-    * abcde-->
-    *   03de6c570bfe24bfc328ccd7ca46b76eadaf4334
-    */
-    for (i = 0; i < SHA1_DIGEST_SIZE; i++) {
-        printf("%02x", digest[i]);
-    }
-    printf("\n");
+    SHA1_digest(data, sizeof(data)-1, digest, SHA1_DIGEST_SIZE);
+    output_buf(digest, SHA1_DIGEST_SIZE);
+
 }
