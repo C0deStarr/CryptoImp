@@ -60,8 +60,7 @@ Output:
 */
 ErrCrypto sm2_encrypt(ecc* pCtx
 	, const uint8_t* pMsg, uint32_t nMsgC2
-	, uint8_t* pOutCipher, uint32_t nCipher
-	, uint32_t *pnNeededOutBuffer
+	, uint8_t* pOutCipher, _Inout_ uint32_t* pnCipher
 )
 {
 	ErrCrypto err = ERR_ENCRYPT;
@@ -85,30 +84,20 @@ ErrCrypto sm2_encrypt(ecc* pCtx
 	uint32_t nC1 = 0;
 
 	if (!pCtx || !(pCtx->pubKey.xq)
-		|| !pMsg)
+		|| !pMsg || !pnCipher)
 	{
 		return ERR_NULL;
 	}
+	
+	nHashC3 = GetDigestSize(enumHash);
+	pfnHash = GetDigestFunc(enumHash);
+	if(!pfnHash) return ERR_UNKNOWN;
 
-
-	switch (enumHash)
-	{
-	case enum_sm3:
-	{
-		nHashC3 = SM3_DIGEST_SIZE;
-		pfnHash = SM3_digest;
-	}
-	break;
-	default:
-		return 0;
-	}
 	nC1 = pCtx->ec.stcCurve.nSizeOfN + 1; // compressed point C1: x || lsbY
-	if (nCipher < (nC1 + nMsgC2 + nHashC3))
+	if (*pnCipher < (nC1 + nMsgC2 + nHashC3))
 	{
-		if (pnNeededOutBuffer)
-		{
-			*pnNeededOutBuffer = nC1 + nMsgC2 + nHashC3;
-		}
+		
+		*pnCipher = nC1 + nMsgC2 + nHashC3;
 		return ERR_MAX_OFFSET;
 	}
 	if (!pOutCipher)
@@ -190,6 +179,50 @@ ErrCrypto sm2_encrypt(ecc* pCtx
 	return err;
 }
 
+ErrCrypto sm2_decrypt(ecc* pCtx
+	, const uint8_t* pCipher, uint32_t nCipher
+	, uint8_t* pOutMsg, _Inout_ uint32_t* pnOutMsg
+)
+{
+	ErrCrypto err = ERR_DECRYPT;
+	PFnHash pfnHash = NULL;
+	uint32_t nHashC3 = 0;
+	enum_hash enumHash = enum_sm3;
+
+	uint32_t nC1 = 0;
+
+	if (!pCtx || !pCipher || !pnOutMsg)
+	{
+		return ERR_NULL;
+	}
+
+	nHashC3 = GetDigestSize(enumHash);
+	pfnHash = GetDigestFunc(enumHash);
+	if (!pfnHash) return ERR_UNKNOWN;
+
+	if ((nCipher - nC1 - nHashC3) > nCipher)
+	{
+		return ERR_PARAM;
+	}
+
+	nC1 = pCtx->ec.stcCurve.nSizeOfN + 1; // compressed point C1: PC || x
+	if (*pnOutMsg < (nCipher - nC1 - nHashC3))
+	{
+
+		*pnOutMsg = nCipher - nC1 - nHashC3;
+		return ERR_MAX_OFFSET;
+	}
+	if (!pOutMsg)
+	{
+		return ERR_NULL;
+	}
+	do {
+
+		err = ERR_OK;
+	}while(0);
+	return err;
+}
+
 void test_sm2()
 {
 	ecc ctx = { 0 };
@@ -200,23 +233,32 @@ void test_sm2()
 	uint32_t nMsg = sizeof(msg) - 1;
 	uint8_t *pCipher = NULL;
 	uint32_t nCipher = NULL;
+
+	uint8_t* pDecrypt = NULL;
+	uint32_t nDecrypt = 0;
+
 	if (ERR_OK != InitECC(&ctx, EC_SM2))
 	{
 		return;
 	}
-	instr(ctx.priKey.d, "1649AB77A00637BD5E2EFE283FBF353534AA7F7CB89463F208DDBC2920BB0DA0");
+	//instr(ctx.priKey.d, "1649AB77A00637BD5E2EFE283FBF353534AA7F7CB89463F208DDBC2920BB0DA0");
 
 	sm2_encrypt(&ctx
 		, msg, nMsg
-		, pCipher, nCipher
-		, &nCipher);
+		, pCipher, &nCipher);
 	pCipher = (uint8_t *)calloc(nCipher, 1);
 	sm2_encrypt(&ctx
 		, msg, nMsg
-		, pCipher, nCipher
+		, pCipher, &nCipher
 		, NULL);
 
 	output_buf(pCipher, nCipher);
+
+
+	sm2_decrypt(&ctx
+		, pCipher, nCipher
+		, pDecrypt , &nDecrypt);
+
 
 	free(pCipher);
 	pCipher = NULL;

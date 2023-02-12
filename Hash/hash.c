@@ -19,7 +19,8 @@ uint32_t GetDigestSize(enum_hash enumHash)
 PFnHash GetDigestFunc(enum_hash enumHash)
 {
 	static uint32_t s_arrHashFuncs[NUMBER_OF_HASHES] = {
-			SHA1_digest
+			SHA1_digest,
+			SM3_digest
 	};
 	if (enumHash >= NUMBER_OF_HASHES)
 	{

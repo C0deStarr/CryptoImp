@@ -14,8 +14,12 @@
 */
 ErrCrypto sm2_encrypt(ecc* pCtx
 	, const uint8_t* pMsg, uint32_t nMsg
-	, uint8_t* pOutCipher, uint32_t nCipher
-	, uint32_t* pnNeededOutBuffer
+	, uint8_t* pOutCipher, _Inout_ uint32_t *pnCipher
+);
+
+ErrCrypto sm2_decrypt(ecc* pCtx
+	, const uint8_t* pCipher, uint32_t nCipher
+	, uint8_t* pOutMsg, _Inout_ uint32_t *pnOutMsg
 );
 
 void test_sm2();
