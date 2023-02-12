@@ -31,6 +31,7 @@
 int main()
 {
 	//test_base64();
+	//test_sha1();
 	//test_sha256();
 	//test_sha224();
 	//test_sha512();
