@@ -424,7 +424,7 @@ ErrCrypto sm2_sign(ecc* pCtx
 
 		bigrand(pCtx->ec.stcCurve.n_or_q, k);
 		// GBT_32918.5-2017
-		instr(k, "59276e27d506861a16680f3ad9c02dccef3cc1fa3cdbe4ce6d54b80deac1bc21");
+		//instr(k, "59276e27d506861a16680f3ad9c02dccef3cc1fa3cdbe4ce6d54b80deac1bc21");
 
 		// step 4
 		ecurve_mult(k
@@ -462,7 +462,9 @@ ErrCrypto sm2_sign(ecc* pCtx
 		subtract(k, s, s);
 
 		// s = (k-rd) / (1+d) mod n
-		powmod(s, tmp, pCtx->ec.stcCurve.n_or_q, s);
+		mad(s, tmp, tmp
+			, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q
+			, s);
 		if (0 == mr_compare(zero, s))
 		{
 			continue;
@@ -474,30 +476,33 @@ ErrCrypto sm2_sign(ecc* pCtx
 			, TRUE);
 		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN
 			, s
-			, pOutS
+			, pOutS + 1
 			, TRUE);
+		*pOutS = ( exsign(s) == 1 ) ? 1 : 0;
 #ifdef _DEBUG
-		epoint *Q = epoint_init();
-		big x1 = mirvar(0);
 		copy(xr, dbgR);
 		copy(s, dbgS);
-		// verify
-		// t = r+s
-		add(xr, s, t);
-		if (!epoint_set(pCtx->pubKey.xq, pCtx->pubKey.xq
-			, pCtx->pubKey.nLSB_y
-			, Q)) break;
-		ecurve_mult2(s, pCtx->ec.stcCurve.G
-			, t, Q
-			, R);
-		epoint_get(R, x1, x1);
-		// x1 = (x1 + e) mod n
-		add(e, x1, x1);
-		divide(x1, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
-		if (0 == mr_compare(x1, xr))
-		{
-			printf("verifyy ok\n");
-		}
+		// epoint *Q = epoint_init();
+		// big x1 = mirvar(0);
+		// // verify
+		// // t = r+s mod n
+		// add(xr, s, t);
+		// divide(t, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+		// 
+		// if (!epoint_set(pCtx->pubKey.xq, pCtx->pubKey.xq
+		// 	, pCtx->pubKey.nLSB_y
+		// 	, Q)) break;
+		// ecurve_mult2(s, pCtx->ec.stcCurve.G
+		// 	, t, Q
+		// 	, R);
+		// epoint_get(R, x1, x1);
+		// // x1 = (x1 + e) mod n
+		// add(e, x1, x1);
+		// divide(x1, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+		// if (0 == mr_compare(x1, xr))
+		// {
+		// 	printf("verifyy ok\n");
+		// }
 #endif 
 		break;
 	}while(1);
@@ -539,7 +544,7 @@ ErrCrypto sm2_verify(ecc* pCtx
 	e = mirvar(0);
 	t = mirvar(0);
 	xr = mirvar(0);
-	tmp = mirvar(1);
+	tmp = mirvar(0);
 	Q = epoint_init();
 	R = epoint_init();
 	do {
@@ -547,7 +552,8 @@ ErrCrypto sm2_verify(ecc* pCtx
 		// 0 < r < n
 		// 0 < s < n
 		bytes_to_big(pCtx->ec.stcCurve.nSizeOfN, pInR, r);
-		bytes_to_big(pCtx->ec.stcCurve.nSizeOfN, pInS, s);
+		bytes_to_big(pCtx->ec.stcCurve.nSizeOfN, pInS + 1, s);
+		insign((*pInS == 1) ? PLUS : MINUS, s);
 		if (( (0 > exsign(r))
 				&& (mr_compare(pCtx->ec.stcCurve.n_or_q, r) <= 0))
 			|| ( (0 > exsign(s))
@@ -578,12 +584,10 @@ ErrCrypto sm2_verify(ecc* pCtx
 
 	
 		// step 4 t = (r+s) mod n
-		// tmp == 1
-		mad(tmp, r, s
-			, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q
-			, t);
+		add(r, s, t);
+		divide(t, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
 
-		zero(tmp);
+
 		if (0 == mr_compare(tmp, t))
 		{
 			break;
@@ -605,11 +609,9 @@ ErrCrypto sm2_verify(ecc* pCtx
 		}
 #endif
 		// step 6 check R = (e + x) mod n  == r
-		convert(1, tmp);
-		mad(e, tmp, xr
-			, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q
-			, tmp);
-		if (0 == mr_compare(r, tmp))
+		add(e, xr, xr);
+		divide(xr, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+		if (0 == mr_compare(r, xr))
 		{
 			err = ERR_OK;
 		}
@@ -625,8 +627,8 @@ void test_sm2_sign()
 	uint8_t msg[] = { "message digest" };
 	uint32_t nMsg = sizeof(msg) - 1;
 	uint8_t digest[MAX_SIZE_OF_DIGEST] = { 0 };
-	uint8_t r[32] = { 0 };
-	uint8_t s[32] = { 0 };
+	uint8_t r[32] = { 0 };	// SIGN || r
+	uint8_t s[33] = { 0 };
 	uint32_t nSM2 = 32;
 
 	big dbgR = NULL;
@@ -661,7 +663,7 @@ void test_sm2_sign()
 	sm2_sign(&ctx
 		, digest, SHA256_DIGEST_SIZE
 		, r, nSM2
-		, s, nSM2
+		, s, nSM2 + 1
 #ifdef _DEBUG
 		, dbgR
 		, dbgS
@@ -677,7 +679,7 @@ void test_sm2_sign()
 	if (ERR_OK == sm2_verify(&ctx
 		, digest, SHA256_DIGEST_SIZE
 		, r, nSM2
-		, s, nSM2
+		, s, nSM2 + 1
 #ifdef _DEBUG
 		, dbgR
 		, dbgS

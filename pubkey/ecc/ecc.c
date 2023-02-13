@@ -172,7 +172,7 @@ ErrCrypto GenerateEccKeys(ecc* pCtx)
 		, pCtx->priKey.d);
 
 	// GBT_32918.5-2017
-	// instr(pCtx->priKey.d, "3945208f7b2144b13f36e38ac6d39f95889393692860b51a42fb81ef4df7c5b8");
+	 //instr(pCtx->priKey.d, "3945208f7b2144b13f36e38ac6d39f95889393692860b51a42fb81ef4df7c5b8");
 
 	// Q = dG
 	ecurve_mult(pCtx->priKey.d
