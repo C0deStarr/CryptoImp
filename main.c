@@ -57,7 +57,9 @@ int main()
 	//test_ecdsa();
 	//test_ecc();
 
-	test_sm2();
+	//test_sm2();
+	
+	test_sm2_sign();
 	
 
 	getchar();

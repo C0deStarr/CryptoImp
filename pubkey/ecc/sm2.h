@@ -24,4 +24,29 @@ ErrCrypto sm2_decrypt(ecc* pCtx
 
 void test_sm2();
 
+
+ErrCrypto sm2_sign(ecc* pCtx
+	, const uint8_t* pHash, uint32_t nHash
+	, uint8_t* pOutR, uint32_t nOutR
+	, uint8_t* pOutS, uint32_t nOutS
+#ifdef _DEBUG
+	, big dbgR
+	, big dbgS
+	, big dbgX1
+#endif 
+);
+
+ErrCrypto sm2_verify(ecc* pCtx
+	, const uint8_t* pHash, uint32_t nHash
+	, const uint8_t* pInR, uint32_t nR
+	, const uint8_t* pInS, uint32_t nS
+#ifdef _DEBUG
+	, big dbgR
+	, big dbgS
+	, big dbgX1
+#endif 
+);
+
+void test_sm2_sign();
+
 #endif // !_SM2_H

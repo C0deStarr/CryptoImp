@@ -359,3 +359,334 @@ void test_sm2()
 
 	UninitMiracl();
 }
+
+
+
+
+ErrCrypto sm2_sign(ecc* pCtx
+	, const uint8_t* pHash, uint32_t nHash
+	, uint8_t* pOutR, uint32_t nOutR
+	, uint8_t* pOutS, uint32_t nOutS
+#ifdef _DEBUG
+	, big dbgR
+	, big dbgS
+	, big dbgX1
+#endif 
+)
+{
+	ErrCrypto err = ERR_OK;
+
+	big k = NULL;	// random
+	big e = NULL;	// input msg/hash
+	int nBits = 0;
+
+	epoint* R = NULL;
+	big xr = NULL;
+	big s = NULL;
+	big tmp = NULL;
+#ifdef _DEBUG
+	big t = mirvar(0);
+#endif
+	if (!pCtx || !(pCtx->priKey.d)
+		|| !pHash || !pOutR)
+	{
+		return ERR_NULL;
+	}
+
+	if ((pCtx->ec.stcCurve.nSizeOfN > nOutR)
+		|| pCtx->ec.stcCurve.nSizeOfN > nOutS)
+	{
+		return ERR_MEMORY;
+	}
+
+	k = mirvar(0);
+	e = mirvar(0);
+	R = epoint_init();
+	xr = mirvar(0);
+	s = mirvar(0);
+	tmp = mirvar(0);
+
+	// step 2
+	bytes_to_big(nHash, pHash, e);
+	if (pCtx->ec.stcCurve.nSizeOfN <= nHash)
+	{
+		// left bits: math.ceil(math.log(n, 2))
+		nBits = logb2(pCtx->ec.stcCurve.n_or_q);
+		nBits = pCtx->ec.stcCurve.nSizeOfN * 8 - nBits;
+		nBits = 0 - nBits;
+		sftbit(e, nBits, e);
+	}
+
+	// step 3 random k
+	// random k: 0 < k < n
+	irand(time(NULL));
+	do {
+
+		bigrand(pCtx->ec.stcCurve.n_or_q, k);
+		// GBT_32918.5-2017
+		instr(k, "59276e27d506861a16680f3ad9c02dccef3cc1fa3cdbe4ce6d54b80deac1bc21");
+
+		// step 4
+		ecurve_mult(k
+			, pCtx->ec.stcCurve.G
+			, R);
+		epoint_get(R, xr, xr);
+#ifdef _DEBUG
+		copy(xr, dbgX1);
+#endif
+		// step 5 xr = (xr+e) % n
+		add(xr, e, xr);
+		divide(xr, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+
+		if (0 == mr_compare(s, xr))	// s == 0
+		{
+			continue;
+		}
+		add(xr, k, tmp);
+		if (0 == mr_compare(tmp, pCtx->ec.stcCurve.n_or_q))
+		{
+			continue;
+		}
+
+		// step 6 calc ss
+		// tmp = 1/(1+d) mod q
+		incr(pCtx->priKey.d, 1, tmp);
+		xgcd(tmp, pCtx->ec.stcCurve.n_or_q, tmp, tmp, tmp);
+
+
+		// step 9 s = (k-rd) / (1+d)  mod n
+		// bug not fixed
+		// s = rd
+		multiply(xr, pCtx->priKey.d, s);
+		//s = k-rd
+		subtract(k, s, s);
+
+		// s = (k-rd) / (1+d) mod n
+		powmod(s, tmp, pCtx->ec.stcCurve.n_or_q, s);
+		if (0 == mr_compare(zero, s))
+		{
+			continue;
+		}
+
+		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN
+			, xr
+			, pOutR
+			, TRUE);
+		big_to_bytes(pCtx->ec.stcCurve.nSizeOfN
+			, s
+			, pOutS
+			, TRUE);
+#ifdef _DEBUG
+		epoint *Q = epoint_init();
+		big x1 = mirvar(0);
+		copy(xr, dbgR);
+		copy(s, dbgS);
+		// verify
+		// t = r+s
+		add(xr, s, t);
+		if (!epoint_set(pCtx->pubKey.xq, pCtx->pubKey.xq
+			, pCtx->pubKey.nLSB_y
+			, Q)) break;
+		ecurve_mult2(s, pCtx->ec.stcCurve.G
+			, t, Q
+			, R);
+		epoint_get(R, x1, x1);
+		// x1 = (x1 + e) mod n
+		add(e, x1, x1);
+		divide(x1, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q);
+		if (0 == mr_compare(x1, xr))
+		{
+			printf("verifyy ok\n");
+		}
+#endif 
+		break;
+	}while(1);
+	return err;
+}
+
+ErrCrypto sm2_verify(ecc* pCtx
+	, const uint8_t* pHash, uint32_t nHash
+	, const uint8_t* pInR, uint32_t nR
+	, const uint8_t* pInS, uint32_t nS
+#ifdef _DEBUG
+	, big dbgR
+	, big dbgS
+	, big dbgX1
+#endif 
+)
+{
+	ErrCrypto err = ERR_SIGNATURE_VERIFY;
+
+	big r = NULL;
+	big s = NULL;
+	big e = NULL;
+	int nBits = 0;
+	big t = NULL;
+	big tmp = NULL;
+	big xr = NULL;
+	epoint* Q = NULL;
+	epoint* R = NULL;
+
+	if (!pCtx || !(pCtx->pubKey.xq)
+		|| !pHash || !pInR || !pInS
+		)
+	{
+		return ERR_NULL;
+	}
+
+	r = mirvar(0);
+	s = mirvar(0);
+	e = mirvar(0);
+	t = mirvar(0);
+	xr = mirvar(0);
+	tmp = mirvar(1);
+	Q = epoint_init();
+	R = epoint_init();
+	do {
+		// step 1 check
+		// 0 < r < n
+		// 0 < s < n
+		bytes_to_big(pCtx->ec.stcCurve.nSizeOfN, pInR, r);
+		bytes_to_big(pCtx->ec.stcCurve.nSizeOfN, pInS, s);
+		if (( (0 > exsign(r))
+				&& (mr_compare(pCtx->ec.stcCurve.n_or_q, r) <= 0))
+			|| ( (0 > exsign(s))
+				&& (mr_compare(pCtx->ec.stcCurve.n_or_q, s) <= 0))
+			)
+		{
+			break;
+		}
+#ifdef _DEBUG
+		int cmp = mr_compare(dbgR, r);
+		cmp = mr_compare(dbgS, s);
+		if((0 == mr_compare(dbgR, r))
+			&& (0 == mr_compare(dbgS, s)))
+		{
+			printf("reconstruct r & s ok\n");
+		}
+#endif
+		// step 3
+		bytes_to_big(nHash, pHash, e);
+		if (pCtx->ec.stcCurve.nSizeOfN <= nHash)
+		{
+			// left bits: math.ceil(math.log(n, 2))
+			nBits = logb2(pCtx->ec.stcCurve.n_or_q);
+			nBits = pCtx->ec.stcCurve.nSizeOfN * 8 - nBits;
+			nBits = 0 - nBits;
+			sftbit(e, nBits, e);
+		}
+
+	
+		// step 4 t = (r+s) mod n
+		// tmp == 1
+		mad(tmp, r, s
+			, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q
+			, t);
+
+		zero(tmp);
+		if (0 == mr_compare(tmp, t))
+		{
+			break;
+		}
+
+		// step 5 (x1, y1) = sG + tQ
+		// reconstruct public key
+		if (!epoint_set(pCtx->pubKey.xq, pCtx->pubKey.xq
+			, pCtx->pubKey.nLSB_y
+			, Q)) break;
+		ecurve_mult2(s, pCtx->ec.stcCurve.G
+			, t, Q
+			, R);
+		epoint_get(R, xr, xr);
+#ifdef _DEBUG
+		if (0 == mr_compare(xr, dbgX1))
+		{
+			printf("dbgX1 == X1\n");
+		}
+#endif
+		// step 6 check R = (e + x) mod n  == r
+		convert(1, tmp);
+		mad(e, tmp, xr
+			, pCtx->ec.stcCurve.n_or_q, pCtx->ec.stcCurve.n_or_q
+			, tmp);
+		if (0 == mr_compare(r, tmp))
+		{
+			err = ERR_OK;
+		}
+		
+	} while (0);
+	return err;
+}
+
+void test_sm2_sign()
+{
+	ecc ctx = { 0 };
+
+	uint8_t msg[] = { "message digest" };
+	uint32_t nMsg = sizeof(msg) - 1;
+	uint8_t digest[MAX_SIZE_OF_DIGEST] = { 0 };
+	uint8_t r[32] = { 0 };
+	uint8_t s[32] = { 0 };
+	uint32_t nSM2 = 32;
+
+	big dbgR = NULL;
+	big dbgS = NULL;
+	big dbgX1 = NULL;
+	if (ERR_OK != InitECC(&ctx, EC_SM2))
+	{
+		return;
+	}
+
+	printf("pubkey:\n");
+	printf("y(lsb)==%d\nxq==", ctx.pubKey.nLSB_y);
+	cotnum(ctx.pubKey.xq, stdout);
+
+	printf("prikey:\n");
+	cotnum(ctx.priKey.d, stdout);
+
+	// hash
+	//if (ERR_OK != SHA256_digest(msg, nMsg
+	//	, digest, SHA1_DIGEST_SIZE))
+	//{
+	//	return;
+	//}
+	memcpy(digest
+		, "\xf0\xb4\x3e\x94\xba\x45\xac\xca\xac\xe6\x92\xed\x53\x43\x82\xeb\x17\xe6\xab\x5a\x19\xce\x7b\x31\xf4\x48\x6f\xdf\xc0\xd2\x86\x40"
+		, 32);
+
+	dbgR = mirvar(0);
+	dbgS = mirvar(0);
+	dbgX1 = mirvar(0);
+	printf("====sign====\n");
+	sm2_sign(&ctx
+		, digest, SHA256_DIGEST_SIZE
+		, r, nSM2
+		, s, nSM2
+#ifdef _DEBUG
+		, dbgR
+		, dbgS
+		, dbgX1
+#endif
+		);
+	printf("r:");
+	output_buf(r, nSM2);
+	printf("s:");
+	output_buf(s, nSM2);
+
+	printf("====verify====\n");
+	if (ERR_OK == sm2_verify(&ctx
+		, digest, SHA256_DIGEST_SIZE
+		, r, nSM2
+		, s, nSM2
+#ifdef _DEBUG
+		, dbgR
+		, dbgS
+		, dbgX1
+#endif
+		))
+	{
+		printf("verify ok\n");
+	}
+
+	UninitMiracl();
+}
