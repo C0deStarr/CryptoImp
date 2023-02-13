@@ -317,7 +317,7 @@ ErrCrypto SHA1_digest(const uint8_t* pData, uint64_t nData, uint8_t* pDigest, ui
     {
         return ERR_NULL;
     }
-    if (nDigest <= SHA1_DIGEST_SIZE)
+    if (nDigest < SHA1_DIGEST_SIZE)
     {
         return ERR_MAX_OFFSET;
     }
