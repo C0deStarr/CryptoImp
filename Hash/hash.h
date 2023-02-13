@@ -4,6 +4,7 @@
 #include <common/common.h>
 
 #include "sha/sha1.h"
+#include "sha/sha256.h"
 #include "sha/sha512.h"
 #include "gm/sm3.h"
 

@@ -15,7 +15,6 @@ ErrCrypto ecdsa_sign(ecc* pCtx
 
 	big k = NULL;	// random
 	big e = NULL;	// input msg/hash
-	big bigHash = NULL;
 	int nBits = 0;
 
 	epoint *R = NULL;
