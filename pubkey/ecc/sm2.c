@@ -114,8 +114,9 @@ ErrCrypto sm2_encrypt(ecc* pCtx
 		// step A1 random K
 		irand(time(NULL));
 		bigrand(pCtx->ec.stcCurve.n_or_q, bigK);
-		// test for Appendix A
-		//instr(bigK, "4C62EEFD6ECFC2B95B92FD6C3D9575148AFA17425546D49018E5388D49DD7B4F");
+
+		// GBT_32918.5-2017
+		//instr(bigK, "59276e27d506861a16680f3ad9c02dccef3cc1fa3cdbe4ce6d54b80deac1bc21");
 
 		// step A2 : C1
 		ecurve_mult(bigK, pCtx->ec.stcCurve.G, epointC1);
@@ -317,8 +318,7 @@ void test_sm2()
 	{
 		return;
 	}
-	//instr(ctx.priKey.d, "1649AB77A00637BD5E2EFE283FBF353534AA7F7CB89463F208DDBC2920BB0DA0");
-
+	
 	sm2_encrypt(&ctx
 		, msg, nMsg
 		, pCipher, &nCipher);
@@ -328,6 +328,10 @@ void test_sm2()
 		, pCipher, &nCipher
 		, NULL);
 
+	// GBT_32918.5-2017
+	// C1(compress): 0204ebfc718e8d1798620432268e77feb6415e2ede0e073c0f4f640ecd2e149a73
+	// C2: 21886ca989ca9c7d58087307ca93092d651efa
+	// C3: 59983c18f809e262923c53aec295d30383b54e39d609d160afcb1908d0bd8766
 	printf("cipher:\n");
 	output_buf(pCipher, nCipher);
 
