@@ -19,6 +19,8 @@ ErrCrypto chacha20_init(chacha20* pState,
     const uint8_t* pNonce,
     uint32_t nNonce);
 
+ErrCrypto chacha20_block_func(chacha20* pState);
+
 void test_chacha20();
 
 #endif // !_CHACHA20_H

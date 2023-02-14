@@ -59,8 +59,8 @@ ErrCrypto chacha20_init(chacha20* pState,
         c=constant k=key b=blockcount(low) B=blockcount(high) n=nonce
         */
 
-        /** h[12] remains 0 (offset) **/
-        /** h[13] remains 0 (offset) **/
+        /** hash[12] remains 0 (offset) **/
+        /** hash[13] remains 0 (offset) **/
         pState->hash[14] = u8to32_little(pNonce + 0);
         pState->hash[15] = u8to32_little(pNonce + 4);
         break;
@@ -75,7 +75,7 @@ ErrCrypto chacha20_init(chacha20* pState,
         c=constant k=key b=blockcount n=nonce
         */
 
-        /** h[12] remains 0 (offset) **/
+        /** hash[12] remains 0 (offset) **/
         pState->hash[13] = u8to32_little(pNonce + 0);
         pState->hash[14] = u8to32_little(pNonce + 4);
         pState->hash[15] = u8to32_little(pNonce + 8);
@@ -104,6 +104,42 @@ ErrCrypto chacha20_init(chacha20* pState,
     return err;
 }
 
+
+ErrCrypto chacha20_block_func(chacha20* pState)
+{
+    ErrCrypto err = ERR_OK;
+
+    uint32_t hash[CHACHA20_HASH_WORD_NUM] = {0};
+    uint32_t i = 0;
+    uint32_t sum = 0;
+
+    if (!pState)
+    {
+        return ERR_NULL;
+    }
+    memcpy(hash, pState->hash, sizeof(hash));
+    for (i = 0; i < 10; i++) {
+        /** Column round **/
+        QR(hash[0], hash[4], hash[8], hash[12]);
+        QR(hash[1], hash[5], hash[9], hash[13]);
+        QR(hash[2], hash[6], hash[10], hash[14]);
+        QR(hash[3], hash[7], hash[11], hash[15]);
+        /** Diagonal round **/
+        QR(hash[0], hash[5], hash[10], hash[15]);
+        QR(hash[1], hash[6], hash[11], hash[12]);
+        QR(hash[2], hash[7], hash[8], hash[13]);
+        QR(hash[3], hash[4], hash[9], hash[14]);
+    }
+
+    for (i = 0; i < 16; i++) {
+
+        sum = hash[i] + pState->hash[i];
+        u32to8_little(pState->keystream + 4 * i, sum);
+    }
+
+    return err;
+}
+
 void test_chacha20()
 {
     chacha20 state = {0};
@@ -121,5 +157,8 @@ void test_chacha20()
 #ifdef _DEBUG
     state.hash[12] = u8to32_little("\x01\x00\x00\x00");
 #endif
+    
+    chacha20_block_func(&state);
+
     return;
 }
