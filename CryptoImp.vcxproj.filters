@@ -43,6 +43,9 @@
     <Filter Include="pubkey\ecc">
       <UniqueIdentifier>{04078960-771a-4d8a-aff2-59536d676b41}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Cipher\StreamCipher">
+      <UniqueIdentifier>{1dcaecba-242e-4ad2-830d-f990c8d1ced7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Hash\md\md5.h">
@@ -135,6 +138,9 @@
     <ClInclude Include="pubkey\ecc\sm2.h">
       <Filter>pubkey\ecc</Filter>
     </ClInclude>
+    <ClInclude Include="Cipher\StreamCipher\chacha20.h">
+      <Filter>Cipher\StreamCipher</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Hash\md\md5.c">
@@ -226,6 +232,9 @@
     </ClCompile>
     <ClCompile Include="pubkey\ecc\sm2.c">
       <Filter>pubkey\ecc</Filter>
+    </ClCompile>
+    <ClCompile Include="Cipher\StreamCipher\chacha20.c">
+      <Filter>Cipher\StreamCipher</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -18,6 +18,8 @@
 //#include "./Cipher/BlockCipher/aes.h"
 //#include "./Cipher/BlockCipher/sm4.h"
 
+#include "./Cipher/StreamCipher/chacha20.h"
+
 //
 //	pubkey
 //
@@ -26,7 +28,7 @@
 //#include "./pubkey/rsa/pkcs1_pss.h"
 //#include "./pubkey/ecc/ecc.h"
 //#include "./pubkey/ecc/ecdsa.h"
-#include "./pubkey/ecc/sm2.h"
+//#include "./pubkey/ecc/sm2.h"
 
 int main()
 {
@@ -59,7 +61,9 @@ int main()
 
 	//test_sm2();
 	
-	test_sm2_sign();
+	//test_sm2_sign();
+
+	test_chacha20();
 	
 
 	getchar();
