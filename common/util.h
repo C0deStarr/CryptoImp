@@ -3,6 +3,11 @@
 #include "common.h"
 #include <Hash/hash.h>
 
+#define ROTL32(x, n)	(((x) << (n)) | ((x) >> (32-(n))))
+#define ROTL64(x, n)	(((x) << (n)) | ((x) >> (64-(n))))
+#define ROTR32(x, n)	(((x) >> (n)) | ((x) << (32-(n))))
+#define ROTR64(x, n)    (((x) >> (n)) | ((x) << (64-(n))))
+
 void output_buf(const uint8_t *pBuf, uint32_t nBuf);
 
 void xor_buf(const uint8_t in[], uint8_t out[], uint32_t len);

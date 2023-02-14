@@ -2,6 +2,7 @@
 #include "./sha512.h"
 #include <stdio.h>
 #include <common/endianess.h>
+#include <common/util.h>
 #include <string.h>
 
 static const uint64_t K[SHA512_SCHEDULE_SIZE] = {
@@ -30,12 +31,12 @@ static const uint64_t K[SHA512_SCHEDULE_SIZE] = {
 #define CH(x,y,z)       (((x) & (y)) ^ (~(x) & (z)))
 #define MAJ(x,y,z)      (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z)))
 
-#define ROTR64(n, x)    (((x)>>(n)) | ((x)<<(64-(n))))
+
 #define SHR(n,x)        ((x)>>(n))
-#define SIGMA_0_512(x)    (ROTR64(28,x) ^ ROTR64(34,x) ^ ROTR64(39,x))
-#define SIGMA_1_512(x)    (ROTR64(14,x) ^ ROTR64(18,x) ^ ROTR64(41,x))
-#define sigma_0_512(x)    (ROTR64(1,x)  ^ ROTR64(8,x)  ^ SHR(7,x))
-#define sigma_1_512(x)    (ROTR64(19,x) ^ ROTR64(61,x) ^ SHR(6,x))
+#define SIGMA_0_512(x)    (ROTR64(x, 28) ^ ROTR64(x, 34) ^ ROTR64(x, 39))
+#define SIGMA_1_512(x)    (ROTR64(x, 14) ^ ROTR64(x, 18) ^ ROTR64(x, 41))
+#define sigma_0_512(x)    (ROTR64(x, 1)  ^ ROTR64(x, 8)  ^ SHR(7,x))
+#define sigma_1_512(x)    (ROTR64(x, 19) ^ ROTR64(x, 61) ^ SHR(6,x))
 
 // W[t] for 16 <= t <= 80
 #define SCHEDULE(t) (sigma_1_512(W[t-2])    \

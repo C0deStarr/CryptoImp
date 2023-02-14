@@ -2,10 +2,10 @@
 #include "gf_mul.h"
 
 #include <common/endianess.h>
+#include <common/util.h>
 #include <string.h>
 
-#define ROTR32(x, n) (((x) >> (n)) | ((x) << (32-(n))))
-#define ROTL32(x, n) (((x) << (n)) | ((x) >> (32-(n))))
+
 #define RotWord(x) ROTL32(x,8)
 
 ErrCrypto KeyExpansion(StcAES* pStcAES, uint8_t key[/*4*Nk*/]);

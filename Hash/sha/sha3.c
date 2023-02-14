@@ -2,10 +2,10 @@
 #include "./sha3.h"
 #include <string.h>
 #include <common/endianess.h>
+#include <common/util.h>
 
 
 
-#define ROTL64(x,y) ( ((x) << (y)) | (x) >> (64-(y)) )
 
 /*
 

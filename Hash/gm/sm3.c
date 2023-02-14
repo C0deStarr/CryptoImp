@@ -5,7 +5,6 @@
 #include <stdio.h>
 #define SM3_NUMBER_OF_ROUNDS 64
 
-#define ROTL(x,y) ( ((x) << (y)) | (x) >> (32-(y)) )
 
 static const uint32_t IV[8] = {
 	0x7380166f,
@@ -69,12 +68,12 @@ static uint32_t GG(uint32_t x, uint32_t y, uint32_t z, uint32_t j)
 */
 static uint32_t P0(uint32_t x)
 {
-    return x ^ ROTL(x, 9) ^ ROTL(x, 17);
+    return x ^ ROTL32(x, 9) ^ ROTL32(x, 17);
 }
 
 static uint32_t P1(uint32_t x)
 {
-    return x ^ ROTL(x, 15) ^ ROTL(x, 23);
+    return x ^ ROTL32(x, 15) ^ ROTL32(x, 23);
 }
 
 
@@ -127,9 +126,9 @@ static int SM3_ProcessBlock(SM3_HashState* pState)
             W[j] = P1(
                     W[j - 16]
                     ^ W[j - 9]
-                    ^ ROTL(W[j - 3], 15)
+                    ^ ROTL32(W[j - 3], 15)
                     )
-                ^ ROTL(W[j - 13], 7)
+                ^ ROTL32(W[j - 13], 7)
                 ^ W[j - 6];
         }
     }
@@ -145,20 +144,20 @@ static int SM3_ProcessBlock(SM3_HashState* pState)
     // CF
     for (j = 0; j < SM3_NUMBER_OF_ROUNDS; j++)
     {
-        SS1 = ROTL(
-            ROTL(A, 12)
+        SS1 = ROTL32(
+            ROTL32(A, 12)
                 + E
-                + ROTL(T[j < 16 ? 0 : 1], j)
+                + ROTL32(T[j < 16 ? 0 : 1], j)
             , 7);
-        SS2 = SS1 ^ ROTL(A, 12);
+        SS2 = SS1 ^ ROTL32(A, 12);
         TT1 = FF(A, B, C, j) + D + SS2 + W1[j];
         TT2 = GG(E, F, G, j) + H + SS1 + W[j];
         D = C;
-        C = ROTL(B, 9);
+        C = ROTL32(B, 9);
         B = A;
         A = TT1;
         H = G;
-        G = ROTL(F, 19);
+        G = ROTL32(F, 19);
         F = E;
         E = P0(TT2);
     }
