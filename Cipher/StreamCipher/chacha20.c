@@ -136,6 +136,33 @@ ErrCrypto chacha20_block_func(chacha20* pState)
         sum = hash[i] + pState->hash[i];
         u32to8_little(pState->keystream + 4 * i, sum);
     }
+    switch (pState->nNonce) 
+    {
+    case 8: {
+        /** Nonce is 64 bits, counter is two words **/
+        if (++(pState->hash[12]) == 0) {
+            if (++(pState->hash[13]) == 0) {
+                return ERR_MAX_DATA;
+            }
+        }
+        break;
+    }
+    case 12: {
+        /** Nonce is 96 bits, counter is one word **/
+        if (++(pState->hash[12]) == 0) {
+            return ERR_MAX_DATA;
+        }
+        break;
+    }
+    // case 16: {
+    //     /** Nonce is 192 bits, there is no counter as this is intended
+    //      * to be run once only (HChaCha20) **/
+    //     break;
+    // }
+    }
+    return err;
+}
+
 
     return err;
 }

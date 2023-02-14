@@ -10,6 +10,7 @@
 typedef struct {
 	uint32_t hash[CHACHA20_HASH_WORD_NUM];
     uint8_t keystream[CHACHA20_KEYSTREAM_LEN];
+    uint32_t nNonce;
 }chacha20;
 
 
