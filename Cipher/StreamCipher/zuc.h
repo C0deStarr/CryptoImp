@@ -22,7 +22,10 @@ ErrCrypto zuc_generate_keystream(ZUC* pState
 	, uint32_t nWords
 	, uint32_t* keystream);
 
-
+ErrCrypto zuc_encrypt(ZUC* pState
+	, const uint8_t* pIn
+	, uint32_t nIn
+	, uint8_t* pOut);
 
 
 void test_zuc();

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <common/util.h>
+#include <common/endianess.h>
 
 
 /*
@@ -226,7 +227,54 @@ ErrCrypto zuc_generate_keystream(ZUC* pState
 }
 
 
+ErrCrypto zuc_encrypt(ZUC* pState
+	, const uint8_t* pIn
+	, uint32_t nIn
+	, uint8_t* pOut)
+{
+	ErrCrypto err = ERR_OK;
+	uint32_t* LFSR = NULL;
+	uint32_t R1 = 0;
+	uint32_t R2 = 0;
+	uint32_t x0 = 0, x1 = 0, x2 = 0, x3 = 0;
+	uint32_t W1 = 0, W2 = 0, U = 0, V = 0;
+	uint32_t Z = 0;
+	uint32_t i = 0;
+	uint32_t nWords = 0;
+	uint8_t block[4] = {0};
+	uint32_t nWordSize = 4; //sizeof(uint32_t)
 
+	if (!pState || !pIn || !pOut)
+	{
+		return ERR_NULL;
+	}
+	LFSR = pState->LFSR;
+	R1 = pState->R1;
+	R2 = pState->R2;
+
+	nWords = nIn / nWordSize;
+	for (i = 0; i < nWords; i++) {
+		BitReconstruction(x0, x1, x2, x3);
+		Z = x3 ^ F(x0, x1, x2);
+		LFSRWithWorkMode();
+
+		u32to8_big(pOut, Z);
+		xor_buf(pIn, pOut, nWordSize);
+		pIn += nWordSize; // sizeof(block);
+		pOut += nWordSize; // sizeof(block);
+	}
+	if (nWordSize = nIn % nWordSize)
+	{
+		BitReconstruction(x0, x1, x2, x3);
+		Z = x3 ^ F(x0, x1, x2);
+		LFSRWithWorkMode();
+
+		u32to8_big(block, Z);
+		xor_buf(pIn, block, nWordSize);
+		memcpy(pOut, block, nWordSize);
+	}
+	return err;
+}
 
 void test_zuc()
 {
