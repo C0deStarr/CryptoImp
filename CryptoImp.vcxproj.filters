@@ -141,6 +141,9 @@
     <ClInclude Include="Cipher\StreamCipher\chacha20.h">
       <Filter>Cipher\StreamCipher</Filter>
     </ClInclude>
+    <ClInclude Include="Cipher\StreamCipher\zuc.h">
+      <Filter>Cipher\StreamCipher</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Hash\md\md5.c">
@@ -234,6 +237,9 @@
       <Filter>pubkey\ecc</Filter>
     </ClCompile>
     <ClCompile Include="Cipher\StreamCipher\chacha20.c">
+      <Filter>Cipher\StreamCipher</Filter>
+    </ClCompile>
+    <ClCompile Include="Cipher\StreamCipher\zuc.c">
       <Filter>Cipher\StreamCipher</Filter>
     </ClCompile>
   </ItemGroup>

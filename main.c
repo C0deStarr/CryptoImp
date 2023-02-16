@@ -18,7 +18,8 @@
 //#include "./Cipher/BlockCipher/aes.h"
 //#include "./Cipher/BlockCipher/sm4.h"
 
-#include "./Cipher/StreamCipher/chacha20.h"
+//#include "./Cipher/StreamCipher/chacha20.h"
+#include "./Cipher/StreamCipher/zuc.h"
 
 //
 //	pubkey
@@ -63,8 +64,9 @@ int main()
 	
 	//test_sm2_sign();
 
-	test_chacha20();
-	
+	//test_chacha20();
+
+	test_zuc();
 
 	getchar();
 	return 0;
