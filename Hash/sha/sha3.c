@@ -389,7 +389,7 @@ ErrCrypto sha3_final(KeccakState* pKeccakState, uint8_t* pDigest, int nDigest)
 		{
 			// sh3 hash functions
 			pKeccakState->block[pKeccakState->nByOffset] = 0x06;
-			pKeccakState->block[pKeccakState->nByRate - 1] = 0x80;
+			pKeccakState->block[pKeccakState->nByRate - 1] |= 0x80;
 		}
 		else
 		{
