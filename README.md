@@ -59,6 +59,6 @@ Elliptic Curve Cryptography:
 * ECDSA, [FIPS 186-5](https://csrc.nist.gov/publications/detail/fips/186/5/final)
 * Elliptic Curves
   * Curves in Short-Weierstrass Form
-    * P-192/224/256/384/521
+    * P-192/224/256/384/521， W-25519/448
     * [SM2]((http://www.sca.gov.cn/sca/xxgk/2010-12/17/content_1002386.shtml))
 
