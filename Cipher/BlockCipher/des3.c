@@ -1,4 +1,5 @@
 #include "des3.h"
+#include <string.h>
 
 
 ErrCrypto des3_init(des3_key* pStcKey, const uint8_t* pKey, uint32_t nKey)
@@ -72,6 +73,7 @@ void test_des3()
 		0x12, 0x31, 0x6E, 0x02, 0x8C, 0x8F, 0x3B, 0x4B,
 		0x13, 0x31, 0x6E, 0x02, 0x8C, 0x8F, 0x3B, 0x4C
 	};
+	uint8_t true_cipher[] = { 0xa3, 0x66, 0xde, 0x00, 0x5b, 0x49, 0xe6, 0x5b };
 	uint8_t cipher[256] = { 0 };
 	uint8_t buf[256] = { 0 };
 
@@ -95,6 +97,10 @@ void test_des3()
 	}
 	printf("\n");
 
+	if (!memcmp(cipher, true_cipher, nData))
+	{
+		printf("enc ok\n");
+	}
 
 	err = des3(
 		&stcKey
@@ -107,6 +113,11 @@ void test_des3()
 	for (i = 0; i < BLOCK_SIZE; i++) {
 		printf("%02x", buf[i]);
 	}
+	if (!memcmp(buf, data, nData))
+	{
+		printf("\ndec ok\n");
+	}
+
 	printf("\n");
 
 }
